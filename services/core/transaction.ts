@@ -4,7 +4,7 @@
 import Jszip from 'jszip'
 import { BigNumber } from 'ethers'
 // @ts-expect-error
-import MerkleTree from '@tornado/fixed-merkle-tree'
+import MerkleTree from 'fixed-merkle-tree'
 import axios, { AxiosResponse } from 'axios'
 import { BytesLike } from '@ethersproject/bytes'
 
@@ -31,14 +31,17 @@ import { CommitmentEvents } from '@/services/events/@types'
 
 import { ChainId } from '@/types'
 import { getTornadoPool } from '@/contracts'
+import { Element } from 'fixed-merkle-tree'
 
 const ADDRESS_BYTES_LENGTH = 20
 
 const jszip = new Jszip()
 
-function buildMerkleTree({ events }: { events: CommitmentEvents }): typeof MerkleTree {
+const poseidonHash2Wrapper = (left: Element, right: Element) => toFixedHex(poseidonHash2(left.toString(), right.toString()))
+
+function buildMerkleTree({ events }: { events: CommitmentEvents }) {
   const leaves = events.sort((a, b) => a.index - b.index).map((e) => toFixedHex(e.commitment))
-  return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2 })
+  return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper })
 }
 
 async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmount, fee, recipient, relayer }: ProofParams) {

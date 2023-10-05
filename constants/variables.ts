@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers'
 
 import { WalletInfo, ChainId } from '@/types'
-import { localConnector } from '@/services'
+// import { localConnector } from '@/services'
 
 const SUPPORTED_WALLETS: { [key: string]: WalletInfo } = {
   METAMASK: {
@@ -10,12 +10,12 @@ const SUPPORTED_WALLETS: { [key: string]: WalletInfo } = {
     iconName: 'metamask',
     description: 'Easy-to-use browser extension.',
   },
-  LOCAL: {
-    connector: () => localConnector(),
-    name: 'Local',
-    iconName: 'local',
-    description: 'Frontend wallet.',
-  },
+  // LOCAL: {
+  //   connector: () => localConnector(),
+  //   name: 'Local',
+  //   iconName: 'local',
+  //   description: 'Frontend wallet.',
+  // },
 }
 
 const numbers = {
@@ -76,6 +76,8 @@ const SIGN_MESSAGE = `Sign this message to generate your TornadoCash Nova Privac
 
 const REGISTRY_DEPLOYED_BLOCK: Record<ChainId, number> = {
   [ChainId.MAINNET]: 14173129,
+  [ChainId.BSC]: 0,
+  [ChainId.XDAI]: 0
 }
 
 const registerGuideUrl = 'https://hackmd.io/@yfVgphY1TiKixVMVfVLAlw/B1Bp3p4UF'

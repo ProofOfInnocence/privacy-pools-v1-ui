@@ -21,7 +21,7 @@ declare global {
   }
 }
 
-declare module '@tornado/circomlib' {
+declare module 'circomlib' {
   interface Circom {
     poseidon: CallableFunction
   }

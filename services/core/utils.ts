@@ -2,7 +2,7 @@ import crypto from 'crypto'
 
 import { BigNumber, utils } from 'ethers'
 // @ts-expect-error
-import { poseidon } from '@tornado/circomlib'
+import { poseidon } from 'circomlib'
 
 import { numbers, FIELD_SIZE } from '@/constants'
 
