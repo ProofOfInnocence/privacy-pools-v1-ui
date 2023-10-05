@@ -7,7 +7,12 @@ export default function Home() {
   async function deposit() {
     const keypair = new Keypair();
     const output = new Utxo({ amount: toWei("0.1"), keypair });
-    const {extData, args} = await createTransactionData({outputs: [output]}, keypair);
+    const input = new Utxo({ amount: toWei("0.1"), keypair });
+    const transactionInputOutputs = {
+      inputs: [input],
+      outputs: [output],
+    }
+    const {extData, args} = await createTransactionData(transactionInputOutputs, keypair);
     console.log(extData, args);
   }
 

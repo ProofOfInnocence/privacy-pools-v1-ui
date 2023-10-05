@@ -30,6 +30,7 @@
     "isolatedModules": true,
     "noEmit": true,
     "baseUrl": ".",
+    "useUnknownInCatchVariables": false,
     "plugins": [
       {
         "name": "next"
