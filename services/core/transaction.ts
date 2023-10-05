@@ -3,7 +3,6 @@
 
 import Jszip from 'jszip'
 import { BigNumber } from 'ethers'
-// @ts-expect-error
 import MerkleTree from 'fixed-merkle-tree'
 import axios, { AxiosResponse } from 'axios'
 import { BytesLike } from '@ethersproject/bytes'
@@ -161,7 +160,7 @@ async function prepareTransaction({
 
   const amount = extAmount.gt(0) ? extAmount : BG_ZERO
 
-  let params = {
+  let params: ProofParams = {
     inputs,
     outputs,
     isL1Withdrawal,

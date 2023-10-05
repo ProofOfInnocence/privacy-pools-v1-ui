@@ -56,7 +56,6 @@ export function numberToHex(value: number | bigint | string | BigNumberish) {
   return utils.hexlify(value)
 }
 
-// @ts-expect-error for set unitName init value
 export function fromWei(balance: BigNumberish, unitName: string | BigNumberish | undefined = numbers.ETH_DECIMALS) {
   return utils.formatUnits(balance, unitName)
 }

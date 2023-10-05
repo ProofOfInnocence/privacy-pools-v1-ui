@@ -3,7 +3,7 @@
 const { AES, HmacSHA256, enc } = require('crypto-js')
 const { isEmpty } = require('lodash')
 const { BigNumber } = require('ethers')
-const { poseidon } = require('@tornado/circomlib')
+const { poseidon } = require('circomlib')
 const { decrypt } = require('eth-sig-util')
 const { IndexedDB } = require('../services/idb')
 const { sleep } = require('../utilities/helpers')

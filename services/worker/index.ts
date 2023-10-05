@@ -7,8 +7,8 @@ import { CommitmentEvents, NullifierEvents } from '@/services/events/@types'
 
 import { EventsPayload, DecryptedEvents, GetEventsFromTxHashParams } from './@types'
 
-import '@/assets/events.worker.js'
-import '@/assets/nullifier.worker.js'
+// import '@/assets/events.worker.js'
+// import '@/assets/nullifier.worker.js'
 
 // import NWorker from '@/assets/nullifier.worker.js'
 // import EWorker from '@/assets/events.worker.js'
@@ -39,10 +39,12 @@ class Provider implements WorkerProvider {
   public constructor() {
     const ipfsPathPrefix = getIPFSPrefix()
 
-    const basePath = `${window.location.origin}${ipfsPathPrefix}`
+    console.log('ipfsPathPrefix', ipfsPathPrefix)
 
-    this.nullifierWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/_nuxt/workers/nullifier.worker.js`))
-    this.eventsWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/_nuxt/workers/events.worker.js`))
+    const basePath = `${window.location.origin}${ipfsPathPrefix}`
+    console.log(`${basePath}/nullifier.worker.js`)
+    this.nullifierWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/nullifierr.worker.js`))
+    this.eventsWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/eventss.worker.js`))
 
     // // @ts-expect-error
     // this.nullifierWorkers = new Array(CORES).fill('').map(() => new NWorker())
@@ -75,10 +77,10 @@ class Provider implements WorkerProvider {
 
   public getNullifierEventsFromTxHash = async (nullifiers: NullifierEvents, txHash: string): Promise<NullifierEvents> => {
     try {
-      const nullifierEvents = await this.openNullifierChannel<
-        NullifierEvents,
-        { cachedNullifiers: NullifierEvents; txHash: string }
-      >(workerEvents.GET_NULLIFIER_EVENTS_FROM_TX_HASH, { cachedNullifiers: nullifiers, txHash })
+      const nullifierEvents = await this.openNullifierChannel<NullifierEvents, { cachedNullifiers: NullifierEvents; txHash: string }>(
+        workerEvents.GET_NULLIFIER_EVENTS_FROM_TX_HASH,
+        { cachedNullifiers: nullifiers, txHash }
+      )
 
       return nullifierEvents
     } catch (err) {
@@ -88,10 +90,11 @@ class Provider implements WorkerProvider {
 
   public getDecryptedEventsFromTxHash = async (keypair: BaseKeypair, txHash: string): Promise<DecryptedEvents> => {
     try {
-      const decrypted = await this.openEventsChannel<GetEventsFromTxHashParams, DecryptedEvents>(
-        workerEvents.GET_EVENTS_FROM_TX_HASH,
-        { txHash, publicKey: keypair.pubkey, privateKey: keypair.privkey },
-      )
+      const decrypted = await this.openEventsChannel<GetEventsFromTxHashParams, DecryptedEvents>(workerEvents.GET_EVENTS_FROM_TX_HASH, {
+        txHash,
+        publicKey: keypair.pubkey,
+        privateKey: keypair.privkey,
+      })
 
       return decrypted
     } catch (err) {
