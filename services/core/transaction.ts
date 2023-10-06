@@ -276,6 +276,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       const commitmentsService = commitmentsFactory.getService(ChainId.XDAI)
 
       params.events = await commitmentsService.fetchCommitments(keypair)
+      console.log('Events:', params.events);
     }
 
     const { extData, args, amount } = await prepareTransaction(params)
