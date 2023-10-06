@@ -185,19 +185,19 @@ async function prepareTransaction({
   }
 }
 
-async function getIPFSIdFromENS(ensName: string) {
-  const { provider } = getProvider(ChainId.MAINNET)
-  const resolver = await provider.getResolver(ensName)
-  if (!resolver) {
-    console.error(`Cannot fetch ENS resolver for ${ensName}`)
-    return ''
-  }
+// async function getIPFSIdFromENS(ensName: string) {
+//   const { provider } = getProvider(ChainId.MAINNET)
+//   const resolver = await provider.getResolver(ensName)
+//   if (!resolver) {
+//     console.error(`Cannot fetch ENS resolver for ${ensName}`)
+//     return ''
+//   }
 
-  const cHash = await resolver.getContentHash()
-  const [, id] = cHash.split('://')
+//   const cHash = await resolver.getContentHash()
+//   const [, id] = cHash.split('://')
 
-  return id
-}
+//   return id
+// }
 
 async function fetchFile<T>({ url, name, id, retryAttempt = numbers.ZERO }: FetchFileParams): Promise<AxiosResponse<T>> {
   try {
@@ -211,7 +211,8 @@ async function fetchFile<T>({ url, name, id, retryAttempt = numbers.ZERO }: Fetc
     return response
   } catch (err) {
     if (!id) {
-      id = await getIPFSIdFromENS(APP_ENS_NAME)
+      // id = await getIPFSIdFromENS(APP_ENS_NAME)
+      throw new Error('id is not defined, Cannot fetch proving keys, please check your internet connection or try to use VPN.')
     }
 
     const knownResources = [url, `https://ipfs.io/ipfs/${id}`, `https://dweb.link/ipfs/${id}`, `https://gateway.pinata.cloud/ipfs/${id}`]
@@ -248,7 +249,7 @@ async function download({ prefix, name, contentType }: DownloadParams) {
 
 async function estimateTransact(payload: EstimateTransactParams) {
   try {
-    const tornadoPool = getTornadoPool(ChainId.XDAI)
+    const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
 
     const gas = await tornadoPool.estimateGas.transact(payload.args, payload.extData, {
       from: tornadoPool.address,
@@ -265,7 +266,7 @@ async function estimateTransact(payload: EstimateTransactParams) {
 
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair) {
   try {
-    const tornadoPool = getTornadoPool(ChainId.XDAI)
+    const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
 
     if (!params.inputs || !params.inputs.length) {
       const root = await tornadoPool.callStatic.getLastRoot()
@@ -273,7 +274,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       params.events = []
       params.rootHex = toFixedHex(root)
     } else {
-      const commitmentsService = commitmentsFactory.getService(ChainId.XDAI)
+      const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
 
       params.events = await commitmentsService.fetchCommitments(keypair)
     }
