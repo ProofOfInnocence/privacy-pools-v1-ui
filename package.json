@@ -24,7 +24,8 @@
     "next": "13.5.4",
     "react": "^18",
     "react-dom": "^18",
-    "web3-utils": "^1.3.6"
+    "web3-utils": "^1.3.6",
+    "nova_scotia_browser": "file:public/pkg"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",

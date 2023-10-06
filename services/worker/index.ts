@@ -12,6 +12,7 @@ import { EventsPayload, DecryptedEvents, GetEventsFromTxHashParams } from './@ty
 
 import NWorker from '@/assets/nullifier.worker.js'
 import EWorker from '@/assets/events.worker.js'
+import VWorker from '@/assets/nova.worker.js'
 
 export interface WorkerProvider {
   workerSetup: (chainId: ChainId) => void
@@ -35,6 +36,7 @@ const CORES = Math.max(AVAILABLE_CORES, MIN_CORES)
 class Provider implements WorkerProvider {
   public readonly nullifierWorkers: Worker[]
   public readonly eventsWorkers: Worker[]
+  public readonly novaWorkers: Worker[]
 
   public constructor() {
     const ipfsPathPrefix = getIPFSPrefix()
@@ -50,6 +52,8 @@ class Provider implements WorkerProvider {
     this.nullifierWorkers = new Array(CORES).fill('').map(() => new NWorker())
     // @ts-expect-error
     this.eventsWorkers = new Array(CORES).fill('').map(() => new EWorker())
+    this.novaWorkers = new Array(CORES).fill('').map(() => new VWorker())
+    
   }
 
   public workerSetup = (chainId: ChainId) => {
