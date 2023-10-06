@@ -15,7 +15,7 @@ import { getTornadoPool } from '@/contracts'
 import { numbers, workerEvents } from '@/constants/worker'
 import { getBlocksBatches, controlledPromise } from '@/utilities'
 
-import { Keypair  } from '@/services'
+import { Keypair } from '@/services'
 import { CommitmentEvents } from '@/services/events/@types'
 import { workerProvider } from '../worker'
 import { GetDecryptedEvents } from '@/services/worker/@types'
@@ -43,7 +43,7 @@ class Service implements CommitmentsService {
       const batchEvents = await workerProvider.openEventsChannel<BatchEventsPayload, GetDecryptedEvents>(
         workerEvents.GET_BATCH_EVENTS,
         { blockFrom, blockTo, cachedEvents, publicKey: keypair.pubkey, privateKey: keypair.privkey },
-        index,
+        index
       )
 
       return batchEvents
@@ -85,7 +85,7 @@ class Service implements CommitmentsService {
 
     const promises = batches.map(
       // eslint-disable-next-line
-      (batch, index) => this.fetchCommitmentsBatch({ batch, index, keypair, cachedEvents: commitments }),
+      (batch, index) => this.fetchCommitmentsBatch({ batch, index, keypair, cachedEvents: commitments })
     )
 
     const freshCommitments = await Promise.all<CommitmentEvents>(promises)
@@ -95,14 +95,16 @@ class Service implements CommitmentsService {
   public async getCachedData(keypair: Keypair): Promise<CachedData> {
     try {
       const currentBlock = await this.poolContract.provider.getBlockNumber()
+      console.log('Current block:', currentBlock);
       const cachedEvents = await workerProvider.openEventsChannel<GetCashedEventsPayload, GetDecryptedEvents>(
         workerEvents.GET_CACHED_COMMITMENTS_EVENTS,
         {
           publicKey: keypair.pubkey,
           privateKey: keypair.privkey,
           storeName: 'commitment_events_100',
-        },
+        }
       )
+      console.log(cachedEvents)
 
       if (cachedEvents?.lastSyncBlock && cachedEvents?.commitments?.length) {
         const newBlockFrom = Number(cachedEvents.lastSyncBlock) + numbers.ONE
@@ -117,9 +119,11 @@ class Service implements CommitmentsService {
   }
 
   public async fetchCommitments(keypair: Keypair): Promise<CommitmentEvents> {
+    console.log("Keypair hex:", keypair.pubkey._hex);
     const knownPromise = this.promises[keypair.pubkey._hex]?.promise
 
     if (knownPromise) {
+      console.log('Known promise is called')
       return await knownPromise
     }
 
@@ -141,7 +145,10 @@ class Service implements CommitmentsService {
 
   private async fetchData(keypair: Keypair): Promise<CommitmentEvents> {
     try {
+      console.log('Fetch data is called')
       const { latestBlock, commitments } = await this.getCachedData(keypair)
+      console.log('Latest block:', latestBlock);
+      console.log('Commitments:', commitments);
 
       const { freshCommitments, lastBlock } = await this.getFreshCommitments({ keypair, latestBlock, commitments })
 
@@ -169,6 +176,7 @@ class CommitmentsFactory {
   public instances = new Map()
 
   public getService = (chainId: L2ChainId) => {
+    console.log('Get service is called')
     if (this.instances.has(chainId)) {
       return this.instances.get(chainId)
     }

@@ -43,8 +43,8 @@ class Provider implements WorkerProvider {
 
     const basePath = `${window.location.origin}${ipfsPathPrefix}`
     console.log(`${basePath}/nullifier.worker.js`)
-    this.nullifierWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/nullifierr.worker.js`))
-    this.eventsWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/eventss.worker.js`))
+    this.nullifierWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/nullifier.worker.js`))
+    this.eventsWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/events.worker.js`))
 
     // // @ts-expect-error
     // this.nullifierWorkers = new Array(CORES).fill('').map(() => new NWorker())
@@ -53,6 +53,7 @@ class Provider implements WorkerProvider {
   }
 
   public workerSetup = (chainId: ChainId) => {
+    console.log('Worker setup has been called')
     try {
       const params = { eventName: workerEvents.INIT_WORKER, payload: chainId }
       this.nullifierWorkers.forEach((worker) => worker.postMessage(params))
