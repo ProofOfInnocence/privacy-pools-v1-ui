@@ -8,9 +8,8 @@ export default function Home() {
     workerProvider.workerSetup(ChainId.ETHEREUM_GOERLI)
     const keypair = new Keypair()
     const output = new Utxo({ amount: toWei('0.1'), keypair })
-    const input = new Utxo({ amount: toWei('0.1'), keypair })
+    // const input = new Utxo({ amount: toWei('0.1'), keypair })
     const transactionInputOutputs = {
-      inputs: [input],
       outputs: [output],
     }
     const { extData, args } = await createTransactionData(transactionInputOutputs, keypair)
