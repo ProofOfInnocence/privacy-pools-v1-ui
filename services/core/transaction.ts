@@ -263,10 +263,15 @@ async function estimateTransact(payload: EstimateTransactParams) {
     )
   }
 }
+import { useAccount } from 'wagmi'
+
 
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair) {
   try {
     const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
+    const { connector } = useAccount()
+    tornadoPool.connect(connector?.getProvider())
+    
 
     if (!params.inputs || !params.inputs.length) {
       const root = await tornadoPool.callStatic.getLastRoot()
