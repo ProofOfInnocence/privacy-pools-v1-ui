@@ -19,12 +19,14 @@ export interface WorkerProvider {
   getCommitmentEvents: () => Promise<CommitmentEvents>
   getNullifierEventsFromTxHash: (nullifiers: NullifierEvents, txHash: string) => Promise<NullifierEvents>
   getDecryptedEventsFromTxHash: (keypair: BaseKeypair, txHash: string) => Promise<DecryptedEvents>
+  generate_pp: () => void
   // channels
   readonly openNullifierChannel: <P, R>(eventName: string, payload: P, workerIndex?: number) => Promise<R>
   readonly openEventsChannel: <P, R>(eventName: string, payload: P, workerIndex?: number) => Promise<R>
   // workers
   readonly nullifierWorkers: Worker[]
   readonly eventsWorkers: Worker[]
+  readonly novaWorkers: Worker[]
 }
 
 const MIN_CORES = 2
@@ -52,8 +54,8 @@ class Provider implements WorkerProvider {
     this.nullifierWorkers = new Array(CORES).fill('').map(() => new NWorker())
     // @ts-expect-error
     this.eventsWorkers = new Array(CORES).fill('').map(() => new EWorker())
-    this.novaWorkers = new Array(CORES).fill('').map(() => new VWorker())
-    
+    const CORESX = 1
+    this.novaWorkers = new Array(CORESX).fill('').map(() => new VWorker())
   }
 
   public workerSetup = (chainId: ChainId) => {
@@ -62,8 +64,24 @@ class Provider implements WorkerProvider {
       const params = { eventName: workerEvents.INIT_WORKER, payload: chainId }
       this.nullifierWorkers.forEach((worker) => worker.postMessage(params))
       this.eventsWorkers.forEach((worker) => worker.postMessage(params))
+      this.novaWorkers.forEach((worker) => worker.postMessage(params))
     } catch (err) {
       console.error('workerSetup has error: ', err.message)
+    }
+  }
+
+  public generate_pp = async () => {
+    try {
+      console.log("generate pp called")
+      const py = {
+        mode: 0,
+        pp_path: 'poi.r1cs'
+      }
+      const params = { eventName: workerEvents.GENERATE_PP, payload: py }
+      console.log("start post messages")
+      this.novaWorkers.forEach((worker) => worker.postMessage(params))
+    } catch (err) {
+      throw new Error(`Events worker method getCommitmentEvents has error: ${err}`)
     }
   }
 

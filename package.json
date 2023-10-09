@@ -22,10 +22,11 @@
     "jszip": "^3.7.1",
     "lodash": "^4.17.21",
     "next": "13.5.4",
+    "nova_scotia_browser": "file:public/pkg",
     "react": "^18",
     "react-dom": "^18",
-    "web3-utils": "^1.3.6",
-    "nova_scotia_browser": "file:public/pkg"
+    "request": "^2.79.0",
+    "web3-utils": "^1.3.6"
   },
   "devDependencies": {
     "@types/axios": "^0.14.0",

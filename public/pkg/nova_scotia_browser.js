@@ -210,23 +210,29 @@ function __wbg_adapter_26(arg0, arg1, arg2) {
 
 /**
 * @param {string} path
+* @param {string} base
 * @returns {Promise<string>}
 */
-export function read_filem(path) {
+export function read_filem(path, base) {
     const ptr0 = passStringToWasm0(path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.read_filem(ptr0, len0);
+    const ptr1 = passStringToWasm0(base, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.read_filem(ptr0, len0, ptr1, len1);
     return takeObject(ret);
 }
 
 /**
 * @param {string} path
+* @param {string} base
 * @returns {Promise<Uint8Array>}
 */
-export function read_filen(path) {
+export function read_filen(path, base) {
     const ptr0 = passStringToWasm0(path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.read_filen(ptr0, len0);
+    const ptr1 = passStringToWasm0(base, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.read_filen(ptr0, len0, ptr1, len1);
     return takeObject(ret);
 }
 
@@ -239,13 +245,42 @@ export function init_panic_hook() {
 /**
 * @param {number} mode
 * @param {string} r1cs_or_json_or_cbor_or_binc_path
+* @param {string} base
 * @returns {Promise<string>}
 */
-export function generate_params(mode, r1cs_or_json_or_cbor_or_binc_path) {
+export function generate_params(mode, r1cs_or_json_or_cbor_or_binc_path, base) {
     const ptr0 = passStringToWasm0(r1cs_or_json_or_cbor_or_binc_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.generate_params(mode, ptr0, len0);
+    const ptr1 = passStringToWasm0(base, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.generate_params(mode, ptr0, len0, ptr1, len1);
     return takeObject(ret);
+}
+
+/**
+* @param {string} url
+* @param {string} filename
+* @returns {string}
+*/
+export function get_path(url, filename) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passStringToWasm0(url, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(filename, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        wasm.get_path(retptr, ptr0, len0, ptr1, len1);
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        deferred3_0 = r0;
+        deferred3_1 = r1;
+        return getStringFromWasm0(r0, r1);
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
 }
 
 /**
@@ -254,9 +289,10 @@ export function generate_params(mode, r1cs_or_json_or_cbor_or_binc_path) {
 * @param {string} wasm_path
 * @param {string} input_path
 * @param {string} start_path
+* @param {string} base
 * @returns {Promise<string>}
 */
-export function generate_proof(pp_str, r1cs_path, wasm_path, input_path, start_path) {
+export function generate_proof(pp_str, r1cs_path, wasm_path, input_path, start_path, base) {
     const ptr0 = passStringToWasm0(pp_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passStringToWasm0(r1cs_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
@@ -267,7 +303,9 @@ export function generate_proof(pp_str, r1cs_path, wasm_path, input_path, start_p
     const len3 = WASM_VECTOR_LEN;
     const ptr4 = passStringToWasm0(start_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len4 = WASM_VECTOR_LEN;
-    const ret = wasm.generate_proof(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4);
+    const ptr5 = passStringToWasm0(base, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len5 = WASM_VECTOR_LEN;
+    const ret = wasm.generate_proof(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5);
     return takeObject(ret);
 }
 
@@ -275,16 +313,19 @@ export function generate_proof(pp_str, r1cs_path, wasm_path, input_path, start_p
 * @param {string} pp_str
 * @param {string} proof_str
 * @param {string} start_path
+* @param {string} base
 * @returns {Promise<boolean>}
 */
-export function verify_compressed_proof(pp_str, proof_str, start_path) {
+export function verify_compressed_proof(pp_str, proof_str, start_path, base) {
     const ptr0 = passStringToWasm0(pp_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passStringToWasm0(proof_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     const ptr2 = passStringToWasm0(start_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len2 = WASM_VECTOR_LEN;
-    const ret = wasm.verify_compressed_proof(ptr0, len0, ptr1, len1, ptr2, len2);
+    const ptr3 = passStringToWasm0(base, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len3 = WASM_VECTOR_LEN;
+    const ret = wasm.verify_compressed_proof(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
     return takeObject(ret);
 }
 
@@ -320,7 +361,7 @@ function handleError(f, args) {
         wasm.__wbindgen_exn_store(addHeapObject(e));
     }
 }
-function __wbg_adapter_69(arg0, arg1, arg2, arg3) {
+function __wbg_adapter_70(arg0, arg1, arg2, arg3) {
     wasm.wasm_bindgen__convert__closures__invoke2_mut__hc56b428ab50416e8(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
@@ -422,9 +463,6 @@ function __wbg_get_imports() {
         const ret = getStringFromWasm0(arg0, arg1);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
-        takeObject(arg0);
-    };
     imports.wbg.__wbg_log_5ec45823638d9505 = function(arg0, arg1) {
         console.log(getStringFromWasm0(arg0, arg1));
     };
@@ -435,6 +473,9 @@ function __wbg_get_imports() {
     imports.wbg.__wbg_readfileb_367d093a11ee88a7 = function(arg0, arg1) {
         const ret = read_fileb(getStringFromWasm0(arg0, arg1));
         return addHeapObject(ret);
+    };
+    imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
+        takeObject(arg0);
     };
     imports.wbg.__wbindgen_string_get = function(arg0, arg1) {
         const obj = getObject(arg1);
@@ -531,7 +572,7 @@ function __wbg_get_imports() {
                 const a = state0.a;
                 state0.a = 0;
                 try {
-                    return __wbg_adapter_69(a, state0.b, arg0, arg1);
+                    return __wbg_adapter_70(a, state0.b, arg0, arg1);
                 } finally {
                     state0.a = a;
                 }
@@ -624,12 +665,12 @@ function __wbg_get_imports() {
         const ret = startWorkers(takeObject(arg0), takeObject(arg1), wbg_rayon_PoolBuilder.__wrap(arg2));
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper3752 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 554, __wbg_adapter_26);
+    imports.wbg.__wbindgen_closure_wrapper3761 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 555, __wbg_adapter_26);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper3754 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 554, __wbg_adapter_26);
+    imports.wbg.__wbindgen_closure_wrapper3763 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 555, __wbg_adapter_26);
         return addHeapObject(ret);
     };
 

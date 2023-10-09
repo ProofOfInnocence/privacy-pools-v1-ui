@@ -17,9 +17,17 @@ export default function Home() {
     console.log(extData, args)
   }
 
+  async function genpp() {
+    workerProvider.workerSetup(ChainId.XDAI)
+    console.log("genpp called")
+    workerProvider.generate_pp()
+    console.log("genpp done")
+  }
+
   return (
     <div>
       <button onClick={deposit}>AJDBHKG</button>
+      <button onClick={genpp}>Public Parameters</button>
     </div>
   )
 }
