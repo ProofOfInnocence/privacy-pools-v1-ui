@@ -282,7 +282,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
 
     const { extData, args, amount } = await prepareTransaction(params)
 
-    await estimateTransact({ extData, args })
+    // await estimateTransact({ extData, args })
 
     return { extData, args, amount }
   } catch (err) {

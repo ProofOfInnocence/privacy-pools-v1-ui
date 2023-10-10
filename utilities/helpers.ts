@@ -72,3 +72,12 @@ export function controlledPromise<T>(promise: Promise<T>) {
     reject: _reject,
   }
 }
+
+export function toHexString(value: string): `0x${string}` {
+  // Check if the string already starts with "0x"
+  if (value.startsWith('0x')) {
+    return value as `0x${string}` // If it does, return it as is
+  } else {
+    return `0x${value}` // If it doesn't, add "0x" and return
+  }
+}

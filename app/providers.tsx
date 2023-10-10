@@ -6,6 +6,11 @@ import { argentWallet, trustWallet, ledgerWallet, injectedWallet } from '@rainbo
 import { configureChains, createConfig, WagmiConfig } from 'wagmi'
 import { mainnet, polygon, optimism, arbitrum, base, zora, goerli } from 'wagmi/chains'
 import { publicProvider } from 'wagmi/providers/public'
+import { alchemyProvider } from 'wagmi/providers/alchemy'
+
+// const alchemyApiKey = process.env.ALCHEMY_ID ? process.env.ALCHEMY_ID : ''
+
+// console.log('Alchemy API Key', alchemyApiKey)
 
 const { chains, publicClient } = configureChains([goerli], [publicProvider()])
 
