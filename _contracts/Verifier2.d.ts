@@ -11,38 +11,43 @@ import {
   PopulatedTransaction,
   BaseContract,
   ContractTransaction,
+  CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface BridgeBNBInterface extends ethers.utils.Interface {
-  functions: {};
-
-  events: {
-    "RelayedMessage(address,address,bytes32,bool)": EventFragment;
-    "UserRequestForAffirmation(bytes32,bytes)": EventFragment;
+interface Verifier2Interface extends ethers.utils.Interface {
+  functions: {
+    "verifyProof(bytes,uint256[7])": FunctionFragment;
   };
 
-  getEvent(nameOrSignatureOrTopic: "RelayedMessage"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "UserRequestForAffirmation"): EventFragment;
+  encodeFunctionData(
+    functionFragment: "verifyProof",
+    values: [
+      BytesLike,
+      [
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish
+      ]
+    ]
+  ): string;
+
+  decodeFunctionResult(
+    functionFragment: "verifyProof",
+    data: BytesLike
+  ): Result;
+
+  events: {};
 }
 
-export type RelayedMessageEvent = TypedEvent<
-  [string, string, string, boolean] & {
-    sender: string;
-    executor: string;
-    messageId: string;
-    status: boolean;
-  }
->;
-
-export type UserRequestForAffirmationEvent = TypedEvent<
-  [string, string] & { messageId: string; encodedData: string }
->;
-
-export class BridgeBNB extends BaseContract {
+export class Verifier2 extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -83,51 +88,85 @@ export class BridgeBNB extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: BridgeBNBInterface;
+  interface: Verifier2Interface;
 
-  functions: {};
-
-  callStatic: {};
-
-  filters: {
-    "RelayedMessage(address,address,bytes32,bool)"(
-      sender?: string | null,
-      executor?: string | null,
-      messageId?: BytesLike | null,
-      status?: null
-    ): TypedEventFilter<
-      [string, string, string, boolean],
-      { sender: string; executor: string; messageId: string; status: boolean }
-    >;
-
-    RelayedMessage(
-      sender?: string | null,
-      executor?: string | null,
-      messageId?: BytesLike | null,
-      status?: null
-    ): TypedEventFilter<
-      [string, string, string, boolean],
-      { sender: string; executor: string; messageId: string; status: boolean }
-    >;
-
-    "UserRequestForAffirmation(bytes32,bytes)"(
-      messageId?: BytesLike | null,
-      encodedData?: null
-    ): TypedEventFilter<
-      [string, string],
-      { messageId: string; encodedData: string }
-    >;
-
-    UserRequestForAffirmation(
-      messageId?: BytesLike | null,
-      encodedData?: null
-    ): TypedEventFilter<
-      [string, string],
-      { messageId: string; encodedData: string }
-    >;
+  functions: {
+    verifyProof(
+      proof: BytesLike,
+      input: [
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish
+      ],
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
   };
 
-  estimateGas: {};
+  verifyProof(
+    proof: BytesLike,
+    input: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      BigNumberish
+    ],
+    overrides?: CallOverrides
+  ): Promise<boolean>;
 
-  populateTransaction: {};
+  callStatic: {
+    verifyProof(
+      proof: BytesLike,
+      input: [
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish
+      ],
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+  };
+
+  filters: {};
+
+  estimateGas: {
+    verifyProof(
+      proof: BytesLike,
+      input: [
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish
+      ],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+  };
+
+  populateTransaction: {
+    verifyProof(
+      proof: BytesLike,
+      input: [
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish,
+        BigNumberish
+      ],
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+  };
 }

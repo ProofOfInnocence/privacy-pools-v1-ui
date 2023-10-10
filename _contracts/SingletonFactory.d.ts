@@ -17,42 +17,24 @@ import {
 import { BytesLike } from "@ethersproject/bytes";
 import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
-import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
+import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface MulticallInterface extends ethers.utils.Interface {
+interface SingletonFactoryInterface extends ethers.utils.Interface {
   functions: {
-    "getCurrentBlockTimestamp()": FunctionFragment;
-    "getEthBalance(address)": FunctionFragment;
-    "multicall(tuple[])": FunctionFragment;
+    "deploy(bytes,bytes32)": FunctionFragment;
   };
 
   encodeFunctionData(
-    functionFragment: "getCurrentBlockTimestamp",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "getEthBalance",
-    values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "multicall",
-    values: [{ target: string; gasLimit: BigNumberish; callData: BytesLike }[]]
+    functionFragment: "deploy",
+    values: [BytesLike, BytesLike]
   ): string;
 
-  decodeFunctionResult(
-    functionFragment: "getCurrentBlockTimestamp",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "getEthBalance",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "multicall", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "deploy", data: BytesLike): Result;
 
   events: {};
 }
 
-export class Multicall extends BaseContract {
+export class SingletonFactory extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -93,85 +75,44 @@ export class Multicall extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: MulticallInterface;
+  interface: SingletonFactoryInterface;
 
   functions: {
-    getCurrentBlockTimestamp(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { timestamp: BigNumber }>;
-
-    getEthBalance(
-      addr: string,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber] & { balance: BigNumber }>;
-
-    multicall(
-      calls: { target: string; gasLimit: BigNumberish; callData: BytesLike }[],
+    deploy(
+      _initCode: BytesLike,
+      _salt: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
 
-  getCurrentBlockTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
-
-  getEthBalance(addr: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-  multicall(
-    calls: { target: string; gasLimit: BigNumberish; callData: BytesLike }[],
+  deploy(
+    _initCode: BytesLike,
+    _salt: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   callStatic: {
-    getCurrentBlockTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getEthBalance(addr: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    multicall(
-      calls: { target: string; gasLimit: BigNumberish; callData: BytesLike }[],
+    deploy(
+      _initCode: BytesLike,
+      _salt: BytesLike,
       overrides?: CallOverrides
-    ): Promise<
-      [
-        BigNumber,
-        ([boolean, BigNumber, string] & {
-          success: boolean;
-          gasUsed: BigNumber;
-          returnData: string;
-        })[]
-      ] & {
-        blockNumber: BigNumber;
-        returnData: ([boolean, BigNumber, string] & {
-          success: boolean;
-          gasUsed: BigNumber;
-          returnData: string;
-        })[];
-      }
-    >;
+    ): Promise<string>;
   };
 
   filters: {};
 
   estimateGas: {
-    getCurrentBlockTimestamp(overrides?: CallOverrides): Promise<BigNumber>;
-
-    getEthBalance(addr: string, overrides?: CallOverrides): Promise<BigNumber>;
-
-    multicall(
-      calls: { target: string; gasLimit: BigNumberish; callData: BytesLike }[],
+    deploy(
+      _initCode: BytesLike,
+      _salt: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    getCurrentBlockTimestamp(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    getEthBalance(
-      addr: string,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    multicall(
-      calls: { target: string; gasLimit: BigNumberish; callData: BytesLike }[],
+    deploy(
+      _initCode: BytesLike,
+      _salt: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

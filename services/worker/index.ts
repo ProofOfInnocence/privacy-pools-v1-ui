@@ -10,8 +10,8 @@ import { EventsPayload, DecryptedEvents, GetEventsFromTxHashParams } from './@ty
 // import '@/assets/events.worker.js'
 // import '@/assets/nullifier.worker.js'
 
-// import NWorker from '@/assets/nullifier.worker.js'
-// import EWorker from '@/assets/events.worker.js'
+import NWorker from '@/assets/nullifier.worker.js'
+import EWorker from '@/assets/events.worker.js'
 
 export interface WorkerProvider {
   workerSetup: (chainId: ChainId) => void
@@ -43,13 +43,13 @@ class Provider implements WorkerProvider {
 
     const basePath = `${window.location.origin}${ipfsPathPrefix}`
     console.log(`${basePath}/nullifier.worker.js`)
-    this.nullifierWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/nullifier.worker.js`))
-    this.eventsWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/events.worker.js`))
+    // this.nullifierWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/nullifier.worker.js`))
+    // this.eventsWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/events.worker.js`))
 
-    // // @ts-expect-error
-    // this.nullifierWorkers = new Array(CORES).fill('').map(() => new NWorker())
-    // // @ts-expect-error
-    // this.eventsWorkers = new Array(CORES).fill('').map(() => new EWorker())
+    // @ts-expect-error
+    this.nullifierWorkers = new Array(CORES).fill('').map(() => new NWorker())
+    // @ts-expect-error
+    this.eventsWorkers = new Array(CORES).fill('').map(() => new EWorker())
   }
 
   public workerSetup = (chainId: ChainId) => {

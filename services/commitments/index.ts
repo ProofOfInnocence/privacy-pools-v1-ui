@@ -1,4 +1,4 @@
-import { L2ChainId } from '@/types'
+import { PoolChainId } from '@/types'
 import {
   FreshData,
   CachedData,
@@ -65,7 +65,7 @@ class Service implements CommitmentsService {
     return commitments
   }
 
-  public constructor(chainId: L2ChainId) {
+  public constructor(chainId: PoolChainId) {
     this.poolContract = getTornadoPool(chainId)
     this.promises = {}
     this.commitments = []
@@ -175,7 +175,7 @@ class Service implements CommitmentsService {
 class CommitmentsFactory {
   public instances = new Map()
 
-  public getService = (chainId: L2ChainId) => {
+  public getService = (chainId: PoolChainId) => {
     console.log('Get service is called')
     if (this.instances.has(chainId)) {
       return this.instances.get(chainId)
