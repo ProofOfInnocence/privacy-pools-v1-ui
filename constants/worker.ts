@@ -16,6 +16,8 @@ const workerEvents = {
   SAVE_LAST_SYNC_BLOCK: 'save_last_sync_block',
   // nova
   GENERATE_PP: 'generate_pp',
+  PROVE: 'prove',
+  VERIFY: 'verify',
 }
 
 const numbers = {

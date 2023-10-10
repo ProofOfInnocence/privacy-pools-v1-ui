@@ -19,8 +19,12 @@ export interface WorkerProvider {
   getCommitmentEvents: () => Promise<CommitmentEvents>
   getNullifierEventsFromTxHash: (nullifiers: NullifierEvents, txHash: string) => Promise<NullifierEvents>
   getDecryptedEventsFromTxHash: (keypair: BaseKeypair, txHash: string) => Promise<DecryptedEvents>
-  generate_pp: () => void
+  generate_pp: () => Promise<void>
+  generate_ppx: () => Promise<string>
+  provex: () => Promise<string>
+  verifyx: () => Promise<boolean>
   // channels
+  readonly openNovaChannel: <P, R>(eventName: string, payload: P, workerIndex?: number) => Promise<R>
   readonly openNullifierChannel: <P, R>(eventName: string, payload: P, workerIndex?: number) => Promise<R>
   readonly openEventsChannel: <P, R>(eventName: string, payload: P, workerIndex?: number) => Promise<R>
   // workers
@@ -85,6 +89,58 @@ class Provider implements WorkerProvider {
     }
   }
 
+  public generate_ppx = async (): Promise<string> => {
+    try {
+      console.log("generate pp x - 0")
+      let pp = await this.openNovaChannel<{mode: number, pp_path: string, base: string}, string>(workerEvents.GENERATE_PP, {
+        mode: 2,
+        pp_path: 'poi-pp.cbor',
+        base: 'http://127.0.0.1:3001'
+      })
+      console.log("generate pp x - 1")
+      console.log("ppx: ", pp)
+
+      return pp
+    } catch (err) {
+      throw new Error(`Nova worker method generate pp has error: ${err}`)
+    }
+  }
+
+  public provex = async (): Promise<string> => {
+    try {
+      console.log("prove x - 0")
+      const proof = await this.openNovaChannel<{r1cs_path: string, wasm_path: string, input_path: string, start_path: string, base: string}, string>(workerEvents.PROVE, {
+        r1cs_path: 'poi.r1cs',
+        wasm_path: 'poi.wasm',
+        input_path: 'poi-inputs.json',
+        start_path: 'poi-start.json',
+        base: 'http://127.0.0.1:3001'
+      })
+      console.log("prove x - 1")
+      console.log("proofx: ", proof)
+
+      return proof
+    } catch (err) {
+      throw new Error(`Nova worker method generate pp has error: ${err}`)
+    }
+  }
+
+  public verifyx = async (): Promise<boolean> => {
+    try {
+      console.log("verify x - 0")
+      const correct = await this.openNovaChannel<{start_path: string, base: string}, boolean>(workerEvents.VERIFY, {
+        start_path: 'poi-start.json',
+        base: 'http://127.0.0.1:3001'
+      })
+      console.log("verify x - 1")
+      console.log("verifyx: ", correct)
+
+      return correct
+    } catch (err) {
+      throw new Error(`Nova worker method generate pp has error: ${err}`)
+    }
+  }
+
   public getCommitmentEvents = async (lastSyncBlock?: number): Promise<CommitmentEvents> => {
     try {
       const commitmentEvents = await this.openEventsChannel<EventsPayload, CommitmentEvents>(workerEvents.GET_COMMITMENT_EVENTS, {
@@ -140,6 +196,31 @@ class Provider implements WorkerProvider {
     } catch (err) {
       throw new Error(`Events worker method getNullifierEvent has error: ${err}`)
     }
+  }
+
+  public readonly openNovaChannel = async <P, R>(eventName: string, payload: P, workerIndex = numbers.ZERO) => {
+    return await new Promise<R>((resolve, reject) => {
+      console.log("nova channel - 0", eventName, workerIndex)
+      const novaChannel = new MessageChannel()
+      console.log("nova channel - 1")
+      novaChannel.port1.onmessage = ({ data }) => {
+        console.log("nova channel on message - 0", data)
+        const { result, errorMessage = 'unknown error' } = data
+        console.log("nova channel on message - 1")
+        novaChannel.port1.close()
+        console.log("nova channel on message - 2", result)
+        if (result) {
+          console.log("nova channel on message - 3.1", result)
+          resolve(result)
+          console.log("nova channel on message - 3.2")
+        } else {
+          reject(errorMessage)
+        }
+      }
+      console.log("nova channel - 2")
+      this.novaWorkers[workerIndex].postMessage({ eventName, payload }, [novaChannel.port2])
+      console.log("nova channel - 3")
+    })
   }
 
   public readonly openNullifierChannel = async <R, P>(eventName: string, payload: P, workerIndex = numbers.ZERO) => {

@@ -3,6 +3,7 @@
 import { Keypair, Utxo, createTransactionData, workerProvider } from '@/services'
 import { ChainId } from '@/types'
 import { toWei } from 'web3-utils'
+
 export default function Home() {
   async function deposit() {
     workerProvider.workerSetup(ChainId.XDAI)
@@ -20,14 +21,30 @@ export default function Home() {
   async function genpp() {
     workerProvider.workerSetup(ChainId.XDAI)
     console.log("genpp called")
-    workerProvider.generate_pp()
-    console.log("genpp done")
+    let ppx = await workerProvider.generate_ppx()
+    console.log("genpp done", ppx)
+  }
+
+  async function prove() {
+    workerProvider.workerSetup(ChainId.XDAI)
+    console.log("prove called")
+    await workerProvider.provex()
+    console.log("prove done")
+  }
+
+  async function verify() {
+    workerProvider.workerSetup(ChainId.XDAI)
+    console.log("verify called")
+    await workerProvider.verifyx()
+    console.log("verify done")
   }
 
   return (
     <div>
       <button onClick={deposit}>AJDBHKG</button>
       <button onClick={genpp}>Public Parameters</button>
+      <button onClick={prove}>Prove</button>
+      <button onClick={verify}>Verify</button>
     </div>
   )
 }
