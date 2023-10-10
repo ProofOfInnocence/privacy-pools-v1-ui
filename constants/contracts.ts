@@ -6,7 +6,7 @@ export const POOL_CONTRACT: { [chainId in ChainId]: string } = {
   // [ChainId.XDAI]: '0xD692Fd2D0b2Fbd2e52CFa5B5b9424bC981C30696',
   // [ChainId.BSC]: '',
   // [ChainId.MAINNET]: '',
-  [ChainId.ETHEREUM_GOERLI]: '0x623b1fc5c9a1acd66eed2e4dae04f2b94dcf09ad'
+  [ChainId.ETHEREUM_GOERLI]: '0xA014443bc5181BaEbAe9A31E9018023f4F23604C'
 }
 // export const REDGISTRY_CONTRACT: { [chainId in ChainId]: string } = {
 //   [ChainId.MAINNET]: '0x58E8dCC13BE9780fC42E8723D8EaD4CF46943dF2',
