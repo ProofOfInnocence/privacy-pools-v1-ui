@@ -7,15 +7,17 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useContractWrite, usePrepareContractWrite, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
 import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
-import { encodeTransactData, generatePrivateKeyFromEntropy, toHexString } from '@/utilities'
+import { encodeTransactData, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
 import { TornadoPool__factory } from '@/_contracts'
 import { BaseError, ContractFunctionRevertedError } from 'viem'
 import { UnspentUtxoData } from '@/services/utxoService/@types'
+import { BigNumber } from 'ethers'
+import { ArgsProof, ExtData } from '@/services/core/@types'
 
 async function getUtxoFromKeypair({
   keypair,
   accountAddress,
-  withCache,
+  withCache = false,
 }: {
   keypair: Keypair
   accountAddress: string
@@ -59,7 +61,52 @@ async function getUtxoFromKeypair({
   }
 }
 
+async function prepareWithdrawal({
+  keypair,
+  amount,
+  address,
+  fee = '0',
+}: {
+  keypair: Keypair
+  amount: string
+  address: string
+  fee: string
+}) {
+  try {
+    const etherAmount = BigNumber.from(toWei(amount))
+    const amountWithFee = etherAmount.add(BigNumber.from(fee))
+
+    const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({
+      keypair,
+      accountAddress: address,
+      withCache: true,
+    })
+
+    // if (totalAmount.lt(amountWithFee)) {
+    //   throw new Error(`${errors.validation.INSUFFICIENT_FUNDS} ${fromWei(totalAmount)}`)
+    // }
+
+    const outputs = [new Utxo({ amount: totalAmount.sub(amountWithFee), keypair })]
+
+    const { extData, args } = await createTransactionData(
+      {
+        l1Fee: BigNumber.from(fee),
+        outputs,
+        isL1Withdrawal: true,
+        inputs: unspentUtxo,
+        recipient: toChecksumAddress(address),
+      },
+      keypair
+    )
+
+    return { extData, args }
+  } catch (err) {
+    throw new Error(err.message)
+  }
+}
+
 export default function Home() {
+  const WITHDRAW_ADDRESS = '0x9fCDf8f60d3009656E50Bf805Cd53C7335b284Fb'
   const [error, setError] = useState('')
   const [poolBalance, setPoolBalance] = useState('')
   const [keypair, setKeypair] = useState<Keypair | null>(null)
@@ -120,12 +167,12 @@ export default function Home() {
     const transactionInputOutputs = {
       outputs: [output],
     }
-    const { extData, args, amount } = await createTransactionData(transactionInputOutputs, keypair)
-    console.log(extData, args)
-    console.log(JSON.stringify({ args, extData }))
-    console.log(publicClient.chain)
-    const encoded = encodeTransactData({ args, extData })
-    console.log(encoded)
+    const { extData, args } = await createTransactionData(transactionInputOutputs, keypair)
+
+    await transact({ args, extData })
+  }
+
+  async function transact({ args, extData }: { args: ArgsProof; extData: ExtData }) {
     if (!walletClient) {
       throw new Error('Wallet client is null')
       return
@@ -148,14 +195,6 @@ export default function Home() {
     }
     const hash = await walletClient.writeContract(request)
     console.log(hash)
-  }
-
-  async function tryCatchWrapper(func: () => Promise<any>) {
-    try {
-      await func()
-    } catch (error) {
-      setError(error.message)
-    }
   }
 
   return (
