@@ -7,7 +7,7 @@ import MerkleTree from 'fixed-merkle-tree'
 import axios, { AxiosResponse } from 'axios'
 import { BytesLike } from '@ethersproject/bytes'
 
-import { APP_ENS_NAME, BG_ZERO, FIELD_SIZE, numbers } from '@/constants'
+import { APP_ENS_NAME, BG_ZERO, FIELD_SIZE, numbers, ZERO_LEAF } from '@/constants'
 
 import {
   ArgsProof,
@@ -40,7 +40,7 @@ const poseidonHash2Wrapper = (left: Element, right: Element) => toFixedHex(posei
 
 function buildMerkleTree({ events }: { events: CommitmentEvents }) {
   const leaves = events.sort((a, b) => a.index - b.index).map((e) => toFixedHex(e.commitment))
-  return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper })
+  return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper, zeroElement: ZERO_LEAF.toString() })
 }
 
 async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmount, fee, recipient, relayer }: ProofParams) {
@@ -64,6 +64,8 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
       inputMerklePathElements.push(new Array(numbers.MERKLE_TREE_HEIGHT).fill(numbers.ZERO))
     }
   }
+  console.log(JSON.stringify(inputMerklePathIndices))
+  console.log(JSON.stringify(inputMerklePathElements))
 
   const [output1, output2] = outputs
 
@@ -81,7 +83,7 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
   const extDataHash = getExtDataHash(extData)
 
   const input = {
-    root: typeof tree === 'string' ? tree : tree.root(),
+    root: typeof tree === 'string' ? tree : tree.root,
     inputNullifier: inputs.map((x) => x.getNullifier()),
     outputCommitment: outputs.map((x) => x.getCommitment()),
     publicAmount: BigNumber.from(extAmount).sub(fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString(),
@@ -176,6 +178,16 @@ async function prepareTransaction({
     params.tree = await buildMerkleTree({ events })
   }
 
+  // console.log("NEW EXPERIMENT IS COMING")
+  // const mt = await buildMerkleTree({ events: [] })
+  // console.log("NEW EXPERIMENT IS COMING")
+  // console.log(mt.root)
+  // console.log(mt.insert(ZERO_LEAF.toString()))
+  // console.log(mt.path(0).pathElements)
+
+  // console.log('Builded merkle tree: ', params.tree)
+  // console.log('Builded trees root: ', params.tree.root)
+
   const { extData, args } = await getProof(params)
 
   return {
@@ -266,18 +278,19 @@ async function estimateTransact(payload: EstimateTransactParams) {
 
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair) {
   try {
-    const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)    
+    const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
 
     if (!params.inputs || !params.inputs.length) {
       const root = await tornadoPool.callStatic.getLastRoot()
 
       params.events = []
       params.rootHex = toFixedHex(root)
+      console.log('LAST ROOT = ', params.rootHex)
     } else {
       const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
 
       params.events = await commitmentsService.fetchCommitments(keypair)
-      console.log('Events:', params.events);
+      console.log('Events:', params.events)
     }
 
     const { extData, args, amount } = await prepareTransaction(params)

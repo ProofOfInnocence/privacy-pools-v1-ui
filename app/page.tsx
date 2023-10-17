@@ -13,6 +13,7 @@ import { BaseError, ContractFunctionRevertedError } from 'viem'
 import { UnspentUtxoData } from '@/services/utxoService/@types'
 import { BigNumber } from 'ethers'
 import { ArgsProof, ExtData } from '@/services/core/@types'
+import axios from 'axios'
 
 async function getUtxoFromKeypair({
   keypair,
@@ -65,16 +66,20 @@ async function prepareWithdrawal({
   keypair,
   amount,
   address,
+  relayer,
   fee = '0',
 }: {
   keypair: Keypair
   amount: string
   address: string
+  relayer: string
   fee: string
 }) {
   try {
     const etherAmount = BigNumber.from(toWei(amount))
-    const amountWithFee = etherAmount.add(BigNumber.from(fee))
+    console.log("Ether amount:", etherAmount.toString())
+    const amountWithFee = etherAmount.add(BigNumber.from(toWei(fee)))
+    console.log("Amount with fee:", amountWithFee.toString())
 
     const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({
       keypair,
@@ -82,19 +87,19 @@ async function prepareWithdrawal({
       withCache: true,
     })
 
-    // if (totalAmount.lt(amountWithFee)) {
-    //   throw new Error(`${errors.validation.INSUFFICIENT_FUNDS} ${fromWei(totalAmount)}`)
-    // }
+    if (totalAmount.lt(amountWithFee)) {
+      throw new Error('Insufficient balance')
+    }
 
     const outputs = [new Utxo({ amount: totalAmount.sub(amountWithFee), keypair })]
 
     const { extData, args } = await createTransactionData(
       {
-        l1Fee: BigNumber.from(fee),
         outputs,
-        isL1Withdrawal: true,
-        inputs: unspentUtxo,
+        inputs: unspentUtxo.length > 2 ? unspentUtxo.slice(0, 2) : unspentUtxo,
         recipient: toChecksumAddress(address),
+        relayer: toChecksumAddress(relayer),
+        fee: BigNumber.from(toWei(fee)),
       },
       keypair
     )
@@ -110,6 +115,7 @@ export default function Home() {
   const [error, setError] = useState('')
   const [poolBalance, setPoolBalance] = useState('')
   const [keypair, setKeypair] = useState<Keypair | null>(null)
+  const [relayerURL, setRelayerURL] = useState('http://172.16.20.111:8000')
 
   const { signMessage } = useSignMessage({
     message: SIGN_MESSAGE,
@@ -118,6 +124,7 @@ export default function Home() {
       const keypair = new Keypair(privateKey)
       console.log(keypair.address())
       setKeypair(keypair)
+      workerProvider.workerSetup(ChainId.ETHEREUM_GOERLI)
     },
     onError(error) {
       setError(error.message)
@@ -128,10 +135,6 @@ export default function Home() {
   const publicClient = usePublicClient()
   const { data: walletClient, isError, isLoading } = useWalletClient()
 
-  // useEffect(() => {
-
-  // }, [])
-
   useEffect(() => {
     if (!keypair && connector != null) {
       console.log('Sign message')
@@ -140,7 +143,6 @@ export default function Home() {
   }, [connector])
 
   async function getBalance() {
-    workerProvider.workerSetup(ChainId.ETHEREUM_GOERLI)
     if (!keypair) {
       throw new Error('Keypair is null')
       return
@@ -156,8 +158,29 @@ export default function Home() {
     setPoolBalance(totalAmount.toString())
   }
 
+  async function sendToRelayer({ extData, args }: { extData: ExtData; args: ArgsProof }) {
+    // axios.post(`${relayerURL}/status`);
+    const { data } = await axios.get(`${relayerURL}/status`)
+    console.log(data)
+    //     "curl -X POST -H 'content-type:application/json' --data '" +
+    // JSON.stringify(txData) +
+    // "' http://127.0.0.1:8000/transaction"
+    const headers = {
+      'Content-Type': 'application/json',
+    }
+
+    const { data: res } = await axios.post(
+      `${relayerURL}/transaction`,
+      {
+        args,
+        extData,
+      },
+      { headers }
+    )
+    console.log(res)
+  }
+
   async function deposit() {
-    workerProvider.workerSetup(ChainId.ETHEREUM_GOERLI)
     if (!keypair) {
       throw new Error('Keypair is null')
       return
@@ -166,10 +189,45 @@ export default function Home() {
     // const input = new Utxo({ amount: toWei('0.1'), keypair })
     const transactionInputOutputs = {
       outputs: [output],
+      relayer: '0x0f820f428AE436C1000b27577bF5bbf09BfeC8f2',
+      fee: BigNumber.from('10000000000'),
+      isL1Withdrawal: false,
+      l1Fee: BigNumber.from('0'),
     }
     const { extData, args } = await createTransactionData(transactionInputOutputs, keypair)
 
+    // await sendToRelayer({ extData, args })
     await transact({ args, extData })
+  }
+
+  async function withdraw() {
+    if (!keypair) {
+      throw new Error('Keypair is null')
+      return
+    }
+    if (!address) {
+      throw new Error('Address is null')
+      return
+    }
+    const amount = toWei('0.0001')
+    const fee = toWei('0.0001')
+    // const relayerFee = 
+    const { data } = await axios.get(`${relayerURL}/status`) // data = 
+
+
+
+
+    const { extData, args } = await prepareWithdrawal({
+      keypair,
+      amount: '0.0001',
+      address: WITHDRAW_ADDRESS,
+      fee: '0.00001',
+      relayer: toChecksumAddress(data.rewardAddress),
+    })
+
+    await sendToRelayer({ extData, args })
+
+    // await transact({ args, extData })
   }
 
   async function transact({ args, extData }: { args: ArgsProof; extData: ExtData }) {
@@ -201,6 +259,7 @@ export default function Home() {
     <div>
       <button onClick={deposit}>AJDBHKG</button>
       <button onClick={getBalance}>Get balance</button>
+      <button onClick={withdraw}>Withdraw</button>
       <h1>Pool Balance: {poolBalance}</h1>
       <ConnectButton />
       {error && <div>{error}</div>}
