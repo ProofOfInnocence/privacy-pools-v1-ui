@@ -64,8 +64,13 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
       inputMerklePathElements.push(new Array(numbers.MERKLE_TREE_HEIGHT).fill(numbers.ZERO))
     }
   }
-  console.log(JSON.stringify(inputMerklePathIndices))
-  console.log(JSON.stringify(inputMerklePathElements))
+  // console.log(JSON.stringify(inputMerklePathIndices))
+  // console.log(JSON.stringify(inputMerklePathElements))
+  console.log('MERKLE TREE STATS:::::::::::::')
+  console.log(tree.root)
+  console.log(tree.elements)
+  console.log(tree.zeros)
+  console.log(tree.layers)
 
   const [output1, output2] = outputs
 

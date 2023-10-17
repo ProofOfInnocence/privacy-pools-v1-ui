@@ -312,8 +312,9 @@ const getCashedEvents = async ({ storeName, publicKey, privateKey }, [port]) => 
 const getCashedCommitmentEvents = async ({ storeName, publicKey, privateKey }, [port]) => {
   try {
     const isIdbEnable = await getIsDBEnabled()
+    console.log("isIdbEnable", isIdbEnable)
 
-    if (!isIdbEnable) {
+    if (isIdbEnable) {
       const cachedEvents = await self.$indexedDB.getAll({ storeName })
 
       const commitments = cachedEvents.reduce((acc, curr) => {

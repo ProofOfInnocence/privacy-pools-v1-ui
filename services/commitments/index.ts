@@ -104,7 +104,7 @@ class Service implements CommitmentsService {
           storeName: 'commitment_events_100',
         }
       )
-      console.log(cachedEvents)
+      console.log("Cached Eventes ===== ", cachedEvents)
 
       if (cachedEvents?.lastSyncBlock && cachedEvents?.commitments?.length) {
         const newBlockFrom = Number(cachedEvents.lastSyncBlock) + numbers.ONE
