@@ -8,6 +8,7 @@ import {
 
 import {
   TornadoPool__factory as TornadoPoolFactory,
+  WETH__factory as WETHFactory
 } from '@/_contracts'
 
 export function getTornadoPool(chainId: ChainId) {
@@ -20,10 +21,10 @@ export function getTornadoPool(chainId: ChainId) {
 //   return BscBridgeHelper.connect(BRIDGE_HELPER[chainId], provider)
 // }
 
-// export function getWrappedToken(chainId: L2ChainId) {
-//   const { provider } = getProvider(chainId)
-//   return WBNBXdai.connect(WRAPPED_TOKEN[chainId], provider)
-// }
+export function getWrappedToken(chainId: ChainId) {
+  const { provider } = getProvider(chainId)
+  return WETHFactory.connect(WRAPPED_TOKEN[chainId], provider)
+}
 
 // export function getBridgeProxy(chainId: L1ChainId) {
 //   const { provider } = getProvider(chainId)

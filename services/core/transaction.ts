@@ -44,8 +44,8 @@ function buildMerkleTree({ events }: { events: CommitmentEvents }) {
 }
 
 async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmount, fee, recipient, relayer }: ProofParams) {
-  inputs = shuffle(inputs)
-  outputs = shuffle(outputs)
+  // inputs = shuffle(inputs)
+  // outputs = shuffle(outputs)
 
   const inputMerklePathIndices = []
   const inputMerklePathElements = []
@@ -151,10 +151,10 @@ async function prepareTransaction({
   recipient = BG_ZERO,
   isL1Withdrawal = true,
 }: PrepareTxParams) {
-  if (inputs.length > numbers.INPUT_LENGTH_16 || outputs.length > numbers.INPUT_LENGTH_2) {
+  if (inputs.length > numbers.INPUT_LENGTH_2 || outputs.length > numbers.INPUT_LENGTH_2) {
     throw new Error('Incorrect inputs/outputs count')
   }
-  while (inputs.length !== numbers.INPUT_LENGTH_2 && inputs.length < numbers.INPUT_LENGTH_16) {
+  while (inputs.length < numbers.INPUT_LENGTH_2) {
     inputs.push(new Utxo())
   }
   while (outputs.length < numbers.INPUT_LENGTH_2) {
@@ -283,20 +283,20 @@ async function estimateTransact(payload: EstimateTransactParams) {
 
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair) {
   try {
-    const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
+    // const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
 
-    if (!params.inputs || !params.inputs.length) {
-      const root = await tornadoPool.callStatic.getLastRoot()
+    // if (!params.inputs || !params.inputs.length) {
+    //   const root = await tornadoPool.callStatic.getLastRoot()
 
-      params.events = []
-      params.rootHex = toFixedHex(root)
-      console.log('LAST ROOT = ', params.rootHex)
-    } else {
-      const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
+    //   params.events = []
+    //   params.rootHex = toFixedHex(root)
+    //   console.log('LAST ROOT = ', params.rootHex)
+    // } else {
+    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
 
-      params.events = await commitmentsService.fetchCommitments(keypair)
-      console.log('Events:', params.events)
-    }
+    params.events = await commitmentsService.fetchCommitments(keypair)
+    // console.log('Events:', params.events)
+    // }
 
     const { extData, args, amount } = await prepareTransaction(params)
 

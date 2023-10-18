@@ -8,7 +8,7 @@ import { useAccount, useContractWrite, usePrepareContractWrite, usePublicClient,
 import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
 import { encodeTransactData, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { TornadoPool__factory } from '@/_contracts'
+import { TornadoPool__factory, WETH__factory } from '@/_contracts'
 import { BaseError, ContractFunctionRevertedError } from 'viem'
 import { UnspentUtxoData } from '@/services/utxoService/@types'
 import { BigNumber } from 'ethers'
@@ -18,6 +18,8 @@ import DepositComponent from '@/components/Deposit'
 import WithdrawComponent from '@/components/Withdraw'
 import Logo from '@/components/Logo'
 import { RelayerInfo } from '@/types'
+import Balance from '@/components/Balance'
+import { getWrappedToken } from '@/contracts'
 
 async function getUtxoFromKeypair({
   keypair,
@@ -66,7 +68,7 @@ async function getUtxoFromKeypair({
   }
 }
 
-async function prepareWithdrawal({
+async function prepareTransaction({
   keypair,
   amount,
   address,
@@ -81,7 +83,6 @@ async function prepareWithdrawal({
 }) {
   try {
     const etherAmount = BigNumber.from(toWei(amount))
-    console.log('Ether amount:', etherAmount.toString())
     const amountWithFee = etherAmount.add(BigNumber.from(toWei(fee)))
     console.log('Amount with fee:', amountWithFee.toString())
 
@@ -90,6 +91,7 @@ async function prepareWithdrawal({
       accountAddress: address,
       withCache: true,
     })
+    console.log('Total amount:', totalAmount.toString())
 
     if (totalAmount.lt(amountWithFee)) {
       throw new Error('Insufficient balance')
@@ -122,10 +124,10 @@ const relayers: RelayerInfo[] = [
 export default function Home() {
   const WITHDRAW_ADDRESS = '0x9fCDf8f60d3009656E50Bf805Cd53C7335b284Fb'
   const [error, setError] = useState('')
-  const [poolBalance, setPoolBalance] = useState('')
+  const [poolBalance, setPoolBalance] = useState(0)
   const [keypair, setKeypair] = useState<Keypair | null>(null)
   const [relayerURL, setRelayerURL] = useState('http://172.16.20.111:8000')
-  const [activeTab, setActiveTab] = useState('deposit');
+  const [activeTab, setActiveTab] = useState('deposit')
 
   const { signMessage } = useSignMessage({
     message: SIGN_MESSAGE,
@@ -133,8 +135,8 @@ export default function Home() {
       const privateKey = generatePrivateKeyFromEntropy(data)
       const keypair = new Keypair(privateKey)
       console.log(keypair.address())
-      setKeypair(keypair)
       workerProvider.workerSetup(ChainId.ETHEREUM_GOERLI)
+      initKeypair(keypair)
     },
     onError(error) {
       setError(error.message)
@@ -148,25 +150,22 @@ export default function Home() {
   useEffect(() => {
     if (!keypair && connector != null) {
       console.log('Sign message')
-      // signMessage()
-      setKeypair(new Keypair())
+      signMessage()
     }
   }, [connector])
 
-  async function getBalance() {
-    if (!keypair) {
-      throw new Error('Keypair is null')
-      return
-    }
+  async function initKeypair(keypair: Keypair) {
+    setKeypair(keypair)
     if (!address) {
       throw new Error('Address is null')
       return
     }
+    console.log(keypair)
 
     const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
     console.log(unspentUtxo)
     console.log(totalAmount)
-    setPoolBalance(totalAmount.toString())
+    setPoolBalance(totalAmount)
   }
 
   async function sendToRelayer(relayerURL: string, { extData, args }: { extData: ExtData; args: ArgsProof }) {
@@ -185,11 +184,109 @@ export default function Home() {
     console.log(res)
   }
 
+  async function handleAllowance(amount: string) {
+    const weth = getWrappedToken(ChainId.ETHEREUM_GOERLI)
+    if (!address) {
+      throw new Error('Address is null')
+      return
+    }
+    // get wrapped amount
+    const wrappedAmount = await weth.balanceOf(address)
+    console.log('Wrapped amount', wrappedAmount.toString())
+    if (wrappedAmount.lt(toWei(amount))) {
+      // mint
+      console.log('Mint')
+      // // weth.deposit
+      // const { request } = await publicClient.simulateContract({
+      //   address: toHexString(weth.address),
+      //   abi: WETH__factory.abi,
+      //   functionName: 'deposit',
+      //   args: [toWei(amount)],
+      //   account: address,
+      // })
+      const rem = BigNumber.from(toWei(amount)).sub(wrappedAmount)
+      // const { request } = await publicClient.simulateContract({
+      //   address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI]),
+      //   abi: TornadoPool__factory.abi,
+      //   functionName: 'transact',
+      //   args: [args, extData],
+      //   account: address,
+      // })
+      // console.log('Request', request)
+      // if (!walletClient) {
+      //   throw new Error('Wallet client is null')
+      //   return
+      // }
+      // const hash = await walletClient.writeContract(request)
+
+      // const res = await weth.deposit({ value: rem })
+
+      const { request } = await publicClient.simulateContract({
+        address: toHexString(weth.address),
+        abi: WETH__factory.abi,
+        functionName: 'deposit',
+        args: [],
+        account: address,
+        value: rem.toBigInt(),
+      })
+      console.log('Request', request)
+      if (!walletClient) {
+        throw new Error('Wallet client is null')
+        return
+      }
+      const hash = await walletClient.writeContract(request)
+      console.log(hash)
+    }
+    const curAllowance = await weth.allowance(address, POOL_CONTRACT[ChainId.ETHEREUM_GOERLI])
+    console.log('Current allowance', curAllowance.toString())
+    if (curAllowance.lt(toWei(amount))) {
+      console.log('Approve')
+      // const res = await weth.approve(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI], toWei(amount))
+      const { request } = await publicClient.simulateContract({
+        address: toHexString(weth.address),
+        abi: WETH__factory.abi,
+        functionName: 'approve',
+        args: [POOL_CONTRACT[ChainId.ETHEREUM_GOERLI], toWei(amount)],
+        account: address,
+      })
+      console.log('Request', request)
+      if (!walletClient) {
+        throw new Error('Wallet client is null')
+        return
+      }
+      const hash = await walletClient.writeContract(request)
+      console.log(hash)
+    }
+    // wait until allowance and balance is enough
+    async function isAllowanceEnough() {
+      if (!address) {
+        throw new Error('Address is null')
+      }
+      const allowance = await weth.allowance(address, POOL_CONTRACT[ChainId.ETHEREUM_GOERLI])
+      console.log('Allowance', allowance.toString())
+      if (allowance.lt(toWei(amount))) {
+        return false
+      }
+      const balance = await weth.balanceOf(address)
+      console.log('Balance', balance.toString())
+      if (balance.lt(toWei(amount))) {
+        return false
+      }
+      return true
+    }
+    // wait
+    while (!(await isAllowanceEnough())) {
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+    }
+    // const allowance = await weth.allowance(address, POOL_CONTRACT[ChainId.ETHEREUM_GOERLI])
+  }
+
   async function deposit(amount: string) {
     if (!keypair) {
       throw new Error('Keypair is null')
       return
     }
+    await handleAllowance(amount)
     const output = new Utxo({ amount: toWei(amount), keypair })
     // const input = new Utxo({ amount: toWei('0.1'), keypair })
     const transactionInputOutputs = {
@@ -247,36 +344,44 @@ export default function Home() {
 
   return (
     <div className="h-screen bg-gray-100">
-    {/* Header */}
-    <header className="bg-white p-4 shadow-md flex justify-between items-center">
-      <Logo />
-      <ConnectButton /> {/* I'm not defining this as per your instructions. */}
-    </header>
+      {/* Header */}
+      <header className="bg-white p-4 shadow-md flex justify-between items-center">
+        <Logo />
 
-    {/* Main content */}
-    <div className="flex justify-center items-center h-full">
-      <div className="bg-white rounded-lg shadow-md p-4 w-64">
-        {/* Tabs */}
-        <div className="mb-4 flex border-b">
-          <button 
-            onClick={() => setActiveTab('deposit')}
-            className={`py-2 px-4 ${activeTab === 'deposit' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
-          >
-            Deposit
-          </button>
-          <button 
-            onClick={() => setActiveTab('withdraw')}
-            className={`py-2 px-4 ${activeTab === 'withdraw' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
-          >
-            Withdraw
-          </button>
+        <div className="flex items-center space-x-4">
+          <Balance shieldedBalance={poolBalance} /> {/* Replace 123.45 with dynamic value if needed */}
+          <ConnectButton />
         </div>
+      </header>
 
-        {/* Tab content */}
-        {activeTab === 'deposit' ? <DepositComponent  deposit={deposit} balance={0.0001}/> : <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />}
+      {/* Main content */}
+      <div className="flex justify-center pt-8">
+        <div className="bg-white rounded-lg shadow-md p-0 w-96">
+          {/* Tabs */}
+          <div className="mb-4 flex border-b">
+            <button
+              onClick={() => setActiveTab('deposit')}
+              className={`py-2 px-4 ${activeTab === 'deposit' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
+            >
+              Deposit
+            </button>
+            <button
+              onClick={() => setActiveTab('withdraw')}
+              className={`py-2 px-4 ${activeTab === 'withdraw' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
+            >
+              Withdraw
+            </button>
+          </div>
+
+          {/* Tab content */}
+          {activeTab === 'deposit' ? (
+            <DepositComponent deposit={deposit} balance={0.0001} />
+          ) : (
+            <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />
+          )}
+        </div>
       </div>
     </div>
-  </div>
 
     // <div>
     //   {/* <button onClick={()=>{deposit("0.000031")}}>AJDBHKG</button> */}
