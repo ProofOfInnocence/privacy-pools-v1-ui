@@ -59,6 +59,7 @@ const MAX_REDUCE_LENGTH = 160
 const BG_ZERO = BigNumber.from(numbers.ZERO)
 
 const FIELD_SIZE = BigNumber.from('21888242871839275222246405745257275088548364400416034343698204186575808495617')
+const ZERO_LEAF = BigNumber.from('21663839004416932945382355908790599225266501822907911457504978515578255421292')
 
 const operationGasLimits: { [key in string]: number } = {
   // 291019 - estimate gas
@@ -75,9 +76,10 @@ const SESSION_STORAGE_KEY = 'tornado_key'
 const SIGN_MESSAGE = `Sign this message to generate your TornadoCash Nova Privacy Key. This key lets the application decrypt your balance in TornadoCash Nova.\n\nIMPORTANT: Only sign this message if you trust the application.`
 
 const REGISTRY_DEPLOYED_BLOCK: Record<ChainId, number> = {
-  [ChainId.MAINNET]: 14173129,
-  [ChainId.BSC]: 0,
-  [ChainId.XDAI]: 0
+  // [ChainId.MAINNET]: 14173129,
+  // [ChainId.BSC]: 0,
+  // [ChainId.XDAI]: 0,
+  [ChainId.ETHEREUM_GOERLI]: 9818192
 }
 
 const registerGuideUrl = 'https://hackmd.io/@yfVgphY1TiKixVMVfVLAlw/B1Bp3p4UF'
@@ -101,4 +103,5 @@ export {
   SESSION_STORAGE_KEY,
   REGISTRY_DEPLOYED_BLOCK,
   L1_WITHDRAW_GAS_LIMIT,
+  ZERO_LEAF
 }

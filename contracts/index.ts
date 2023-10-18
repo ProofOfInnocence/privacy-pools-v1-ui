@@ -1,31 +1,17 @@
-import { ChainId, L1ChainId, L2ChainId } from '@/types'
+import { ChainId } from '@/types'
 import { getProvider } from '@/services'
 import {
   WRAPPED_TOKEN,
-  MULTICALL,
   POOL_CONTRACT,
   OFFCHAIN_ORACLE_CONTRACT,
-  REDGISTRY_CONTRACT,
-  AGGREGATOR_FACTORY,
 } from '@/constants'
 
 import {
-  WbnbXdai__factory as WBNBXdai,
-  BridgeBNB__factory as BridgeBNB,
-  AmbBridge__factory as AmbBridge,
-  FeeManager__factory as FeeManager,
-  Multicall__factory as MulticallFactory,
-  Aggregator__factory as AggregatorFactory,
-  Omnibridge__factory as OmnibridgeFactory,
   TornadoPool__factory as TornadoPoolFactory,
-  BscBridgeHelper__factory as BscBridgeHelper,
-  SanctionsList__factory as SanctionsListFactory,
-  OffchainOracle__factory as OffchainOracleFactory,
-  RelayerRegistry__factory as RelayerRegistryFactory,
-  ForeignOmnibridge__factory as ForeignOmnibridgeFactory,
+  WETH__factory as WETHFactory
 } from '@/_contracts'
 
-export function getTornadoPool(chainId: L2ChainId) {
+export function getTornadoPool(chainId: ChainId) {
   const { provider } = getProvider(chainId)
   return TornadoPoolFactory.connect(POOL_CONTRACT[chainId], provider)
 }
@@ -35,10 +21,10 @@ export function getTornadoPool(chainId: L2ChainId) {
 //   return BscBridgeHelper.connect(BRIDGE_HELPER[chainId], provider)
 // }
 
-// export function getWrappedToken(chainId: L2ChainId) {
-//   const { provider } = getProvider(chainId)
-//   return WBNBXdai.connect(WRAPPED_TOKEN[chainId], provider)
-// }
+export function getWrappedToken(chainId: ChainId) {
+  const { provider } = getProvider(chainId)
+  return WETHFactory.connect(WRAPPED_TOKEN[chainId], provider)
+}
 
 // export function getBridgeProxy(chainId: L1ChainId) {
 //   const { provider } = getProvider(chainId)

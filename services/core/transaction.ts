@@ -7,7 +7,7 @@ import MerkleTree from 'fixed-merkle-tree'
 import axios, { AxiosResponse } from 'axios'
 import { BytesLike } from '@ethersproject/bytes'
 
-import { APP_ENS_NAME, BG_ZERO, FIELD_SIZE, numbers } from '@/constants'
+import { APP_ENS_NAME, BG_ZERO, FIELD_SIZE, numbers, ZERO_LEAF } from '@/constants'
 
 import {
   ArgsProof,
@@ -40,12 +40,12 @@ const poseidonHash2Wrapper = (left: Element, right: Element) => toFixedHex(posei
 
 function buildMerkleTree({ events }: { events: CommitmentEvents }) {
   const leaves = events.sort((a, b) => a.index - b.index).map((e) => toFixedHex(e.commitment))
-  return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper })
+  return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper, zeroElement: ZERO_LEAF.toString() })
 }
 
 async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmount, fee, recipient, relayer }: ProofParams) {
-  inputs = shuffle(inputs)
-  outputs = shuffle(outputs)
+  // inputs = shuffle(inputs)
+  // outputs = shuffle(outputs)
 
   const inputMerklePathIndices = []
   const inputMerklePathElements = []
@@ -64,6 +64,13 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
       inputMerklePathElements.push(new Array(numbers.MERKLE_TREE_HEIGHT).fill(numbers.ZERO))
     }
   }
+  // console.log(JSON.stringify(inputMerklePathIndices))
+  // console.log(JSON.stringify(inputMerklePathElements))
+  console.log('MERKLE TREE STATS:::::::::::::')
+  console.log(tree.root)
+  console.log(tree.elements)
+  console.log(tree.zeros)
+  console.log(tree.layers)
 
   const [output1, output2] = outputs
 
@@ -81,7 +88,7 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
   const extDataHash = getExtDataHash(extData)
 
   const input = {
-    root: typeof tree === 'string' ? tree : tree.root(),
+    root: typeof tree === 'string' ? tree : tree.root,
     inputNullifier: inputs.map((x) => x.getNullifier()),
     outputCommitment: outputs.map((x) => x.getCommitment()),
     publicAmount: BigNumber.from(extAmount).sub(fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString(),
@@ -144,10 +151,10 @@ async function prepareTransaction({
   recipient = BG_ZERO,
   isL1Withdrawal = true,
 }: PrepareTxParams) {
-  if (inputs.length > numbers.INPUT_LENGTH_16 || outputs.length > numbers.INPUT_LENGTH_2) {
+  if (inputs.length > numbers.INPUT_LENGTH_2 || outputs.length > numbers.INPUT_LENGTH_2) {
     throw new Error('Incorrect inputs/outputs count')
   }
-  while (inputs.length !== numbers.INPUT_LENGTH_2 && inputs.length < numbers.INPUT_LENGTH_16) {
+  while (inputs.length < numbers.INPUT_LENGTH_2) {
     inputs.push(new Utxo())
   }
   while (outputs.length < numbers.INPUT_LENGTH_2) {
@@ -176,6 +183,16 @@ async function prepareTransaction({
     params.tree = await buildMerkleTree({ events })
   }
 
+  // console.log("NEW EXPERIMENT IS COMING")
+  // const mt = await buildMerkleTree({ events: [] })
+  // console.log("NEW EXPERIMENT IS COMING")
+  // console.log(mt.root)
+  // console.log(mt.insert(ZERO_LEAF.toString()))
+  // console.log(mt.path(0).pathElements)
+
+  // console.log('Builded merkle tree: ', params.tree)
+  // console.log('Builded trees root: ', params.tree.root)
+
   const { extData, args } = await getProof(params)
 
   return {
@@ -185,19 +202,19 @@ async function prepareTransaction({
   }
 }
 
-async function getIPFSIdFromENS(ensName: string) {
-  const { provider } = getProvider(ChainId.MAINNET)
-  const resolver = await provider.getResolver(ensName)
-  if (!resolver) {
-    console.error(`Cannot fetch ENS resolver for ${ensName}`)
-    return ''
-  }
+// async function getIPFSIdFromENS(ensName: string) {
+//   const { provider } = getProvider(ChainId.MAINNET)
+//   const resolver = await provider.getResolver(ensName)
+//   if (!resolver) {
+//     console.error(`Cannot fetch ENS resolver for ${ensName}`)
+//     return ''
+//   }
 
-  const cHash = await resolver.getContentHash()
-  const [, id] = cHash.split('://')
+//   const cHash = await resolver.getContentHash()
+//   const [, id] = cHash.split('://')
 
-  return id
-}
+//   return id
+// }
 
 async function fetchFile<T>({ url, name, id, retryAttempt = numbers.ZERO }: FetchFileParams): Promise<AxiosResponse<T>> {
   try {
@@ -211,7 +228,8 @@ async function fetchFile<T>({ url, name, id, retryAttempt = numbers.ZERO }: Fetc
     return response
   } catch (err) {
     if (!id) {
-      id = await getIPFSIdFromENS(APP_ENS_NAME)
+      // id = await getIPFSIdFromENS(APP_ENS_NAME)
+      throw new Error('id is not defined, Cannot fetch proving keys, please check your internet connection or try to use VPN.')
     }
 
     const knownResources = [url, `https://ipfs.io/ipfs/${id}`, `https://dweb.link/ipfs/${id}`, `https://gateway.pinata.cloud/ipfs/${id}`]
@@ -248,7 +266,7 @@ async function download({ prefix, name, contentType }: DownloadParams) {
 
 async function estimateTransact(payload: EstimateTransactParams) {
   try {
-    const tornadoPool = getTornadoPool(ChainId.XDAI)
+    const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
 
     const gas = await tornadoPool.estimateGas.transact(payload.args, payload.extData, {
       from: tornadoPool.address,
@@ -265,23 +283,24 @@ async function estimateTransact(payload: EstimateTransactParams) {
 
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair) {
   try {
-    const tornadoPool = getTornadoPool(ChainId.XDAI)
+    // const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
 
-    if (!params.inputs || !params.inputs.length) {
-      const root = await tornadoPool.callStatic.getLastRoot()
+    // if (!params.inputs || !params.inputs.length) {
+    //   const root = await tornadoPool.callStatic.getLastRoot()
 
-      params.events = []
-      params.rootHex = toFixedHex(root)
-    } else {
-      const commitmentsService = commitmentsFactory.getService(ChainId.XDAI)
+    //   params.events = []
+    //   params.rootHex = toFixedHex(root)
+    //   console.log('LAST ROOT = ', params.rootHex)
+    // } else {
+    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
 
-      params.events = await commitmentsService.fetchCommitments(keypair)
-      console.log('Events:', params.events);
-    }
+    params.events = await commitmentsService.fetchCommitments(keypair)
+    // console.log('Events:', params.events)
+    // }
 
     const { extData, args, amount } = await prepareTransaction(params)
 
-    await estimateTransact({ extData, args })
+    // await estimateTransact({ extData, args })
 
     return { extData, args, amount }
   } catch (err) {
