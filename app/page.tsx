@@ -5,7 +5,7 @@ import { ChainId } from '@/types'
 import { toWei } from 'web3-utils'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useContractWrite, usePrepareContractWrite, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
-import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
+import { BG_ZERO, POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
 import { encodeTransactData, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
 import { TornadoPool__factory, WETH__factory } from '@/_contracts'
@@ -72,18 +72,20 @@ async function prepareTransaction({
   keypair,
   amount,
   address,
-  relayer,
-  fee = '0',
+  fee = BG_ZERO,
+  relayer = BG_ZERO,
+  recipient = BG_ZERO,
 }: {
   keypair: Keypair
-  amount: string
+  amount: BigNumber
   address: string
-  relayer: string
-  fee: string
+  fee?: BigNumber
+  relayer?: string | BigNumber
+  recipient?: string | BigNumber
 }) {
   try {
-    const etherAmount = BigNumber.from(toWei(amount))
-    const amountWithFee = etherAmount.add(BigNumber.from(toWei(fee)))
+    // const etherAmount = BigNumber.from(toWei(amount))
+    const amountWithFee = amount.add(fee)
     console.log('Amount with fee:', amountWithFee.toString())
 
     const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({
@@ -97,15 +99,18 @@ async function prepareTransaction({
       throw new Error('Insufficient balance')
     }
 
+    if (unspentUtxo.length > 2) {
+      throw new Error('Too many inputs')
+    }
     const outputs = [new Utxo({ amount: totalAmount.sub(amountWithFee), keypair })]
 
     const { extData, args } = await createTransactionData(
       {
         outputs,
         inputs: unspentUtxo.length > 2 ? unspentUtxo.slice(0, 2) : unspentUtxo,
-        recipient: toChecksumAddress(address),
-        relayer: toChecksumAddress(relayer),
-        fee: BigNumber.from(toWei(fee)),
+        recipient: recipient ? toChecksumAddress(recipient) : undefined,
+        relayer: relayer ? toChecksumAddress(relayer) : undefined,
+        fee: fee,
       },
       keypair
     )
@@ -122,11 +127,9 @@ const relayers: RelayerInfo[] = [
 ]
 
 export default function Home() {
-  const WITHDRAW_ADDRESS = '0x9fCDf8f60d3009656E50Bf805Cd53C7335b284Fb'
   const [error, setError] = useState('')
   const [poolBalance, setPoolBalance] = useState(0)
   const [keypair, setKeypair] = useState<Keypair | null>(null)
-  const [relayerURL, setRelayerURL] = useState('http://172.16.20.111:8000')
   const [activeTab, setActiveTab] = useState('deposit')
 
   const { signMessage } = useSignMessage({
@@ -194,33 +197,7 @@ export default function Home() {
     const wrappedAmount = await weth.balanceOf(address)
     console.log('Wrapped amount', wrappedAmount.toString())
     if (wrappedAmount.lt(toWei(amount))) {
-      // mint
-      console.log('Mint')
-      // // weth.deposit
-      // const { request } = await publicClient.simulateContract({
-      //   address: toHexString(weth.address),
-      //   abi: WETH__factory.abi,
-      //   functionName: 'deposit',
-      //   args: [toWei(amount)],
-      //   account: address,
-      // })
       const rem = BigNumber.from(toWei(amount)).sub(wrappedAmount)
-      // const { request } = await publicClient.simulateContract({
-      //   address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI]),
-      //   abi: TornadoPool__factory.abi,
-      //   functionName: 'transact',
-      //   args: [args, extData],
-      //   account: address,
-      // })
-      // console.log('Request', request)
-      // if (!walletClient) {
-      //   throw new Error('Wallet client is null')
-      //   return
-      // }
-      // const hash = await walletClient.writeContract(request)
-
-      // const res = await weth.deposit({ value: rem })
-
       const { request } = await publicClient.simulateContract({
         address: toHexString(weth.address),
         abi: WETH__factory.abi,
@@ -287,12 +264,21 @@ export default function Home() {
       return
     }
     await handleAllowance(amount)
-    const output = new Utxo({ amount: toWei(amount), keypair })
-    // const input = new Utxo({ amount: toWei('0.1'), keypair })
-    const transactionInputOutputs = {
-      outputs: [output],
+    if (!address) {
+      throw new Error('Address is null')
+      return
     }
-    const { extData, args } = await createTransactionData(transactionInputOutputs, keypair)
+    const { extData, args } = await prepareTransaction({
+      keypair,
+      amount: BigNumber.from(toWei(amount)),
+      address: address,
+    })
+    // const output = new Utxo({ amount: toWei(amount), keypair })
+    // // const input = new Utxo({ amount: toWei('0.1'), keypair })
+    // const transactionInputOutputs = {
+    //   outputs: [output],
+    // }
+    // const { extData, args } = await createTransactionData(transactionInputOutputs, keypair)
 
     // await sendToRelayer({ extData, args })
     await transact({ args, extData })
@@ -306,12 +292,16 @@ export default function Home() {
     if (!address) {
       throw new Error('Address is null')
     }
-    const { extData, args } = await prepareWithdrawal({
+    const totalAmount = BigNumber.from(toWei(amount))
+    // substraction fee
+    // const amountWithFee = totalAmount.sub(relayer.fee)
+    const { extData, args } = await prepareTransaction({
       keypair,
-      amount,
-      address: toChecksumAddress(recipient),
-      fee: relayer.fee.toString(),
+      amount: totalAmount,
+      address: toChecksumAddress(address),
+      fee: BG_ZERO,
       relayer: toChecksumAddress(relayer.rewardAddress),
+      recipient: toChecksumAddress(recipient),
     })
 
     await sendToRelayer(relayer.rewardAddress, { extData, args })
@@ -382,16 +372,5 @@ export default function Home() {
         </div>
       </div>
     </div>
-
-    // <div>
-    //   {/* <button onClick={()=>{deposit("0.000031")}}>AJDBHKG</button> */}
-    //   <DepositComponent deposit={deposit} balance={0.0001} />
-    //   <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />
-    //   <button onClick={getBalance}>Get balance</button>
-    //   {/* <button onClick={withdraw}>Withdraw</button> */}
-    //   <h1>Pool Balance: {poolBalance}</h1>
-    //   <ConnectButton />
-    //   {error && <div>{error}</div>}
-    // </div>
   )
 }
