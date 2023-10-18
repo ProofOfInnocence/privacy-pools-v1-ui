@@ -4,6 +4,8 @@ import Script from 'next/script'
 
 import '@rainbow-me/rainbowkit/styles.css'
 import { Providers } from './providers'
+import './globals.css'
+
 
 const inter = Inter({ subsets: ['latin'] })
 

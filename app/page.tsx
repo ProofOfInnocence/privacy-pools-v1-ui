@@ -14,6 +14,10 @@ import { UnspentUtxoData } from '@/services/utxoService/@types'
 import { BigNumber } from 'ethers'
 import { ArgsProof, ExtData } from '@/services/core/@types'
 import axios from 'axios'
+import DepositComponent from '@/components/Deposit'
+import WithdrawComponent from '@/components/Withdraw'
+import Logo from '@/components/Logo'
+import { RelayerInfo } from '@/types'
 
 async function getUtxoFromKeypair({
   keypair,
@@ -77,9 +81,9 @@ async function prepareWithdrawal({
 }) {
   try {
     const etherAmount = BigNumber.from(toWei(amount))
-    console.log("Ether amount:", etherAmount.toString())
+    console.log('Ether amount:', etherAmount.toString())
     const amountWithFee = etherAmount.add(BigNumber.from(toWei(fee)))
-    console.log("Amount with fee:", amountWithFee.toString())
+    console.log('Amount with fee:', amountWithFee.toString())
 
     const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({
       keypair,
@@ -109,6 +113,11 @@ async function prepareWithdrawal({
     throw new Error(err.message)
   }
 }
+const relayers: RelayerInfo[] = [
+  { name: 'Relayer1', api: 'http://172.16.20.111:8000', fee: 0.05, rewardAddress: '0x9fCDf8f60d3009656E50Bf805Cd53C7335b284Fb' },
+  { name: 'Relayer2', api: 'http://api2.com', fee: 15, rewardAddress: '0x9fCDf8f60d3009656E50Bf805Cd53C7335b284Fb' },
+  // ... other relayers
+]
 
 export default function Home() {
   const WITHDRAW_ADDRESS = '0x9fCDf8f60d3009656E50Bf805Cd53C7335b284Fb'
@@ -116,6 +125,7 @@ export default function Home() {
   const [poolBalance, setPoolBalance] = useState('')
   const [keypair, setKeypair] = useState<Keypair | null>(null)
   const [relayerURL, setRelayerURL] = useState('http://172.16.20.111:8000')
+  const [activeTab, setActiveTab] = useState('deposit');
 
   const { signMessage } = useSignMessage({
     message: SIGN_MESSAGE,
@@ -138,7 +148,8 @@ export default function Home() {
   useEffect(() => {
     if (!keypair && connector != null) {
       console.log('Sign message')
-      signMessage()
+      // signMessage()
+      setKeypair(new Keypair())
     }
   }, [connector])
 
@@ -158,41 +169,31 @@ export default function Home() {
     setPoolBalance(totalAmount.toString())
   }
 
-  async function sendToRelayer({ extData, args }: { extData: ExtData; args: ArgsProof }) {
-    // axios.post(`${relayerURL}/status`);
-    const { data } = await axios.get(`${relayerURL}/status`)
-    console.log(data)
-    //     "curl -X POST -H 'content-type:application/json' --data '" +
-    // JSON.stringify(txData) +
-    // "' http://127.0.0.1:8000/transaction"
-    const headers = {
-      'Content-Type': 'application/json',
-    }
-
+  async function sendToRelayer(relayerURL: string, { extData, args }: { extData: ExtData; args: ArgsProof }) {
     const { data: res } = await axios.post(
       `${relayerURL}/transaction`,
       {
         args,
         extData,
       },
-      { headers }
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
     )
     console.log(res)
   }
 
-  async function deposit() {
+  async function deposit(amount: string) {
     if (!keypair) {
       throw new Error('Keypair is null')
       return
     }
-    const output = new Utxo({ amount: toWei('0.0001'), keypair })
+    const output = new Utxo({ amount: toWei(amount), keypair })
     // const input = new Utxo({ amount: toWei('0.1'), keypair })
     const transactionInputOutputs = {
       outputs: [output],
-      relayer: '0x0f820f428AE436C1000b27577bF5bbf09BfeC8f2',
-      fee: BigNumber.from('10000000000'),
-      isL1Withdrawal: false,
-      l1Fee: BigNumber.from('0'),
     }
     const { extData, args } = await createTransactionData(transactionInputOutputs, keypair)
 
@@ -200,34 +201,23 @@ export default function Home() {
     await transact({ args, extData })
   }
 
-  async function withdraw() {
+  async function withdrawWithRelayer(amount: string, recipient: string, relayer: RelayerInfo) {
     if (!keypair) {
       throw new Error('Keypair is null')
       return
     }
     if (!address) {
       throw new Error('Address is null')
-      return
     }
-    const amount = toWei('0.0001')
-    const fee = toWei('0.0001')
-    // const relayerFee = 
-    const { data } = await axios.get(`${relayerURL}/status`) // data = 
-
-
-
-
     const { extData, args } = await prepareWithdrawal({
       keypair,
-      amount: '0.0001',
-      address: WITHDRAW_ADDRESS,
-      fee: '0.00001',
-      relayer: toChecksumAddress(data.rewardAddress),
+      amount,
+      address: toChecksumAddress(recipient),
+      fee: relayer.fee.toString(),
+      relayer: toChecksumAddress(relayer.rewardAddress),
     })
 
-    await sendToRelayer({ extData, args })
-
-    // await transact({ args, extData })
+    await sendToRelayer(relayer.rewardAddress, { extData, args })
   }
 
   async function transact({ args, extData }: { args: ArgsProof; extData: ExtData }) {
@@ -256,13 +246,47 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <button onClick={deposit}>AJDBHKG</button>
-      <button onClick={getBalance}>Get balance</button>
-      <button onClick={withdraw}>Withdraw</button>
-      <h1>Pool Balance: {poolBalance}</h1>
-      <ConnectButton />
-      {error && <div>{error}</div>}
+    <div className="h-screen bg-gray-100">
+    {/* Header */}
+    <header className="bg-white p-4 shadow-md flex justify-between items-center">
+      <Logo />
+      <ConnectButton /> {/* I'm not defining this as per your instructions. */}
+    </header>
+
+    {/* Main content */}
+    <div className="flex justify-center items-center h-full">
+      <div className="bg-white rounded-lg shadow-md p-4 w-64">
+        {/* Tabs */}
+        <div className="mb-4 flex border-b">
+          <button 
+            onClick={() => setActiveTab('deposit')}
+            className={`py-2 px-4 ${activeTab === 'deposit' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
+          >
+            Deposit
+          </button>
+          <button 
+            onClick={() => setActiveTab('withdraw')}
+            className={`py-2 px-4 ${activeTab === 'withdraw' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
+          >
+            Withdraw
+          </button>
+        </div>
+
+        {/* Tab content */}
+        {activeTab === 'deposit' ? <DepositComponent  deposit={deposit} balance={0.0001}/> : <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />}
+      </div>
     </div>
+  </div>
+
+    // <div>
+    //   {/* <button onClick={()=>{deposit("0.000031")}}>AJDBHKG</button> */}
+    //   <DepositComponent deposit={deposit} balance={0.0001} />
+    //   <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />
+    //   <button onClick={getBalance}>Get balance</button>
+    //   {/* <button onClick={withdraw}>Withdraw</button> */}
+    //   <h1>Pool Balance: {poolBalance}</h1>
+    //   <ConnectButton />
+    //   {error && <div>{error}</div>}
+    // </div>
   )
 }
