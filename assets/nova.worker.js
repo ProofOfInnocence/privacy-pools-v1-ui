@@ -25,6 +25,8 @@ async function generate_proof({r1cs_path, wasm_path, input_path, start_path, bas
   console.log("generate proof - 1")
   await multiThread.default();
   console.log("generate proof - 2")
+  console.log(self.$pp)
+  console.log(r1cs_path, wasm_path, input_path, start_path, base)
   //await multiThread.initThreadPool(navigator.hardwareConcurrency);
 
   let proof = await multiThread.generate_proof(self.$pp, r1cs_path, wasm_path, input_path, start_path, base)

@@ -44,6 +44,8 @@ function buildMerkleTree({ events }: { events: CommitmentEvents }) {
 }
 
 async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmount, fee, recipient, relayer }: ProofParams) {
+  console.log("GET PROOF IS CALLED")
+  console.log(extAmount)
   // inputs = shuffle(inputs)
   // outputs = shuffle(outputs)
 
@@ -164,6 +166,7 @@ async function prepareTransaction({
   let extAmount = BigNumber.from(fee)
     .add(outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
     .sub(inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+    console.log("EXT AMOUNT IS: ", extAmount)
 
   const amount = extAmount.gt(0) ? extAmount : BG_ZERO
 

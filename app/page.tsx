@@ -84,9 +84,15 @@ async function prepareTransaction({
   recipient?: string | BigNumber
 }) {
   try {
-    // const etherAmount = BigNumber.from(toWei(amount))
+    // console.log("AAGAGSDVAJGHSDJHASHJFVADHJKGFJVBGKVJAKBJKJK")
+    // console.log('Amount:', amount.toString())
+    // console.log('Fee:', fee.toString())
+    // // const etherAmount = BigNumber.from(toWei(amount))
+    // const amountWithFee = amount.sub(fee)
+    // console.log('Amount with fee:', amountWithFee.toString())
+    // const etherAmount = toWei(amount)
     const amountWithFee = amount.add(fee)
-    console.log('Amount with fee:', amountWithFee.toString())
+
 
     const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({
       keypair,
@@ -95,21 +101,38 @@ async function prepareTransaction({
     })
     console.log('Total amount:', totalAmount.toString())
 
-    if (totalAmount.lt(amountWithFee)) {
-      throw new Error('Insufficient balance')
+    // let outputAmount
+    // if (recipient == 0) {
+    //   outputAmount = BigNumber.from(amount).add(inputAmount)
+    // } else {
+    //   if (inputAmount.lt(BigNumber.from(amount))) {
+    //     throw new Error('Not enough funds')
+    //   }
+    //   outputAmount = inputAmount.sub(BigNumber.from(amount))
+    // }
+
+    let outputAmount
+    if (recipient == BG_ZERO) {
+      outputAmount = totalAmount.add(amountWithFee)
+    } else {
+      if (totalAmount.lt(amountWithFee)) {
+        throw new Error('Not enough funds')
+      }
+      outputAmount = totalAmount.sub(amountWithFee)
     }
+
 
     if (unspentUtxo.length > 2) {
       throw new Error('Too many inputs')
     }
-    const outputs = [new Utxo({ amount: totalAmount.sub(amountWithFee), keypair })]
+    const outputs = [new Utxo({ amount: outputAmount, keypair })]
 
     const { extData, args } = await createTransactionData(
       {
         outputs,
         inputs: unspentUtxo.length > 2 ? unspentUtxo.slice(0, 2) : unspentUtxo,
-        recipient: recipient ? toChecksumAddress(recipient) : undefined,
-        relayer: relayer ? toChecksumAddress(relayer) : undefined,
+        recipient: recipient !== BG_ZERO ? toChecksumAddress(recipient) : undefined,
+        relayer: relayer !== BG_ZERO ? toChecksumAddress(relayer) : undefined,
         fee: fee,
       },
       keypair
@@ -300,11 +323,15 @@ export default function Home() {
       amount: totalAmount,
       address: toChecksumAddress(address),
       fee: BG_ZERO,
-      relayer: toChecksumAddress(relayer.rewardAddress),
+      // relayer: toChecksumAddress(relayer.rewardAddress),
       recipient: toChecksumAddress(recipient),
     })
-
-    await sendToRelayer(relayer.rewardAddress, { extData, args })
+    console.log('Ext data', extData)
+    console.log('Args', args)
+    // await genpp()
+    // await prove()
+    await transact({ args, extData })
+    // await sendToRelayer(relayer.rewardAddress, { extData, args })
   }
 
   async function transact({ args, extData }: { args: ArgsProof; extData: ExtData }) {
@@ -333,21 +360,21 @@ export default function Home() {
   }
 
   async function genpp() {
-    workerProvider.workerSetup(ChainId.XDAI)
+    // workerProvider.workerSetup(ChainId.XDAI)
     console.log("genpp called")
     let ppx = await workerProvider.generate_ppx()
     console.log("genpp done", ppx)
   }
 
   async function prove() {
-    workerProvider.workerSetup(ChainId.XDAI)
+    // workerProvider.workerSetup(ChainId.XDAI)
     console.log("prove called")
     await workerProvider.provex()
     console.log("prove done")
   }
 
   async function verify() {
-    workerProvider.workerSetup(ChainId.XDAI)
+    // workerProvider.workerSetup(ChainId.XDAI)
     console.log("verify called")
     await workerProvider.verifyx()
     console.log("verify done")
