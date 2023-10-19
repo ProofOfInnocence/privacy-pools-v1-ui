@@ -31,6 +31,7 @@ import { CommitmentEvents } from '@/services/events/@types'
 import { ChainId } from '@/types'
 import { getTornadoPool } from '@/contracts'
 import { Element } from 'fixed-merkle-tree'
+import { proveInclusion } from './poi'
 
 const ADDRESS_BYTES_LENGTH = 20
 
@@ -294,11 +295,13 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     //   params.rootHex = toFixedHex(root)
     //   console.log('LAST ROOT = ', params.rootHex)
     // } else {
+    const txRecordEvents = await workerProvider.getTxRecordEvents();
+    const membershipProof = await proveInclusion(params, txRecordEvents);
+
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
 
     params.events = await commitmentsService.fetchCommitments(keypair)
-    const txRecordEvents = await workerProvider.getTxRecordEvents();
-    console.log("TX RECORD EVENTS: ", txRecordEvents)
+    // console.log("TX RECORD EVENTS: ", txRecordEvents)
     // console.log('Events:', params.events)
     // }
 

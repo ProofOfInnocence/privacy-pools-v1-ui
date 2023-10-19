@@ -28,7 +28,7 @@ type CommitmentEvent = {
   encryptedOutput: string
 }
 
-type TxRecordEvent = {
+export type TxRecordEvent = {
   blockNumber: number
   transactionHash: string
   index: number
