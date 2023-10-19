@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { RelayerInfo } from '@/types'
 
 type WithdrawComponentProps = {
-  withdrawWithRelayer: (amount: string, recipient: string, relayer: RelayerInfo) => void;
+  withdrawWithRelayer: (amount: string, recipient: string, relayer: RelayerInfo, inputjson: string, startjson: string) => void;
   relayers: RelayerInfo[];
 };
 
@@ -10,9 +10,11 @@ const WithdrawComponent: React.FC<WithdrawComponentProps> = ({ withdrawWithRelay
   const [amount, setAmount] = useState('0.0001');
   const [recipient, setRecipient] = useState('0xcbef1A6b6a001eEe4B75d99cf484DCe5D00F8925');
   const [selectedRelayer, setSelectedRelayer] = useState(relayers[0]);
+  const [inputjson, setInput] = useState('[]');
+  const [startjson, setStart] = useState('[]');
 
   const handleWithdrawClick = () => {
-    withdrawWithRelayer(amount, recipient, selectedRelayer);
+    withdrawWithRelayer(amount, recipient, selectedRelayer, inputjson, startjson);
   };
 
   return (
@@ -69,6 +71,28 @@ const WithdrawComponent: React.FC<WithdrawComponentProps> = ({ withdrawWithRelay
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div className="mb-4">
+        <label className="block mb-2">Input</label>
+        <input
+          type="text"
+          placeholder="Input json"
+          value={inputjson}
+          onChange={(e) => setInput(e.target.value)}
+          className="w-full p-2 border rounded"
+        />
+      </div>
+
+      <div className="mb-4">
+        <label className="block mb-2">Start</label>
+        <input
+          type="text"
+          placeholder="Start json"
+          value={startjson}
+          onChange={(e) => setStart(e.target.value)}
+          className="w-full p-2 border rounded"
+        />
       </div>
 
       <button

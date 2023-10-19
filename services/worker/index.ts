@@ -21,7 +21,7 @@ export interface WorkerProvider {
   getDecryptedEventsFromTxHash: (keypair: BaseKeypair, txHash: string) => Promise<DecryptedEvents>
   generate_pp: () => Promise<void>
   generate_ppx: () => Promise<string>
-  provex: () => Promise<string>
+  provex: (inputjson: string, startjson: string) => Promise<string>
   verifyx: () => Promise<boolean>
   // channels
   readonly openNovaChannel: <P, R>(eventName: string, payload: P, workerIndex?: number) => Promise<R>
@@ -95,10 +95,10 @@ class Provider implements WorkerProvider {
       let pp = await this.openNovaChannel<{mode: number, pp_path: string, base: string}, string>(workerEvents.GENERATE_PP, {
         mode: 2,
         pp_path: 'poi-pp.cbor',
-        base: 'http://localhost:3000'
+        base: 'http://127.0.0.1:3001'
       })
       console.log("generate pp x - 1")
-      console.log("ppx: ", pp)
+      //console.log("ppx: ", pp)
 
       return pp
     } catch (err) {
@@ -106,15 +106,16 @@ class Provider implements WorkerProvider {
     }
   }
 
-  public provex = async (): Promise<string> => {
+  public provex = async (inputjson: string, startjson: string): Promise<string> => {
     try {
       console.log("prove x - 0")
-      const proof = await this.openNovaChannel<{r1cs_path: string, wasm_path: string, input_path: string, start_path: string, base: string}, string>(workerEvents.PROVE, {
+      const proof = await this.openNovaChannel<{r1cs_path: string, wasm_path: string, mode: number, input_path_or_str: string, start_path_or_str: string, base: string}, string>(workerEvents.PROVE, {
         r1cs_path: 'poi.r1cs',
         wasm_path: 'poi.wasm',
-        input_path: 'poi-inputs.json',
-        start_path: 'poi-start.json',
-        base: 'http://localhost:3000'
+        mode: 1,
+        input_path_or_str: inputjson,
+        start_path_or_str: startjson,
+        base: 'http://127.0.0.1:3001'
       })
       console.log("prove x - 1")
       console.log("proofx: ", proof)
@@ -128,9 +129,10 @@ class Provider implements WorkerProvider {
   public verifyx = async (): Promise<boolean> => {
     try {
       console.log("verify x - 0")
-      const correct = await this.openNovaChannel<{start_path: string, base: string}, boolean>(workerEvents.VERIFY, {
-        start_path: 'poi-start.json',
-        base: 'http://localhost:3000'
+      const correct = await this.openNovaChannel<{mode: number, start_path_or_str: string, base: string}, boolean>(workerEvents.VERIFY, {
+        mode: 0,
+        start_path_or_str: 'poi-start.json',
+        base: 'http://127.0.0.1:3001'
       })
       console.log("verify x - 1")
       console.log("verifyx: ", correct)
@@ -208,9 +210,9 @@ class Provider implements WorkerProvider {
         const { result, errorMessage = 'unknown error' } = data
         console.log("nova channel on message - 1")
         novaChannel.port1.close()
-        console.log("nova channel on message - 2", result)
+        console.log("nova channel on message - 2")
         if (result) {
-          console.log("nova channel on message - 3.1", result)
+          console.log("nova channel on message - 3.1")
           resolve(result)
           console.log("nova channel on message - 3.2")
         } else {

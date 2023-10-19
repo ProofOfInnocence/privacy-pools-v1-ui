@@ -19,23 +19,23 @@ async function generate_params({mode, pp_path, base}, [port]) {
   port.postMessage({ result: pp })
 }
 
-async function generate_proof({r1cs_path, wasm_path, input_path, start_path, base}, [port]) {
+async function generate_proof({r1cs_path, wasm_path, mode, input_path_or_str, start_path_or_str, base}, [port]) {
   console.log("generate proof - 0")
   const multiThread = await import("nova_scotia_browser");
   console.log("generate proof - 1")
   await multiThread.default();
   console.log("generate proof - 2")
-  console.log(self.$pp)
-  console.log(r1cs_path, wasm_path, input_path, start_path, base)
+  //console.log(self.$pp)
+  console.log(r1cs_path, wasm_path, mode, input_path_or_str, start_path_or_str, base)
   //await multiThread.initThreadPool(navigator.hardwareConcurrency);
 
-  let proof = await multiThread.generate_proof(self.$pp, r1cs_path, wasm_path, input_path, start_path, base)
-  console.log("generate proof - 3", proof)
+  let proof = await multiThread.generate_proof(self.$pp, r1cs_path, wasm_path, mode, input_path_or_str, start_path_or_str, base)
+  console.log("generate proof - 3")
   self.$proof = proof
   port.postMessage({ result: proof })
 }
 
-async function verify_proof({start_path, base}, [port]) {
+async function verify_proof({mode, start_path_or_str, base}, [port]) {
   console.log("verify proof - 0")
   const multiThread = await import("nova_scotia_browser");
   console.log("verify proof - 1")
@@ -43,7 +43,7 @@ async function verify_proof({start_path, base}, [port]) {
   console.log("verify proof - 2")
   //await multiThread.initThreadPool(navigator.hardwareConcurrency);
 
-  let correct = await multiThread.verify_compressed_proof(self.$pp, self.$proof, start_path, base);
+  let correct = await multiThread.verify_compressed_proof(self.$pp, self.$proof, mode, start_path_or_str, base);
   self.$correct = correct
   port.postMessage({ result: correct })
 }

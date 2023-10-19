@@ -307,7 +307,7 @@ export default function Home() {
     await transact({ args, extData })
   }
 
-  async function withdrawWithRelayer(amount: string, recipient: string, relayer: RelayerInfo) {
+  async function withdrawWithRelayer(amount: string, recipient: string, relayer: RelayerInfo, inputjson: string, startjson: string) {
     if (!keypair) {
       throw new Error('Keypair is null')
       return
@@ -315,9 +315,10 @@ export default function Home() {
     if (!address) {
       throw new Error('Address is null')
     }
-    const totalAmount = BigNumber.from(toWei(amount))
+    ////const totalAmount = BigNumber.from(toWei(amount))
     // substraction fee
     // const amountWithFee = totalAmount.sub(relayer.fee)
+    /*
     const { extData, args } = await prepareTransaction({
       keypair,
       amount: totalAmount,
@@ -326,11 +327,13 @@ export default function Home() {
       // relayer: toChecksumAddress(relayer.rewardAddress),
       recipient: toChecksumAddress(recipient),
     })
-    console.log('Ext data', extData)
-    console.log('Args', args)
-    // await genpp()
-    // await prove()
-    await transact({ args, extData })
+    */
+    ////console.log('Ext data', extData)
+    ////console.log('Args', args)
+    console.log('inputjson', inputjson)
+    await genpp()
+    await prove(inputjson, startjson)
+    ////await transact({ args, extData })
     // await sendToRelayer(relayer.rewardAddress, { extData, args })
   }
 
@@ -363,13 +366,13 @@ export default function Home() {
     // workerProvider.workerSetup(ChainId.XDAI)
     console.log("genpp called")
     let ppx = await workerProvider.generate_ppx()
-    console.log("genpp done", ppx)
+    console.log("genpp done")
   }
 
-  async function prove() {
+  async function prove(inputjson: string, startjson: string) {
     // workerProvider.workerSetup(ChainId.XDAI)
     console.log("prove called")
-    await workerProvider.provex()
+    await workerProvider.provex(inputjson, startjson)
     console.log("prove done")
   }
 
