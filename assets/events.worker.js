@@ -30,6 +30,14 @@ const initDataBase = async () => {
           ],
         },
         {
+          keyPath: 'index',
+          name: `txRecord_events_100`,
+          indexes: [
+            { name: 'transactionHash', unique: false },
+            { name: 'index', unique: true },
+          ],
+        },
+        {
           keyPath: 'id',
           name: `decrypted_events_100`,
           indexes: [{ name: 'hash', unique: true }],
@@ -85,6 +93,73 @@ const getCommitmentBatch = async ({ blockFrom, blockTo, cachedEvents, withCache 
     return true
   })
 }
+
+const getTxRecordsBatch = async ({ blockFrom, blockTo, cachedEvents, withCache }) => {
+  const filter = self.poolContract.filters.NewTxRecord()
+  const events = await self.poolContract.queryFilter(filter, blockFrom, blockTo)
+
+  const txRecordEvents = events.map(({ blockNumber, transactionHash, args }) => ({
+    blockNumber,
+    transactionHash,
+    index: Number(args.index),
+    inputNullifier1: args.inputNullifier1,
+    inputNullifier2: args.inputNullifier2,
+    outputCommitment1: args.outputCommitment1,
+    outputCommitment2: args.outputCommitment2,
+    publicAmount: args.publicAmount,
+  }))
+
+  return txRecordEvents.filter((el) => {
+    if (!withCache && cachedEvents && cachedEvents.length) {
+      return cachedEvents.find((cached) => {
+        return el.transactionHash === cached.transactionHash && el.index === cached.index
+      })
+    }
+    return true
+  })
+}
+
+const getTxRecords = async ({ withCache, lastSyncBlock }) => {
+  try {
+    let blockFrom = numbers.DEPLOYED_BLOCK
+
+    if (!self.$indexedDB) {
+      await sleep(numbers.RECALL_DELAY)
+    }
+
+    let cachedEvents = await self.$indexedDB.getAll({
+      storeName: 'txRecord_events_100',
+    })
+
+    if (!cachedEvents) {
+      cachedEvents = []
+    }
+
+    if (!lastSyncBlock) {
+      lastSyncBlock = await getTxRecordsLastSyncBlock()
+    }
+    const currentBlock = await self.poolContract.provider.getBlockNumber()
+
+    if (lastSyncBlock && cachedEvents.length) {
+      const newBlockFrom = Number(lastSyncBlock) + numbers.ONE
+
+      if (Number(lastSyncBlock) === currentBlock) {
+        return { txRecordEvents: cachedEvents }
+      }
+      blockFrom = newBlockFrom > currentBlock ? currentBlock : newBlockFrom
+    }
+
+    const txRecordEvents = await getTxRecordsBatch({ blockFrom, blockTo: currentBlock, cachedEvents, withCache })
+
+    return {
+      newTxRecordsEvents: txRecordEvents,
+      txRecordEvents: withCache ? cachedEvents.concat(txRecordEvents) : txRecordEvents,
+    }
+  } catch (err) {
+    throw new Error(`Method NEW getTxRecords has error: ${err.message}`)
+  }
+}
+
 const getCommitments = async ({ withCache, lastSyncBlock }) => {
   try {
     let blockFrom = numbers.DEPLOYED_BLOCK
@@ -213,6 +288,18 @@ const getCommitmentEvents = async ({ publicKey, lastSyncBlock, withCache = true 
   }
 }
 
+const getTxRecordEvents = async ({ publicKey, lastSyncBlock, withCache = true }, [port]) => {
+  try {
+    console.log('getTxRecordEvents', publicKey, lastSyncBlock, withCache)
+    const { txRecordEvents, newTxRecordEvents } = await getTxRecords({ withCache, lastSyncBlock })
+
+    port.postMessage({ result: txRecordEvents })
+    saveEvents({ events: newTxRecordEvents, storeName: 'txRecord_events_100' })
+  } catch (err) {
+    port.postMessage({ errorMessage: err.message })
+  }
+}
+
 const getBatchCommitmentsEvents = async ({ blockFrom, blockTo, publicKey, privateKey, cachedEvents, withCache = true }, [port]) => {
   try {
     const commitments = await getCommitmentBatch({ blockFrom, blockTo, publicKey, cachedEvents, withCache })
@@ -280,6 +367,20 @@ const getLastSyncBlock = async () => {
   }
 }
 
+const getTxRecordsLastSyncBlock = async () => {
+  try {
+    const [lastEvent] = await getEvents({
+      indexName: 'name',
+      key: 'txRecord_events_100',
+      storeName: 'last_sync_event',
+    })
+    return lastEvent ? lastEvent.blockNumber : numbers.DEPLOYED_BLOCK
+  } catch (err) {
+    console.error('getTxRecordsLastSyncBlock has error:', err.message)
+    return numbers.DEPLOYED_BLOCK
+  }
+}
+
 const getCashedEvents = async ({ storeName, publicKey, privateKey }, [port]) => {
   try {
     const isIdbEnable = await getIsDBEnabled()
@@ -312,7 +413,7 @@ const getCashedEvents = async ({ storeName, publicKey, privateKey }, [port]) => 
 const getCashedCommitmentEvents = async ({ storeName, publicKey, privateKey }, [port]) => {
   try {
     const isIdbEnable = await getIsDBEnabled()
-    console.log("isIdbEnable", isIdbEnable)
+    console.log('isIdbEnable', isIdbEnable)
 
     if (isIdbEnable) {
       const cachedEvents = await self.$indexedDB.getAll({ storeName })
@@ -390,6 +491,9 @@ const listener = ({ data, ports }) => {
       break
     case workerEvents.SAVE_LAST_SYNC_BLOCK:
       saveLastSyncBlock(data.payload, ports)
+      break
+    case workerEvents.GET_TX_RECORD_EVENTS:
+      getTxRecordEvents(data.payload, ports)
       break
   }
 }

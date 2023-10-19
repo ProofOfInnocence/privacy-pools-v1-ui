@@ -24,7 +24,7 @@ import { Utxo } from './utxo'
 import { prove } from './prover'
 import { toFixedHex, poseidonHash2, getExtDataHash, shuffle } from './utils'
 
-import { getProvider, Keypair } from '@/services'
+import { getProvider, Keypair, workerProvider } from '@/services'
 import { commitmentsFactory } from '@/services/commitments'
 import { CommitmentEvents } from '@/services/events/@types'
 
@@ -297,6 +297,8 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
 
     params.events = await commitmentsService.fetchCommitments(keypair)
+    const txRecordEvents = await workerProvider.getTxRecordEvents();
+    console.log("TX RECORD EVENTS: ", txRecordEvents)
     // console.log('Events:', params.events)
     // }
 

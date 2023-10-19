@@ -28,7 +28,19 @@ type CommitmentEvent = {
   encryptedOutput: string
 }
 
+type TxRecordEvent = {
+  blockNumber: number
+  transactionHash: string
+  index: number
+  inputNullifier1: string,
+  inputNullifier2: string,
+  outputCommitment1: string,
+  outputCommitment2: string,
+  publicAmount: string
+}
+
 export type CommitmentEvents = CommitmentEvent[]
+export type TxRecordEvents = TxRecordEvent[]
 
 type NullifierEvent = {
   nullifier: string

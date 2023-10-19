@@ -3,7 +3,7 @@ import { getIPFSPrefix } from '@/utilities'
 import { workerEvents, numbers } from '@/constants/worker'
 
 import { BaseKeypair } from '@/services/core/@types'
-import { CommitmentEvents, NullifierEvents } from '@/services/events/@types'
+import { CommitmentEvents, NullifierEvents, TxRecordEvents } from '@/services/events/@types'
 
 import { EventsPayload, DecryptedEvents, GetEventsFromTxHashParams } from './@types'
 
@@ -17,6 +17,7 @@ import VWorker from '@/assets/nova.worker.js'
 export interface WorkerProvider {
   workerSetup: (chainId: ChainId) => void
   getCommitmentEvents: () => Promise<CommitmentEvents>
+  getTxRecordEvents: () => Promise<TxRecordEvents>
   getNullifierEventsFromTxHash: (nullifiers: NullifierEvents, txHash: string) => Promise<NullifierEvents>
   getDecryptedEventsFromTxHash: (keypair: BaseKeypair, txHash: string) => Promise<DecryptedEvents>
   generate_pp: () => Promise<void>
@@ -151,6 +152,19 @@ class Provider implements WorkerProvider {
       return commitmentEvents
     } catch (err) {
       throw new Error(`Events worker method getCommitmentEvents has error: ${err}`)
+    }
+  }
+
+  public getTxRecordEvents = async (lastSyncBlock?: number): Promise<TxRecordEvents> => {
+    try {
+      const txRecordEvents = await this.openEventsChannel<EventsPayload, TxRecordEvents>(workerEvents.GET_TX_RECORD_EVENTS, {
+        lastSyncBlock,
+        withCache: true,
+      })
+
+      return txRecordEvents
+    } catch (err) {
+      throw new Error(`Events worker method getTxRecordEvents has error: ${err}`)
     }
   }
 

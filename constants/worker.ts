@@ -18,6 +18,7 @@ const workerEvents = {
   GENERATE_PP: 'generate_pp',
   PROVE: 'prove',
   VERIFY: 'verify',
+  GET_TX_RECORD_EVENTS: 'get_tx_record_events',
 }
 
 const numbers = {
