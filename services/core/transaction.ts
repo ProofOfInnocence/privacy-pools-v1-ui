@@ -297,8 +297,6 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     //   console.log('LAST ROOT = ', params.rootHex)
     // } else {
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
-    const txRecordEvents = await workerProvider.getTxRecordEvents()
-    params.events = await commitmentsService.fetchCommitments(keypair)
     params.outputs = params.outputs || []
     while (params.outputs.length < 2) {
       params.outputs.push(new Utxo())
@@ -317,31 +315,36 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
       params.inputs.push(newUtxo)
     }
-    params.fee = params.fee || BG_ZERO
-    let extAmount = BigNumber.from(params.fee)
-      .add(params.outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
-      .sub(params.inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
 
-    const publicAmount = BigNumber.from(extAmount).sub(params.fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString()
-    const finalTxRecord = new TxRecord({
-      publicAmount,
-      inputs: params.inputs,
-      outputs: params.outputs,
-    })
+    if (params.recipient) {
+      const txRecordEvents = await workerProvider.getTxRecordEvents()
+      console.log('TX RECORD EVENTS: ', txRecordEvents)
+      params.events = await commitmentsService.fetchCommitments(keypair)
 
-    const membershipProof = await proveInclusion(keypair, params, {
-      txRecordEvents,
-      nullifierToUtxo: undefined,
-      commitmentToUtxo: undefined,
-      finalTxRecord: finalTxRecord,
-    })
-    console.log("JHGVJIOHUGYFTUHIOJHUGYFTDRXESTGFRYGUIOPJHUGYTFRDESRXTRFYGUIOJPHUGYTFHRDGHYKO:")
-    console.log(membershipProof)
+      params.fee = params.fee || BG_ZERO
+      let extAmount = BigNumber.from(params.fee)
+        .add(params.outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+        .sub(params.inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
 
+      const publicAmount = BigNumber.from(extAmount).sub(params.fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString()
+      const finalTxRecord = new TxRecord({
+        publicAmount,
+        inputs: params.inputs,
+        outputs: params.outputs,
+      })
+      console.log('FINAL TX RECORD: ', finalTxRecord)
+      console.log('COMMITMENTS: ', params.events)
+
+      const membershipProof = await proveInclusion(keypair, params, {
+        txRecordEvents,
+        nullifierToUtxo: undefined,
+        commitmentToUtxo: undefined,
+        finalTxRecord: finalTxRecord,
+      })
+      console.log('JHGVJIOHUGYFTUHIOJHUGYFTDRXESTGFRYGUIOPJHUGYTFRDESRXTRFYGUIOJPHUGYTFHRDGHYKO:')
+      console.log(membershipProof)
+    }
     params.events = await commitmentsService.fetchCommitments(keypair)
-    // console.log("TX RECORD EVENTS: ", txRecordEvents)
-    // console.log('Events:', params.events)
-    // }
 
     const { extData, args, amount } = await prepareTransaction(params)
 

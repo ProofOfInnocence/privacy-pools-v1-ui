@@ -42,7 +42,7 @@ async function buildMappings(keypair: Keypair, commitmentEvents: CommitmentEvent
       }
       const utxo = commitmentToUtxo.get(commitment)
       if (!utxo) {
-        throw new Error('Should not happen')
+        throw new Error('Should not happen1')
       }
       const newBlinding = BigNumber.from(
         '0x' +
@@ -51,8 +51,10 @@ async function buildMappings(keypair: Keypair, commitmentEvents: CommitmentEvent
 
       const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
       nullifierToUtxo.set(toFixedHex(newUtxo.getNullifier()), newUtxo)
+      console.log('newly generated nullifier = ', toFixedHex(newUtxo.getNullifier()))
+      console.log('trivial nullifier = ', trivialNullifier)
       if (toFixedHex(newUtxo.getNullifier()) != trivialNullifier) {
-        throw new Error('Should not happen')
+        throw new Error('Should not happen2')
       }
     }
     findBlindingForNullifier(event.inputNullifier1, event.outputCommitment1)
@@ -79,15 +81,15 @@ async function getPoiSteps({
     }
     const input2 = nullifierToUtxo.get(toFixedHex(event.inputNullifier2))
     if (!input2) {
-      throw new Error('Should not happen')
+      throw new Error('Should not happen3')
     }
     const output1 = commitmentToUtxo.get(toFixedHex(event.outputCommitment1))
     if (!output1) {
-      throw new Error('Should not happen')
+      throw new Error('Should not happen4')
     }
     const output2 = commitmentToUtxo.get(toFixedHex(event.outputCommitment2))
     if (!output2) {
-      throw new Error('Should not happen')
+      throw new Error('Should not happen5')
     }
     const _txRecord = new TxRecord({
       inputs: [input1, input2],
