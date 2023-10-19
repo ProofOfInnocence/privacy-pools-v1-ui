@@ -1,6 +1,6 @@
 'use client'
 
-import { Keypair, Utxo, createTransactionData, utxoFactory, workerProvider } from '@/services'
+import { Keypair, Utxo, createTransactionData, getProvider, utxoFactory, workerProvider } from '@/services'
 import { ChainId } from '@/types'
 import { toWei } from 'web3-utils'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
@@ -8,7 +8,6 @@ import { useAccount, useContractWrite, usePrepareContractWrite, usePublicClient,
 import { BG_ZERO, POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
 import { encodeTransactData, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { TornadoPool__factory, WETH__factory } from '@/_contracts'
 import { BaseError, ContractFunctionRevertedError } from 'viem'
 import { UnspentUtxoData } from '@/services/utxoService/@types'
 import { BigNumber } from 'ethers'
@@ -20,6 +19,7 @@ import Logo from '@/components/Logo'
 import { RelayerInfo } from '@/types'
 import Balance from '@/components/Balance'
 import { getWrappedToken } from '@/contracts'
+import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
 
 async function getUtxoFromKeypair({
   keypair,
@@ -93,7 +93,6 @@ async function prepareTransaction({
     // const etherAmount = toWei(amount)
     const amountWithFee = amount.add(fee)
 
-
     const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({
       keypair,
       accountAddress: address,
@@ -120,7 +119,6 @@ async function prepareTransaction({
       }
       outputAmount = totalAmount.sub(amountWithFee)
     }
-
 
     if (unspentUtxo.length > 2) {
       throw new Error('Too many inputs')
@@ -342,6 +340,9 @@ export default function Home() {
 
     const [address] = await walletClient.getAddresses()
     console.log('Address', address)
+    console.log('Args', args)
+    console.log('Ext data', extData)
+    console.log('Pool contract', POOL_CONTRACT[ChainId.ETHEREUM_GOERLI])
 
     const { request } = await publicClient.simulateContract({
       address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI]),
@@ -361,23 +362,23 @@ export default function Home() {
 
   async function genpp() {
     // workerProvider.workerSetup(ChainId.XDAI)
-    console.log("genpp called")
+    console.log('genpp called')
     let ppx = await workerProvider.generate_ppx()
-    console.log("genpp done", ppx)
+    console.log('genpp done', ppx)
   }
 
   async function prove() {
     // workerProvider.workerSetup(ChainId.XDAI)
-    console.log("prove called")
+    console.log('prove called')
     await workerProvider.provex()
-    console.log("prove done")
+    console.log('prove done')
   }
 
   async function verify() {
     // workerProvider.workerSetup(ChainId.XDAI)
-    console.log("verify called")
+    console.log('verify called')
     await workerProvider.verifyx()
-    console.log("verify done")
+    console.log('verify done')
   }
 
   return (

@@ -83,8 +83,7 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
     fee: toFixedHex(fee),
     encryptedOutput1: output1.encrypt(),
     encryptedOutput2: output2.encrypt(),
-    isL1Withdrawal,
-    l1Fee: toFixedHex(l1Fee),
+    membershipProofURI: ""
   }
 
   const extDataHash = getExtDataHash(extData)
@@ -129,7 +128,7 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
   const args: ArgsProof = {
     proof,
     root: toFixedHex(input.root),
-    inputNullifiers: inputs.map((x) => toFixedHex(x.getNullifier())),
+    inputNullifiers: inputs.map((x) => toFixedHex(x.getNullifier())) as [string, string],
     outputCommitments: outputs.map((x) => toFixedHex(x.getCommitment())) as [BytesLike, BytesLike],
     publicAmount: toFixedHex(input.publicAmount),
     extDataHash: toFixedHex(extDataHash),

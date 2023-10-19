@@ -81,14 +81,13 @@ export type ExtData = {
   fee: string
   encryptedOutput1: BytesLike
   encryptedOutput2: BytesLike
-  isL1Withdrawal: boolean
-  l1Fee: string
+  membershipProofURI: string
 }
 
 export type ArgsProof = {
   proof: BytesLike
   root: BytesLike
-  inputNullifiers: string[]
+  inputNullifiers: [string, string]
   outputCommitments: [BytesLike, BytesLike]
   publicAmount: BigNumberish
   extDataHash: string

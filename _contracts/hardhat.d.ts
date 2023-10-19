@@ -57,29 +57,9 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.WETH__factory>;
     getContractFactory(
-      name: "IERC20",
+      name: "PrivacyPool",
       signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC20__factory>;
-    getContractFactory(
-      name: "IHasher",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IHasher__factory>;
-    getContractFactory(
-      name: "IVerifier",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IVerifier__factory>;
-    getContractFactory(
-      name: "MerkleTreeWithHistory",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.MerkleTreeWithHistory__factory>;
-    getContractFactory(
-      name: "TornadoPool",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.TornadoPool__factory>;
-    getContractFactory(
-      name: "Verifier16",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.Verifier16__factory>;
+    ): Promise<Contracts.PrivacyPool__factory>;
     getContractFactory(
       name: "Verifier2",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -141,35 +121,10 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.WETH>;
     getContractAt(
-      name: "IERC20",
+      name: "PrivacyPool",
       address: string,
       signer?: ethers.Signer
-    ): Promise<Contracts.IERC20>;
-    getContractAt(
-      name: "IHasher",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IHasher>;
-    getContractAt(
-      name: "IVerifier",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IVerifier>;
-    getContractAt(
-      name: "MerkleTreeWithHistory",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.MerkleTreeWithHistory>;
-    getContractAt(
-      name: "TornadoPool",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.TornadoPool>;
-    getContractAt(
-      name: "Verifier16",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.Verifier16>;
+    ): Promise<Contracts.PrivacyPool>;
     getContractAt(
       name: "Verifier2",
       address: string,

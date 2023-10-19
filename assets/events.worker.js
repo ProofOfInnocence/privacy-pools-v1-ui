@@ -11,7 +11,7 @@ const { workerEvents, numbers } = require('../constants/worker')
 const { ExtendedProvider } = require('../services/ether/ExtendedProvider')
 
 const { POOL_CONTRACT, RPC_LIST, FALLBACK_RPC_LIST } = require('../constants/contracts')
-const { TornadoPool__factory: TornadoPoolFactory } = require('../_contracts')
+const { PrivacyPool__factory: TornadoPoolFactory } = require('../_contracts')
 
 const getProviderWithSigner = (chainId) => {
   return new ExtendedProvider(RPC_LIST[chainId], chainId, FALLBACK_RPC_LIST[chainId])
