@@ -33,11 +33,14 @@ async function buildMappings(keypair: Keypair, commitmentEvents: CommitmentEvent
     function findBlindingForNullifier(trivialNullifier: string, commitment: string) {
       trivialNullifier = toFixedHex(trivialNullifier)
       commitment = toFixedHex(commitment)
+      console.log("Trying to find blinding for nullifier = ", trivialNullifier, " commitment = ", commitment);
 
       if (!commitmentToUtxo.has(commitment)) {
+        console.log("Apparently we don't have commitment = ", commitment, " in commitmentToUtxo");
         return
       }
       if (nullifierToUtxo.has(trivialNullifier)) {
+        console.log("Apparently we already have nullifier = ", trivialNullifier, " in nullifierToUtxo");
         return
       }
       const utxo = commitmentToUtxo.get(commitment)

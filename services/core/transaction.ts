@@ -299,7 +299,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
     params.outputs = params.outputs || []
     while (params.outputs.length < 2) {
-      params.outputs.push(new Utxo())
+      params.outputs.push(new Utxo({keypair}))
     }
     params.inputs = params.inputs || []
     while (params.inputs.length < 2) {
