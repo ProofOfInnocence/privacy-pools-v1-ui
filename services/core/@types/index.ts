@@ -65,15 +65,15 @@ export type PrepareTxParams = {
 
 export type ProveInclusionParams = {
   txRecordEvents: TxRecordEvents
-  nullifierToUtxo: Map<string, BaseUtxo>
-  commitmentToUtxo: Map<string, BaseUtxo>
+  nullifierToUtxo?: Map<string, BaseUtxo>
+  commitmentToUtxo?: Map<string, BaseUtxo>
   finalTxRecord: TxRecord
 }
 
 export type GeneratePoiStepParams = {
   txRecordsMerkleTree: MerkleTree
   allowedTxRecordsMerkleTree: MerkleTree
-  accInnocentCommitments: [string, string]
+  accInnocentCommitments: BigNumber[]
   isLastStep: boolean
 }
 

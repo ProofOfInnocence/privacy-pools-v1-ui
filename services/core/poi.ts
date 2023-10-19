@@ -1,8 +1,140 @@
-import { BG_ZERO } from '@/constants'
-import { PrepareTxParams } from './@types'
-import { TxRecordEvents } from '../events/@types'
+import { BG_ZERO, FIELD_SIZE, ZERO_LEAF, numbers } from '@/constants'
+import { BaseUtxo, PrepareTxParams, ProveInclusionParams } from './@types'
+import { CommitmentEvents, TxRecordEvents } from '../events/@types'
+import { Utxo } from './utxo'
+import { Keypair } from './keypair'
+import { toFixedHex } from './utils'
+import { BigNumber, ethers } from 'ethers'
+import { TxRecord } from './txRecord'
+import MerkleTree from 'fixed-merkle-tree'
+import { poseidonHash2Wrapper } from './transaction'
+
+function buildTxRecordMerkleTree({ events }: { events: TxRecordEvents }) {
+  const leaves = events.sort((a, b) => a.index - b.index).map((e) => toFixedHex(TxRecord.hashFromEvent(e)))
+  return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper, zeroElement: ZERO_LEAF.toString() })
+}
+
+async function buildMappings(keypair: Keypair, commitmentEvents: CommitmentEvents, txRecordEvents: TxRecordEvents) {
+  const commitmentToUtxo = new Map<string, BaseUtxo>()
+  const nullifierToUtxo = new Map<string, BaseUtxo>()
+  for (const event of commitmentEvents) {
+    let decryptedUtxo = null
+    try {
+      decryptedUtxo = Utxo.decrypt(keypair, event.encryptedOutput, event.index)
+    } catch (e) {
+      continue
+    }
+    const currentNullifier = toFixedHex(decryptedUtxo.getNullifier())
+    nullifierToUtxo.set(currentNullifier, decryptedUtxo)
+    commitmentToUtxo.set(toFixedHex(event.commitment), decryptedUtxo)
+  }
+
+  for (const event of txRecordEvents) {
+    function findBlindingForNullifier(trivialNullifier: string, commitment: string) {
+      trivialNullifier = toFixedHex(trivialNullifier)
+      commitment = toFixedHex(commitment)
+
+      if (!commitmentToUtxo.has(commitment)) {
+        return
+      }
+      if (nullifierToUtxo.has(trivialNullifier)) {
+        return
+      }
+      const utxo = commitmentToUtxo.get(commitment)
+      if (!utxo) {
+        throw new Error('Should not happen')
+      }
+      const newBlinding = BigNumber.from(
+        '0x' +
+          ethers.utils.keccak256(ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(utxo.blinding)])).slice(2, 64)
+      ).mod(FIELD_SIZE)
+
+      const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
+      nullifierToUtxo.set(toFixedHex(newUtxo.getNullifier()), newUtxo)
+      if (toFixedHex(newUtxo.getNullifier()) != trivialNullifier) {
+        throw new Error('Should not happen')
+      }
+    }
+    findBlindingForNullifier(event.inputNullifier1, event.outputCommitment1)
+    findBlindingForNullifier(event.inputNullifier2, event.outputCommitment2)
+  }
+
+  return { nullifierToUtxo, commitmentToUtxo }
+}
+
+async function getPoiSteps({
+  txRecordEvents,
+  nullifierToUtxo = undefined,
+  commitmentToUtxo = undefined,
+  finalTxRecord,
+}: ProveInclusionParams) {
+  if (!nullifierToUtxo || !commitmentToUtxo) {
+    throw new Error('nullifierToUtxo and commitmentToUtxo must be defined')
+  }
+  let txRecords = []
+  for (const event of txRecordEvents) {
+    const input1 = nullifierToUtxo.get(toFixedHex(event.inputNullifier1))
+    if (!input1) {
+      continue
+    }
+    const input2 = nullifierToUtxo.get(toFixedHex(event.inputNullifier2))
+    if (!input2) {
+      throw new Error('Should not happen')
+    }
+    const output1 = commitmentToUtxo.get(toFixedHex(event.outputCommitment1))
+    if (!output1) {
+      throw new Error('Should not happen')
+    }
+    const output2 = commitmentToUtxo.get(toFixedHex(event.outputCommitment2))
+    if (!output2) {
+      throw new Error('Should not happen')
+    }
+    const _txRecord = new TxRecord({
+      inputs: [input1, input2],
+      outputs: [output1, output2],
+      publicAmount: event.publicAmount,
+      index: event.index,
+    })
+    txRecords.push(_txRecord)
+  }
+  let steps = [finalTxRecord]
+  const todoProve = new Set()
+  if (finalTxRecord.inputs[0].amount.gt(0)) {
+    todoProve.add(toFixedHex(finalTxRecord.inputs[0].getCommitment()))
+  }
+  if (finalTxRecord.inputs[1].amount.gt(0)) {
+    todoProve.add(toFixedHex(finalTxRecord.inputs[1].getCommitment()))
+  }
+
+  txRecords = txRecords.filter((x) => (x.index < finalTxRecord.index ? finalTxRecord.index : x.index + 1))
+  txRecords.sort((a, b) => b.index - a.index)
+
+  for (const txRecord of txRecords) {
+    if (
+      (txRecord.outputs[0].amount.gt(0) && todoProve.has(toFixedHex(txRecord.outputs[0].getCommitment()))) ||
+      (txRecord.outputs[1].amount.gt(0) && todoProve.has(toFixedHex(txRecord.outputs[1].getCommitment())))
+    ) {
+      todoProve.delete(toFixedHex(txRecord.outputs[0].getCommitment()))
+      todoProve.delete(toFixedHex(txRecord.outputs[1].getCommitment()))
+
+      if (txRecord.inputs[0].amount.gt(0)) {
+        todoProve.add(toFixedHex(txRecord.inputs[0].getCommitment()))
+      }
+      if (txRecord.inputs[1].amount.gt(0)) {
+        todoProve.add(toFixedHex(txRecord.inputs[1].getCommitment()))
+      }
+      steps.push(txRecord)
+    }
+  }
+
+  if (todoProve.size > 0) {
+    throw new Error('Not enough proofs')
+  }
+  return steps.reverse()
+}
 
 async function proveInclusion(
+  keypair: Keypair,
   {
     events = [],
     inputs = [],
@@ -14,7 +146,29 @@ async function proveInclusion(
     recipient = BG_ZERO,
     isL1Withdrawal = true,
   }: PrepareTxParams,
-  txRecordEvents: TxRecordEvents
-) {}
+  { txRecordEvents, nullifierToUtxo = undefined, commitmentToUtxo = undefined, finalTxRecord }: ProveInclusionParams
+) {
+  if (!nullifierToUtxo || !commitmentToUtxo) {
+    const { nullifierToUtxo: nullifierToUtxo_, commitmentToUtxo: commitmentToUtxo_ } = await buildMappings(keypair, events, txRecordEvents)
+    nullifierToUtxo = nullifierToUtxo_
+    commitmentToUtxo = commitmentToUtxo_
+  }
+  const steps = await getPoiSteps({ txRecordEvents, nullifierToUtxo, commitmentToUtxo, finalTxRecord })
+  const txRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
+  const allowedTxRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
+  let accInnocentCommitments = [ZERO_LEAF, ZERO_LEAF]
+  let poiInputs = []
+  for (let i = 0; i < steps.length; i++) {
+    const { stepInputs, outputInnocentCommitments } = steps[i].generateInputs({
+      txRecordsMerkleTree,
+      allowedTxRecordsMerkleTree: allowedTxRecordsMerkleTree,
+      accInnocentCommitments,
+      isLastStep: i == steps.length - 1,
+    })
+    accInnocentCommitments = outputInnocentCommitments
+    poiInputs.push(stepInputs)
+  }
+  return poiInputs
+}
 
 export { proveInclusion }

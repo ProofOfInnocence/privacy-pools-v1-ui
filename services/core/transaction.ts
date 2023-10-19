@@ -2,7 +2,7 @@
 /* eslint-disable */
 
 import Jszip from 'jszip'
-import { BigNumber } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 import MerkleTree from 'fixed-merkle-tree'
 import axios, { AxiosResponse } from 'axios'
 import { BytesLike } from '@ethersproject/bytes'
@@ -32,12 +32,13 @@ import { ChainId } from '@/types'
 import { getTornadoPool } from '@/contracts'
 import { Element } from 'fixed-merkle-tree'
 import { proveInclusion } from './poi'
+import { TxRecord } from './txRecord'
 
 const ADDRESS_BYTES_LENGTH = 20
 
 const jszip = new Jszip()
 
-const poseidonHash2Wrapper = (left: Element, right: Element) => toFixedHex(poseidonHash2(left.toString(), right.toString()))
+export const poseidonHash2Wrapper = (left: Element, right: Element) => toFixedHex(poseidonHash2(left.toString(), right.toString()))
 
 function buildMerkleTree({ events }: { events: CommitmentEvents }) {
   const leaves = events.sort((a, b) => a.index - b.index).map((e) => toFixedHex(e.commitment))
@@ -45,7 +46,7 @@ function buildMerkleTree({ events }: { events: CommitmentEvents }) {
 }
 
 async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmount, fee, recipient, relayer }: ProofParams) {
-  console.log("GET PROOF IS CALLED")
+  console.log('GET PROOF IS CALLED')
   console.log(extAmount)
   // inputs = shuffle(inputs)
   // outputs = shuffle(outputs)
@@ -84,7 +85,7 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
     fee: toFixedHex(fee),
     encryptedOutput1: output1.encrypt(),
     encryptedOutput2: output2.encrypt(),
-    membershipProofURI: ""
+    membershipProofURI: '',
   }
 
   const extDataHash = getExtDataHash(extData)
@@ -166,7 +167,7 @@ async function prepareTransaction({
   let extAmount = BigNumber.from(fee)
     .add(outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
     .sub(inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
-    console.log("EXT AMOUNT IS: ", extAmount)
+  console.log('EXT AMOUNT IS: ', extAmount)
 
   const amount = extAmount.gt(0) ? extAmount : BG_ZERO
 
@@ -295,10 +296,47 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     //   params.rootHex = toFixedHex(root)
     //   console.log('LAST ROOT = ', params.rootHex)
     // } else {
-    const txRecordEvents = await workerProvider.getTxRecordEvents();
-    const membershipProof = await proveInclusion(params, txRecordEvents);
-
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
+    const txRecordEvents = await workerProvider.getTxRecordEvents()
+    params.events = await commitmentsService.fetchCommitments(keypair)
+    params.outputs = params.outputs || []
+    while (params.outputs.length < 2) {
+      params.outputs.push(new Utxo())
+    }
+    params.inputs = params.inputs || []
+    while (params.inputs.length < 2) {
+      const newBlinding = BigNumber.from(
+        '0x' +
+          ethers.utils
+            .keccak256(
+              ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
+            )
+            .slice(2, 64)
+      ).mod(FIELD_SIZE)
+
+      const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
+      params.inputs.push(newUtxo)
+    }
+    params.fee = params.fee || BG_ZERO
+    let extAmount = BigNumber.from(params.fee)
+      .add(params.outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+      .sub(params.inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+
+    const publicAmount = BigNumber.from(extAmount).sub(params.fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString()
+    const finalTxRecord = new TxRecord({
+      publicAmount,
+      inputs: params.inputs,
+      outputs: params.outputs,
+    })
+
+    const membershipProof = await proveInclusion(keypair, params, {
+      txRecordEvents,
+      nullifierToUtxo: undefined,
+      commitmentToUtxo: undefined,
+      finalTxRecord: finalTxRecord,
+    })
+    console.log("JHGVJIOHUGYFTUHIOJHUGYFTDRXESTGFRYGUIOPJHUGYTFRDESRXTRFYGUIOJPHUGYTFHRDGHYKO:")
+    console.log(membershipProof)
 
     params.events = await commitmentsService.fetchCommitments(keypair)
     // console.log("TX RECORD EVENTS: ", txRecordEvents)

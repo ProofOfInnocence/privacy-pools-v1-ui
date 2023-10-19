@@ -9,7 +9,17 @@ class TxRecord {
   public publicAmount: string
   public index: number
 
-  public constructor({ inputs = [], outputs = [], publicAmount = '', index = 0 } = {}) {
+  public constructor({
+    inputs,
+    outputs,
+    publicAmount = '',
+    index = 0,
+  }: {
+    inputs: BaseUtxo[]
+    outputs: BaseUtxo[]
+    publicAmount?: string
+    index?: number
+  }) {
     this.inputs = inputs
     this.outputs = outputs
     this.publicAmount = publicAmount
@@ -54,11 +64,7 @@ class TxRecord {
       txRecordsPathElements = new Array(txRecordsMerkleTree.levels).fill(0)
     }
 
-    const step_in = poseidonHash([
-      txRecordsMerkleTree.root,
-      allowedTxRecordsMerkleTree.root,
-      poseidonHash2(accInnocentCommitments[0], accInnocentCommitments[1]),
-    ])
+    const step_in = poseidonHash([txRecordsMerkleTree.root, allowedTxRecordsMerkleTree.root, poseidonHash(accInnocentCommitments)])
 
     let allowedTxRecordsPathIndex = null
     let allowedTxRecordsPathElements = null
