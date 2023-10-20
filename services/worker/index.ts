@@ -60,6 +60,7 @@ class Provider implements WorkerProvider {
     // @ts-expect-error
     this.eventsWorkers = new Array(CORES).fill('').map(() => new EWorker())
     const CORESX = 1
+    // @ts-expect-error
     this.novaWorkers = new Array(CORESX).fill('').map(() => new VWorker())
   }
 
