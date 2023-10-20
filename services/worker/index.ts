@@ -78,7 +78,7 @@ class Provider implements WorkerProvider {
     try {
       let pp = await this.openNovaChannel<{mode: number, pp_path: string, base: string}, string>(workerEvents.GENERATE_PP, {
         mode: 2,
-        pp_path: 'poi-pp-new.cbor',
+        pp_path: 'poi-pp-22.cbor',
         base: `${window.location.origin}`
       })
       return pp
@@ -90,8 +90,8 @@ class Provider implements WorkerProvider {
   public prove_membership = async (inputjson: string, startjson: string): Promise<string> => {
     try {
       const proof = await this.openNovaChannel<{r1cs_path: string, wasm_path: string, mode: number, input_path_or_str: string, start_path_or_str: string, base: string}, string>(workerEvents.PROVE, {
-        r1cs_path: 'poi-new.r1cs',
-        wasm_path: 'poi-new.wasm',
+        r1cs_path: 'poi-22.r1cs',
+        wasm_path: 'poi-22.wasm',
         mode: 1,
         input_path_or_str: inputjson,
         start_path_or_str: startjson,
