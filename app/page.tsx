@@ -333,7 +333,7 @@ export default function Home() {
     console.log(JSON.stringify(membershipProof))
     if (membershipProof) {
       const inputjson = JSON.stringify(membershipProof)
-      const startjson = JSON.stringify({ step_in: [membershipProof[0].step_in] })
+      const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProof[0].step_in).toHexString()] })
       console.log('inputjson', inputjson)
       console.log('startjson', startjson)
       await workerProvider.generate_public_parameters()

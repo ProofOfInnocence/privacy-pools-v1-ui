@@ -38,7 +38,7 @@ const WithdrawComponent: React.FC<WithdrawComponentProps> = ({ withdrawWithRelay
           className="w-full p-2 border rounded"
         />
       </div>
-
+{/* 
       <div className="mb-4">
         <label className="block mb-2">Select Relayer</label>
         <select
@@ -69,7 +69,7 @@ const WithdrawComponent: React.FC<WithdrawComponentProps> = ({ withdrawWithRelay
             </tr>
           </tbody>
         </table>
-      </div>
+      </div> */}
 
       <button
         onClick={handleWithdrawClick}

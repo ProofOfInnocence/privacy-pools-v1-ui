@@ -52,7 +52,7 @@ const numbers = {
   MIN_TRANSFER_CONFIRMATION: 1,
   CONFIRM_MODAL_CLOSE_TIME: 30000,
   POOL_INFORMATION_UPDATE_TIME: 30000,
-  TX_RECORDS_MERKLE_TREE_HEIGHT: 5,
+  TX_RECORDS_MERKLE_TREE_HEIGHT: 22,
   START_BALANCE_WATCHER_DEBOUNCE: 30000,
 }
 
@@ -74,7 +74,7 @@ const L1_WITHDRAW_GAS_LIMIT = 350000
 const APP_ENS_NAME = 'nova.tornadocash.eth'
 const SESSION_STORAGE_KEY = 'tornado_key'
 
-const SIGN_MESSAGE = `Sign this message to generate your TornadoCash Nova Privacy Key. This key lets the application decrypt your balance in TornadoCash Nova.\n\nIMPORTANT: Only sign this message if you trust the application.`
+const SIGN_MESSAGE = `Sign this message to generate your Privacy Pools Privacy Key. This key lets the application decrypt your balance in Privacy Pools.\n\nIMPORTANT: Only sign this message if you trust the application.`
 
 const REGISTRY_DEPLOYED_BLOCK: Record<ChainId, number> = {
   // [ChainId.MAINNET]: 14173129,
