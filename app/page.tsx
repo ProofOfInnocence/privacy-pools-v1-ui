@@ -21,6 +21,7 @@ import { RelayerInfo } from '@/types'
 import Balance from '@/components/Balance'
 import { getWrappedToken } from '@/contracts'
 import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
+import CIDCalculator from '@/components/IPFS'
 
 async function getUtxoFromKeypair({
   keypair,
@@ -336,7 +337,7 @@ export default function Home() {
     console.log(JSON.stringify(membershipProof))
     if (membershipProof) {
       const inputjson = JSON.stringify(membershipProof)
-      const startjson = JSON.stringify({ step_in: [membershipProof[0].step_in] })
+      const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProof[0].step_in).toHexString()] })
       console.log('inputjson', inputjson)
       console.log('startjson', startjson)
       await genpp()
@@ -385,7 +386,7 @@ export default function Home() {
   async function prove(inputjson: string, startjson: string) {
     // workerProvider.workerSetup(ChainId.XDAI)
     console.log('prove called')
-    await workerProvider.provex(inputjson, startjson)
+    return await workerProvider.provex(inputjson, startjson)
     console.log('prove done')
   }
 
@@ -433,6 +434,7 @@ export default function Home() {
           ) : (
             <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />
           )}
+          <CIDCalculator />
         </div>
       </div>
     </div>
