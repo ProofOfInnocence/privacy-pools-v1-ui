@@ -21,7 +21,6 @@ import { RelayerInfo } from '@/types'
 import Balance from '@/components/Balance'
 import { getWrappedToken } from '@/contracts'
 import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
-// import CIDCalculator from '@/components/IPFS'
 
 async function getUtxoFromKeypair({
   keypair,
@@ -330,18 +329,15 @@ export default function Home() {
     console.log('Args', args)
     let newExtData: ExtData = { ...extData }
     newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
-    // extData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
-    // await genpp()
-    // await prove()
     console.log('INPUT.JSON->')
     console.log(JSON.stringify(membershipProof))
     if (membershipProof) {
       const inputjson = JSON.stringify(membershipProof)
-      const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProof[0].step_in).toHexString()] })
+      const startjson = JSON.stringify({ step_in: [membershipProof[0].step_in] })
       console.log('inputjson', inputjson)
       console.log('startjson', startjson)
-      await genpp()
-      const proof = await prove(inputjson, startjson)
+      await workerProvider.generate_public_parameters()
+      const proof = await workerProvider.prove_membership(inputjson, startjson)
       console.log(proof)
     }
     await transact({ args, extData: newExtData })
@@ -374,27 +370,6 @@ export default function Home() {
     }
     const hash = await walletClient.writeContract(request)
     console.log(hash)
-  }
-
-  async function genpp() {
-    // workerProvider.workerSetup(ChainId.XDAI)
-    console.log('genpp called')
-    let ppx = await workerProvider.generate_ppx()
-    console.log('genpp done', ppx)
-  }
-
-  async function prove(inputjson: string, startjson: string) {
-    // workerProvider.workerSetup(ChainId.XDAI)
-    console.log('prove called')
-    return await workerProvider.provex(inputjson, startjson)
-    console.log('prove done')
-  }
-
-  async function verify() {
-    // workerProvider.workerSetup(ChainId.XDAI)
-    console.log('verify called')
-    await workerProvider.verifyx()
-    console.log('verify done')
   }
 
   return (

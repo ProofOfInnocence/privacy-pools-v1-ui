@@ -6,46 +6,23 @@ async function initWorker(chainID) {
 } 
 
 async function generate_params({mode, pp_path, base}, [port]) {
-  console.log("generate parameters - 0")
-  console.log("mode: ", mode, ", pppath: ", pp_path)
+  console.log("mode: ", mode, ", pppath: ", pp_path, "base: ", base)
   const multiThread = await import("nova_scotia_browser");
-  console.log("generate parameters - 1")
   await multiThread.default();
-  console.log("generate parameters - 2")
   //await multiThread.initThreadPool(navigator.hardwareConcurrency);
-  
   let pp = await multiThread.generate_params(mode, pp_path, base);
   self.$pp = pp;
   port.postMessage({ result: pp })
 }
 
 async function generate_proof({r1cs_path, wasm_path, mode, input_path_or_str, start_path_or_str, base}, [port]) {
-  console.log("generate proof - 0")
   const multiThread = await import("nova_scotia_browser");
-  console.log("generate proof - 1")
   await multiThread.default();
-  console.log("generate proof - 2")
-  //console.log(self.$pp)
   console.log(r1cs_path, wasm_path, mode, input_path_or_str, start_path_or_str, base)
   //await multiThread.initThreadPool(navigator.hardwareConcurrency);
-
   let proof = await multiThread.generate_proof(self.$pp, r1cs_path, wasm_path, mode, input_path_or_str, start_path_or_str, base)
-  console.log("generate proof - 3")
   self.$proof = proof
   port.postMessage({ result: proof })
-}
-
-async function verify_proof({mode, start_path_or_str, base}, [port]) {
-  console.log("verify proof - 0")
-  const multiThread = await import("nova_scotia_browser");
-  console.log("verify proof - 1")
-  await multiThread.default();
-  console.log("verify proof - 2")
-  //await multiThread.initThreadPool(navigator.hardwareConcurrency);
-
-  let correct = await multiThread.verify_compressed_proof(self.$pp, self.$proof, mode, start_path_or_str, base);
-  self.$correct = correct
-  port.postMessage({ result: correct })
 }
 
 const listener = ({ data, ports }) => {
@@ -55,29 +32,14 @@ const listener = ({ data, ports }) => {
       initWorker(5)
       break
     case workerEvents.GENERATE_PP:
-      console.log("genpp event occurred")
-      console.log("data payload", data.payload)
       generate_params(data.payload, ports)
-      //console.log("pp", pp)
-      console.log("pp generated")
+      console.log("public parameters generated")
       break
     case workerEvents.PROVE:
-      console.log("prove event occurred")
-      console.log("data payload", data.payload)
-      //generate_params(data.payload, ports)
       generate_proof(data.payload, ports)
-      //console.log("pp", pp)
-      console.log("prove done")
-      break
-    case workerEvents.VERIFY:
-      console.log("verify event occurred")
-      console.log("data payload", data.payload)
-      //generate_params(data.payload, ports)
-      verify_proof(data.payload, ports)
-      //console.log("pp", pp)
-      console.log("verify done")
+      console.log("prove completed")
       break
   }
 }
-//generate_params(2, "poi-pp.cbor", "http://127.0.0.1:3001")
+
 self.addEventListener('message', listener, false)

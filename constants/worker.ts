@@ -14,11 +14,10 @@ const workerEvents = {
   GET_CACHED_EVENTS: 'get_cached_events',
   GET_CACHED_COMMITMENTS_EVENTS: 'get_cached_commitments_events',
   SAVE_LAST_SYNC_BLOCK: 'save_last_sync_block',
+  GET_TX_RECORD_EVENTS: 'get_tx_record_events',
   // nova
   GENERATE_PP: 'generate_pp',
   PROVE: 'prove',
-  VERIFY: 'verify',
-  GET_TX_RECORD_EVENTS: 'get_tx_record_events',
 }
 
 const numbers = {
