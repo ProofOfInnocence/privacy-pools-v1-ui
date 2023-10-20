@@ -21,7 +21,7 @@ import { RelayerInfo } from '@/types'
 import Balance from '@/components/Balance'
 import { getWrappedToken } from '@/contracts'
 import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
-import CIDCalculator from '@/components/IPFS'
+// import CIDCalculator from '@/components/IPFS'
 
 async function getUtxoFromKeypair({
   keypair,
@@ -434,7 +434,6 @@ export default function Home() {
           ) : (
             <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />
           )}
-          <CIDCalculator />
         </div>
       </div>
     </div>
