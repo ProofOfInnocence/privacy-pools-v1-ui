@@ -96,7 +96,7 @@ class Provider implements WorkerProvider {
       console.log("generate pp x - 0")
       let pp = await this.openNovaChannel<{mode: number, pp_path: string, base: string}, string>(workerEvents.GENERATE_PP, {
         mode: 2,
-        pp_path: 'poi-pp.cbor',
+        pp_path: 'poi-pp-new.cbor',
         base: `${window.location.origin}`
       })
       console.log("generate pp x - 1")
@@ -112,8 +112,8 @@ class Provider implements WorkerProvider {
     try {
       console.log("prove x - 0")
       const proof = await this.openNovaChannel<{r1cs_path: string, wasm_path: string, mode: number, input_path_or_str: string, start_path_or_str: string, base: string}, string>(workerEvents.PROVE, {
-        r1cs_path: 'poi.r1cs',
-        wasm_path: 'poi.wasm',
+        r1cs_path: 'poi-new.r1cs',
+        wasm_path: 'poi-new.wasm',
         mode: 1,
         input_path_or_str: inputjson,
         start_path_or_str: startjson,
