@@ -111,6 +111,8 @@ class TxRecord {
       // console.log(this)
       outputInnocentCommitments.push(poseidonHash([this.outputs[j].getCommitment(), isLastStep ? 0 : this.outputs[j].index]))
     }
+    console.log("this.publicAmount -> ", this.publicAmount)
+    // alert(this.publicAmount)
     return {
       stepInputs: {
         txRecordsPathElements: txRecordsPathElements,
@@ -122,7 +124,7 @@ class TxRecord {
         txRecordsMerkleRoot: txRecordsMerkleTree.root,
         allowedTxRecordsMerkleRoot: allowedTxRecordsMerkleTree.root,
         step_in: step_in,
-        publicAmount: this.publicAmount,
+        publicAmount: BigNumber.from(this.publicAmount).toHexString(),
         outputsStartIndex: this.index,
         inputNullifier: inputNullifier,
         inAmount: inAmount,

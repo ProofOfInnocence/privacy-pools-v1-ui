@@ -22,9 +22,6 @@ import Balance from '@/components/Balance'
 import { getWrappedToken } from '@/contracts'
 import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
 
-// @ts-expect-error
-import { utils } from 'ffjavascript'
-
 async function getUtxoFromKeypair({
   keypair,
   accountAddress,
@@ -335,11 +332,11 @@ export default function Home() {
     // extData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
     // await genpp()
     // await prove()
+    console.log('INPUT.JSON->')
     console.log(JSON.stringify(membershipProof))
-    const aaa = utils.stringifyBigInts(membershipProof)
     if (membershipProof) {
-      const inputjson = JSON.stringify(aaa)
-      const startjson = JSON.stringify({ step_in: [aaa[0].step_in] })
+      const inputjson = JSON.stringify(membershipProof)
+      const startjson = JSON.stringify({ step_in: [membershipProof[0].step_in] })
       console.log('inputjson', inputjson)
       console.log('startjson', startjson)
       await genpp()

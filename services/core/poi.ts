@@ -8,10 +8,12 @@ import { BigNumber, ethers } from 'ethers'
 import { TxRecord } from './txRecord'
 import MerkleTree from 'fixed-merkle-tree'
 import { poseidonHash2Wrapper } from './transaction'
+// @ts-expect-error
+import { utils } from 'ffjavascript'
 
 function buildTxRecordMerkleTree({ events }: { events: TxRecordEvents }) {
   const leaves = events.sort((a, b) => a.index - b.index).map((e) => toFixedHex(TxRecord.hashFromEvent(e)))
-  return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper, zeroElement: ZERO_LEAF.toString() })
+  return new MerkleTree(numbers.TX_RECORDS_MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper, zeroElement: ZERO_LEAF.toString() })
 }
 
 async function buildMappings(keypair: Keypair, commitmentEvents: CommitmentEvents, txRecordEvents: TxRecordEvents) {
@@ -175,7 +177,9 @@ async function proveInclusion(
       isLastStep: i == steps.length - 1,
     })
     accInnocentCommitments = outputInnocentCommitments
-    poiInputs.push(stepInputs)
+    poiInputs.push(
+      utils.stringifyBigInts(stepInputs)
+    )
   }
   console.log("poiInputs->", poiInputs)
   return poiInputs
