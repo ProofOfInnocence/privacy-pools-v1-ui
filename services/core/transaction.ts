@@ -77,7 +77,9 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
   console.log(tree.layers)
 
   const [output1, output2] = outputs
-
+  console.log("Calculating extAmount:")
+  console.log(extAmount)
+  console.log(toFixedHex(extAmount))
   const extData = {
     recipient: toFixedHex(recipient, ADDRESS_BYTES_LENGTH),
     extAmount: toFixedHex(extAmount),

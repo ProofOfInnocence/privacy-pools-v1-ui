@@ -8,7 +8,7 @@ import { useAccount, useContractWrite, usePrepareContractWrite, usePublicClient,
 import { BG_ZERO, POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
 import { encodeTransactData, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { BaseError, ContractFunctionRevertedError } from 'viem'
+import { BaseError, ContractFunctionRevertedError, numberToHex, toRlp } from 'viem'
 import { UnspentUtxoData } from '@/services/utxoService/@types'
 import { BigNumber } from 'ethers'
 import { ArgsProof, ExtData } from '@/services/core/@types'
@@ -326,9 +326,12 @@ export default function Home() {
     })
     console.log('Ext data', extData)
     console.log('Args', args)
+    let newExtData : ExtData = { ...extData }
+    newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
+    // extData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
     // await genpp()
     // await prove()
-    await transact({ args, extData })
+    await transact({ args, extData: newExtData })
     // await sendToRelayer(relayer.rewardAddress, { extData, args })
   }
 

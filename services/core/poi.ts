@@ -159,9 +159,13 @@ async function proveInclusion(
     commitmentToUtxo = commitmentToUtxo_
   }
   const steps = await getPoiSteps({ txRecordEvents, nullifierToUtxo, commitmentToUtxo, finalTxRecord })
+  console.log("Steps->", steps)
+  console.log("txRecordsMerkleTree->", txRecordEvents)
   const txRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
   const allowedTxRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
+  console.log("allowedTxRecordsMerkleTree->", allowedTxRecordsMerkleTree)
   let accInnocentCommitments = [ZERO_LEAF, ZERO_LEAF]
+  console.log("accInnocentCommitments->", accInnocentCommitments)
   let poiInputs = []
   for (let i = 0; i < steps.length; i++) {
     const { stepInputs, outputInnocentCommitments } = steps[i].generateInputs({
@@ -173,6 +177,7 @@ async function proveInclusion(
     accInnocentCommitments = outputInnocentCommitments
     poiInputs.push(stepInputs)
   }
+  console.log("poiInputs->", poiInputs)
   return poiInputs
 }
 

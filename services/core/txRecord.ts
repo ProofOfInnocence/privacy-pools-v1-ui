@@ -35,7 +35,7 @@ class TxRecord {
           this.outputs[0].getCommitment(),
           this.outputs[1].getCommitment(),
         ]),
-        this.publicAmount,
+        BigNumber.from(this.publicAmount),
       ]),
       this.index,
     ])
@@ -44,15 +44,22 @@ class TxRecord {
   static hashFromEvent(event: TxRecordEvent) {
     return poseidonHash([
       poseidonHash([
-        poseidonHash([event.inputNullifier1, event.inputNullifier2, event.outputCommitment1, event.outputCommitment2]),
-        event.publicAmount,
+        poseidonHash([
+          BigNumber.from(event.inputNullifier1),
+          BigNumber.from(event.inputNullifier2),
+          BigNumber.from(event.outputCommitment1),
+          BigNumber.from(event.outputCommitment2),
+        ]),
+        BigNumber.from(event.publicAmount),
       ]),
       event.index,
     ])
   }
 
   public generateInputs({ txRecordsMerkleTree, allowedTxRecordsMerkleTree, accInnocentCommitments, isLastStep }: GeneratePoiStepParams) {
+    console.log('txRecordsMerkleTree', txRecordsMerkleTree)
     const txRecord = toFixedHex(this.hash())
+    console.log('txRecord', txRecord)
     let txRecordsPathIndex
     let txRecordsPathElements
 

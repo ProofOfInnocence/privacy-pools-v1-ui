@@ -92,7 +92,7 @@ export type ProofParams = {
 
 export type ExtData = {
   recipient: string
-  extAmount: string
+  extAmount: string | bigint
   relayer: string
   fee: string
   encryptedOutput1: BytesLike
