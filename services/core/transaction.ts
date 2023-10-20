@@ -77,7 +77,7 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
   console.log(tree.layers)
 
   const [output1, output2] = outputs
-  console.log("Calculating extAmount:")
+  console.log('Calculating extAmount:')
   console.log(extAmount)
   console.log(toFixedHex(extAmount))
   const extData = {
@@ -289,19 +289,11 @@ async function estimateTransact(payload: EstimateTransactParams) {
 
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair) {
   try {
-    // const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
-
-    // if (!params.inputs || !params.inputs.length) {
-    //   const root = await tornadoPool.callStatic.getLastRoot()
-
-    //   params.events = []
-    //   params.rootHex = toFixedHex(root)
-    //   console.log('LAST ROOT = ', params.rootHex)
-    // } else {
+    let membershipProof
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
     params.outputs = params.outputs || []
     while (params.outputs.length < 2) {
-      params.outputs.push(new Utxo({keypair}))
+      params.outputs.push(new Utxo({ keypair }))
     }
     params.inputs = params.inputs || []
     while (params.inputs.length < 2) {
@@ -337,7 +329,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       console.log('FINAL TX RECORD: ', finalTxRecord)
       console.log('COMMITMENTS: ', params.events)
 
-      const membershipProof = await proveInclusion(keypair, params, {
+      membershipProof = await proveInclusion(keypair, params, {
         txRecordEvents,
         nullifierToUtxo: undefined,
         commitmentToUtxo: undefined,
@@ -352,7 +344,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
 
     // await estimateTransact({ extData, args })
 
-    return { extData, args, amount }
+    return { extData, args, amount, membershipProof }
   } catch (err) {
     throw new Error(err.message)
   }

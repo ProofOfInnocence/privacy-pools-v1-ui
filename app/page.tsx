@@ -11,6 +11,7 @@ import { encodeTransactData, generatePrivateKeyFromEntropy, toChecksumAddress, t
 import { BaseError, ContractFunctionRevertedError, numberToHex, toRlp } from 'viem'
 import { UnspentUtxoData } from '@/services/utxoService/@types'
 import { BigNumber } from 'ethers'
+
 import { ArgsProof, ExtData } from '@/services/core/@types'
 import axios from 'axios'
 import DepositComponent from '@/components/Deposit'
@@ -20,6 +21,9 @@ import { RelayerInfo } from '@/types'
 import Balance from '@/components/Balance'
 import { getWrappedToken } from '@/contracts'
 import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
+
+// @ts-expect-error
+import { utils } from 'ffjavascript'
 
 async function getUtxoFromKeypair({
   keypair,
@@ -125,7 +129,7 @@ async function prepareTransaction({
     }
     const outputs = [new Utxo({ amount: outputAmount, keypair })]
 
-    const { extData, args } = await createTransactionData(
+    const { extData, args, membershipProof } = await createTransactionData(
       {
         outputs,
         inputs: unspentUtxo.length > 2 ? unspentUtxo.slice(0, 2) : unspentUtxo,
@@ -136,7 +140,7 @@ async function prepareTransaction({
       keypair
     )
 
-    return { extData, args }
+    return { extData, args, membershipProof }
   } catch (err) {
     throw new Error(err.message)
   }
@@ -316,7 +320,7 @@ export default function Home() {
     const totalAmount = BigNumber.from(toWei(amount))
     // substraction fee
     // const amountWithFee = totalAmount.sub(relayer.fee)
-    const { extData, args } = await prepareTransaction({
+    const { extData, args, membershipProof } = await prepareTransaction({
       keypair,
       amount: totalAmount,
       address: toChecksumAddress(address),
@@ -326,11 +330,22 @@ export default function Home() {
     })
     console.log('Ext data', extData)
     console.log('Args', args)
-    let newExtData : ExtData = { ...extData }
+    let newExtData: ExtData = { ...extData }
     newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
     // extData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
     // await genpp()
     // await prove()
+    console.log(JSON.stringify(membershipProof))
+    const aaa = utils.stringifyBigInts(membershipProof)
+    if (membershipProof) {
+      const inputjson = JSON.stringify(aaa)
+      const startjson = JSON.stringify({ step_in: [aaa[0].step_in] })
+      console.log('inputjson', inputjson)
+      console.log('startjson', startjson)
+      await genpp()
+      const proof = await prove(inputjson, startjson)
+      console.log(proof)
+    }
     await transact({ args, extData: newExtData })
     // await sendToRelayer(relayer.rewardAddress, { extData, args })
   }
@@ -370,10 +385,10 @@ export default function Home() {
     console.log('genpp done', ppx)
   }
 
-  async function prove() {
+  async function prove(inputjson: string, startjson: string) {
     // workerProvider.workerSetup(ChainId.XDAI)
     console.log('prove called')
-    await workerProvider.provex()
+    await workerProvider.provex(inputjson, startjson)
     console.log('prove done')
   }
 

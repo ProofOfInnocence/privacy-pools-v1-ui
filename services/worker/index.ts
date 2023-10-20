@@ -96,7 +96,7 @@ class Provider implements WorkerProvider {
       let pp = await this.openNovaChannel<{mode: number, pp_path: string, base: string}, string>(workerEvents.GENERATE_PP, {
         mode: 2,
         pp_path: 'poi-pp.cbor',
-        base: 'http://127.0.0.1:3001'
+        base: `${window.location.origin}`
       })
       console.log("generate pp x - 1")
       //console.log("ppx: ", pp)
@@ -116,7 +116,7 @@ class Provider implements WorkerProvider {
         mode: 1,
         input_path_or_str: inputjson,
         start_path_or_str: startjson,
-        base: 'http://127.0.0.1:3001'
+        base: `${window.location.origin}`
       })
       console.log("prove x - 1")
       console.log("proofx: ", proof)
@@ -133,7 +133,7 @@ class Provider implements WorkerProvider {
       const correct = await this.openNovaChannel<{mode: number, start_path_or_str: string, base: string}, boolean>(workerEvents.VERIFY, {
         mode: 0,
         start_path_or_str: 'poi-start.json',
-        base: 'http://127.0.0.1:3001'
+        base: `${window.location.origin}`
       })
       console.log("verify x - 1")
       console.log("verifyx: ", correct)
