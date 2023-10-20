@@ -19,12 +19,11 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface TornadoPoolInterface extends ethers.utils.Interface {
+interface PrivacyPoolInterface extends ethers.utils.Interface {
   functions: {
     "FIELD_SIZE()": FunctionFragment;
     "MAX_EXT_AMOUNT()": FunctionFragment;
     "MAX_FEE()": FunctionFragment;
-    "MIN_EXT_AMOUNT_LIMIT()": FunctionFragment;
     "ROOT_HISTORY_SIZE()": FunctionFragment;
     "ZERO_VALUE()": FunctionFragment;
     "__gap()": FunctionFragment;
@@ -39,16 +38,11 @@ interface TornadoPoolInterface extends ethers.utils.Interface {
     "lastBalance()": FunctionFragment;
     "levels()": FunctionFragment;
     "maximumDepositAmount()": FunctionFragment;
-    "minimumWithdrawalAmount()": FunctionFragment;
     "nextIndex()": FunctionFragment;
     "nullifierHashes(bytes32)": FunctionFragment;
-    "onTransact(tuple,tuple)": FunctionFragment;
-    "register(tuple)": FunctionFragment;
-    "registerAndTransact(tuple,tuple,tuple)": FunctionFragment;
     "roots(uint256)": FunctionFragment;
     "token()": FunctionFragment;
     "transact(tuple,tuple)": FunctionFragment;
-    "verifier16()": FunctionFragment;
     "verifier2()": FunctionFragment;
     "verifyProof(tuple)": FunctionFragment;
     "zeros(uint256)": FunctionFragment;
@@ -63,10 +57,6 @@ interface TornadoPoolInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "MAX_FEE", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "MIN_EXT_AMOUNT_LIMIT",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "ROOT_HISTORY_SIZE",
     values?: undefined
@@ -111,65 +101,10 @@ interface TornadoPoolInterface extends ethers.utils.Interface {
     functionFragment: "maximumDepositAmount",
     values?: undefined
   ): string;
-  encodeFunctionData(
-    functionFragment: "minimumWithdrawalAmount",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "nextIndex", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "nullifierHashes",
     values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "onTransact",
-    values: [
-      {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      }
-    ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "register",
-    values: [{ owner: string; publicKey: BytesLike }]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "registerAndTransact",
-    values: [
-      { owner: string; publicKey: BytesLike },
-      {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      }
-    ]
   ): string;
   encodeFunctionData(functionFragment: "roots", values: [BigNumberish]): string;
   encodeFunctionData(functionFragment: "token", values?: undefined): string;
@@ -179,7 +114,7 @@ interface TornadoPoolInterface extends ethers.utils.Interface {
       {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;
@@ -191,14 +126,9 @@ interface TornadoPoolInterface extends ethers.utils.Interface {
         fee: BigNumberish;
         encryptedOutput1: BytesLike;
         encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
+        membershipProofURI: string;
       }
     ]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "verifier16",
-    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "verifier2", values?: undefined): string;
   encodeFunctionData(
@@ -207,7 +137,7 @@ interface TornadoPoolInterface extends ethers.utils.Interface {
       {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;
@@ -222,10 +152,6 @@ interface TornadoPoolInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "MAX_FEE", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "MIN_EXT_AMOUNT_LIMIT",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(
     functionFragment: "ROOT_HISTORY_SIZE",
     data: BytesLike
@@ -267,25 +193,14 @@ interface TornadoPoolInterface extends ethers.utils.Interface {
     functionFragment: "maximumDepositAmount",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "minimumWithdrawalAmount",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "nextIndex", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "nullifierHashes",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "onTransact", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "register", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "registerAndTransact",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "roots", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "token", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "transact", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "verifier16", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "verifier2", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "verifyProof",
@@ -296,12 +211,14 @@ interface TornadoPoolInterface extends ethers.utils.Interface {
   events: {
     "NewCommitment(bytes32,uint256,bytes)": EventFragment;
     "NewNullifier(bytes32)": EventFragment;
-    "PublicKey(address,bytes)": EventFragment;
+    "NewTxRecord(bytes32,bytes32,bytes32,bytes32,uint256,uint32)": EventFragment;
+    "NewWithdrawal(address,uint256,string)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "NewCommitment"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "NewNullifier"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "PublicKey"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "NewTxRecord"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "NewWithdrawal"): EventFragment;
 }
 
 export type NewCommitmentEvent = TypedEvent<
@@ -314,11 +231,26 @@ export type NewCommitmentEvent = TypedEvent<
 
 export type NewNullifierEvent = TypedEvent<[string] & { nullifier: string }>;
 
-export type PublicKeyEvent = TypedEvent<
-  [string, string] & { owner: string; key: string }
+export type NewTxRecordEvent = TypedEvent<
+  [string, string, string, string, BigNumber, number] & {
+    inputNullifier1: string;
+    inputNullifier2: string;
+    outputCommitment1: string;
+    outputCommitment2: string;
+    publicAmount: BigNumber;
+    index: number;
+  }
 >;
 
-export class TornadoPool extends BaseContract {
+export type NewWithdrawalEvent = TypedEvent<
+  [string, BigNumber, string] & {
+    recipient: string;
+    amount: BigNumber;
+    membershipProofURI: string;
+  }
+>;
+
+export class PrivacyPool extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -359,7 +291,7 @@ export class TornadoPool extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: TornadoPoolInterface;
+  interface: PrivacyPoolInterface;
 
   functions: {
     FIELD_SIZE(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -367,8 +299,6 @@ export class TornadoPool extends BaseContract {
     MAX_EXT_AMOUNT(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     MAX_FEE(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    MIN_EXT_AMOUNT_LIMIT(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<[number]>;
 
@@ -415,64 +345,12 @@ export class TornadoPool extends BaseContract {
 
     maximumDepositAmount(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    minimumWithdrawalAmount(overrides?: CallOverrides): Promise<[BigNumber]>;
-
     nextIndex(overrides?: CallOverrides): Promise<[number]>;
 
     nullifierHashes(
       arg0: BytesLike,
       overrides?: CallOverrides
     ): Promise<[boolean]>;
-
-    onTransact(
-      _args: {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      _extData: {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    register(
-      _account: { owner: string; publicKey: BytesLike },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    registerAndTransact(
-      _account: { owner: string; publicKey: BytesLike },
-      _proofArgs: {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      _extData: {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
 
     roots(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
 
@@ -482,7 +360,7 @@ export class TornadoPool extends BaseContract {
       _args: {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;
@@ -494,13 +372,10 @@ export class TornadoPool extends BaseContract {
         fee: BigNumberish;
         encryptedOutput1: BytesLike;
         encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
+        membershipProofURI: string;
       },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    verifier16(overrides?: CallOverrides): Promise<[string]>;
 
     verifier2(overrides?: CallOverrides): Promise<[string]>;
 
@@ -508,7 +383,7 @@ export class TornadoPool extends BaseContract {
       _args: {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;
@@ -524,8 +399,6 @@ export class TornadoPool extends BaseContract {
   MAX_EXT_AMOUNT(overrides?: CallOverrides): Promise<BigNumber>;
 
   MAX_FEE(overrides?: CallOverrides): Promise<BigNumber>;
-
-  MIN_EXT_AMOUNT_LIMIT(overrides?: CallOverrides): Promise<BigNumber>;
 
   ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<number>;
 
@@ -569,61 +442,9 @@ export class TornadoPool extends BaseContract {
 
   maximumDepositAmount(overrides?: CallOverrides): Promise<BigNumber>;
 
-  minimumWithdrawalAmount(overrides?: CallOverrides): Promise<BigNumber>;
-
   nextIndex(overrides?: CallOverrides): Promise<number>;
 
   nullifierHashes(arg0: BytesLike, overrides?: CallOverrides): Promise<boolean>;
-
-  onTransact(
-    _args: {
-      proof: BytesLike;
-      root: BytesLike;
-      inputNullifiers: BytesLike[];
-      outputCommitments: [BytesLike, BytesLike];
-      publicAmount: BigNumberish;
-      extDataHash: BytesLike;
-    },
-    _extData: {
-      recipient: string;
-      extAmount: BigNumberish;
-      relayer: string;
-      fee: BigNumberish;
-      encryptedOutput1: BytesLike;
-      encryptedOutput2: BytesLike;
-      isL1Withdrawal: boolean;
-      l1Fee: BigNumberish;
-    },
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  register(
-    _account: { owner: string; publicKey: BytesLike },
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  registerAndTransact(
-    _account: { owner: string; publicKey: BytesLike },
-    _proofArgs: {
-      proof: BytesLike;
-      root: BytesLike;
-      inputNullifiers: BytesLike[];
-      outputCommitments: [BytesLike, BytesLike];
-      publicAmount: BigNumberish;
-      extDataHash: BytesLike;
-    },
-    _extData: {
-      recipient: string;
-      extAmount: BigNumberish;
-      relayer: string;
-      fee: BigNumberish;
-      encryptedOutput1: BytesLike;
-      encryptedOutput2: BytesLike;
-      isL1Withdrawal: boolean;
-      l1Fee: BigNumberish;
-    },
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
 
   roots(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
@@ -633,7 +454,7 @@ export class TornadoPool extends BaseContract {
     _args: {
       proof: BytesLike;
       root: BytesLike;
-      inputNullifiers: BytesLike[];
+      inputNullifiers: [BytesLike, BytesLike];
       outputCommitments: [BytesLike, BytesLike];
       publicAmount: BigNumberish;
       extDataHash: BytesLike;
@@ -645,13 +466,10 @@ export class TornadoPool extends BaseContract {
       fee: BigNumberish;
       encryptedOutput1: BytesLike;
       encryptedOutput2: BytesLike;
-      isL1Withdrawal: boolean;
-      l1Fee: BigNumberish;
+      membershipProofURI: string;
     },
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
-
-  verifier16(overrides?: CallOverrides): Promise<string>;
 
   verifier2(overrides?: CallOverrides): Promise<string>;
 
@@ -659,7 +477,7 @@ export class TornadoPool extends BaseContract {
     _args: {
       proof: BytesLike;
       root: BytesLike;
-      inputNullifiers: BytesLike[];
+      inputNullifiers: [BytesLike, BytesLike];
       outputCommitments: [BytesLike, BytesLike];
       publicAmount: BigNumberish;
       extDataHash: BytesLike;
@@ -675,8 +493,6 @@ export class TornadoPool extends BaseContract {
     MAX_EXT_AMOUNT(overrides?: CallOverrides): Promise<BigNumber>;
 
     MAX_FEE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MIN_EXT_AMOUNT_LIMIT(overrides?: CallOverrides): Promise<BigNumber>;
 
     ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<number>;
 
@@ -720,64 +536,12 @@ export class TornadoPool extends BaseContract {
 
     maximumDepositAmount(overrides?: CallOverrides): Promise<BigNumber>;
 
-    minimumWithdrawalAmount(overrides?: CallOverrides): Promise<BigNumber>;
-
     nextIndex(overrides?: CallOverrides): Promise<number>;
 
     nullifierHashes(
       arg0: BytesLike,
       overrides?: CallOverrides
     ): Promise<boolean>;
-
-    onTransact(
-      _args: {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      _extData: {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      },
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    register(
-      _account: { owner: string; publicKey: BytesLike },
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    registerAndTransact(
-      _account: { owner: string; publicKey: BytesLike },
-      _proofArgs: {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      _extData: {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      },
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     roots(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
@@ -787,7 +551,7 @@ export class TornadoPool extends BaseContract {
       _args: {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;
@@ -799,13 +563,10 @@ export class TornadoPool extends BaseContract {
         fee: BigNumberish;
         encryptedOutput1: BytesLike;
         encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
+        membershipProofURI: string;
       },
       overrides?: CallOverrides
     ): Promise<void>;
-
-    verifier16(overrides?: CallOverrides): Promise<string>;
 
     verifier2(overrides?: CallOverrides): Promise<string>;
 
@@ -813,7 +574,7 @@ export class TornadoPool extends BaseContract {
       _args: {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;
@@ -851,15 +612,61 @@ export class TornadoPool extends BaseContract {
       nullifier?: null
     ): TypedEventFilter<[string], { nullifier: string }>;
 
-    "PublicKey(address,bytes)"(
-      owner?: string | null,
-      key?: null
-    ): TypedEventFilter<[string, string], { owner: string; key: string }>;
+    "NewTxRecord(bytes32,bytes32,bytes32,bytes32,uint256,uint32)"(
+      inputNullifier1?: null,
+      inputNullifier2?: null,
+      outputCommitment1?: null,
+      outputCommitment2?: null,
+      publicAmount?: null,
+      index?: null
+    ): TypedEventFilter<
+      [string, string, string, string, BigNumber, number],
+      {
+        inputNullifier1: string;
+        inputNullifier2: string;
+        outputCommitment1: string;
+        outputCommitment2: string;
+        publicAmount: BigNumber;
+        index: number;
+      }
+    >;
 
-    PublicKey(
-      owner?: string | null,
-      key?: null
-    ): TypedEventFilter<[string, string], { owner: string; key: string }>;
+    NewTxRecord(
+      inputNullifier1?: null,
+      inputNullifier2?: null,
+      outputCommitment1?: null,
+      outputCommitment2?: null,
+      publicAmount?: null,
+      index?: null
+    ): TypedEventFilter<
+      [string, string, string, string, BigNumber, number],
+      {
+        inputNullifier1: string;
+        inputNullifier2: string;
+        outputCommitment1: string;
+        outputCommitment2: string;
+        publicAmount: BigNumber;
+        index: number;
+      }
+    >;
+
+    "NewWithdrawal(address,uint256,string)"(
+      recipient?: null,
+      amount?: null,
+      membershipProofURI?: null
+    ): TypedEventFilter<
+      [string, BigNumber, string],
+      { recipient: string; amount: BigNumber; membershipProofURI: string }
+    >;
+
+    NewWithdrawal(
+      recipient?: null,
+      amount?: null,
+      membershipProofURI?: null
+    ): TypedEventFilter<
+      [string, BigNumber, string],
+      { recipient: string; amount: BigNumber; membershipProofURI: string }
+    >;
   };
 
   estimateGas: {
@@ -868,8 +675,6 @@ export class TornadoPool extends BaseContract {
     MAX_EXT_AMOUNT(overrides?: CallOverrides): Promise<BigNumber>;
 
     MAX_FEE(overrides?: CallOverrides): Promise<BigNumber>;
-
-    MIN_EXT_AMOUNT_LIMIT(overrides?: CallOverrides): Promise<BigNumber>;
 
     ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -916,63 +721,11 @@ export class TornadoPool extends BaseContract {
 
     maximumDepositAmount(overrides?: CallOverrides): Promise<BigNumber>;
 
-    minimumWithdrawalAmount(overrides?: CallOverrides): Promise<BigNumber>;
-
     nextIndex(overrides?: CallOverrides): Promise<BigNumber>;
 
     nullifierHashes(
       arg0: BytesLike,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    onTransact(
-      _args: {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      _extData: {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    register(
-      _account: { owner: string; publicKey: BytesLike },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    registerAndTransact(
-      _account: { owner: string; publicKey: BytesLike },
-      _proofArgs: {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      _extData: {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     roots(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
@@ -983,7 +736,7 @@ export class TornadoPool extends BaseContract {
       _args: {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;
@@ -995,13 +748,10 @@ export class TornadoPool extends BaseContract {
         fee: BigNumberish;
         encryptedOutput1: BytesLike;
         encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
+        membershipProofURI: string;
       },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    verifier16(overrides?: CallOverrides): Promise<BigNumber>;
 
     verifier2(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1009,7 +759,7 @@ export class TornadoPool extends BaseContract {
       _args: {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;
@@ -1026,10 +776,6 @@ export class TornadoPool extends BaseContract {
     MAX_EXT_AMOUNT(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     MAX_FEE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    MIN_EXT_AMOUNT_LIMIT(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
 
     ROOT_HISTORY_SIZE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -1078,65 +824,11 @@ export class TornadoPool extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    minimumWithdrawalAmount(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     nextIndex(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     nullifierHashes(
       arg0: BytesLike,
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    onTransact(
-      _args: {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      _extData: {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    register(
-      _account: { owner: string; publicKey: BytesLike },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    registerAndTransact(
-      _account: { owner: string; publicKey: BytesLike },
-      _proofArgs: {
-        proof: BytesLike;
-        root: BytesLike;
-        inputNullifiers: BytesLike[];
-        outputCommitments: [BytesLike, BytesLike];
-        publicAmount: BigNumberish;
-        extDataHash: BytesLike;
-      },
-      _extData: {
-        recipient: string;
-        extAmount: BigNumberish;
-        relayer: string;
-        fee: BigNumberish;
-        encryptedOutput1: BytesLike;
-        encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     roots(
@@ -1150,7 +842,7 @@ export class TornadoPool extends BaseContract {
       _args: {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;
@@ -1162,13 +854,10 @@ export class TornadoPool extends BaseContract {
         fee: BigNumberish;
         encryptedOutput1: BytesLike;
         encryptedOutput2: BytesLike;
-        isL1Withdrawal: boolean;
-        l1Fee: BigNumberish;
+        membershipProofURI: string;
       },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
-
-    verifier16(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     verifier2(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
@@ -1176,7 +865,7 @@ export class TornadoPool extends BaseContract {
       _args: {
         proof: BytesLike;
         root: BytesLike;
-        inputNullifiers: BytesLike[];
+        inputNullifiers: [BytesLike, BytesLike];
         outputCommitments: [BytesLike, BytesLike];
         publicAmount: BigNumberish;
         extDataHash: BytesLike;

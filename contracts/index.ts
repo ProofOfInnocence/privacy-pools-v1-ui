@@ -7,13 +7,14 @@ import {
 } from '@/constants'
 
 import {
-  TornadoPool__factory as TornadoPoolFactory,
+  PrivacyPool__factory as TornadoPoolFactory,
   WETH__factory as WETHFactory
 } from '@/_contracts'
 
 export function getTornadoPool(chainId: ChainId) {
   const { provider } = getProvider(chainId)
-  return TornadoPoolFactory.connect(POOL_CONTRACT[chainId], provider)
+  const tornadoPool =  TornadoPoolFactory.connect(POOL_CONTRACT[chainId], provider)
+  return tornadoPool
 }
 
 // export function getBridgeHelper(chainId: L1ChainId) {

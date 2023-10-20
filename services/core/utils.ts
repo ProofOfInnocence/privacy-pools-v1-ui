@@ -31,17 +31,16 @@ interface Params {
   encryptedOutput1: string
   extAmount: string
   fee: string
-  l1Fee: string
-  isL1Withdrawal: boolean
   encryptedOutput2: string
+  membershipProofURI: string
 }
 
-function getExtDataHash({ recipient, extAmount, isL1Withdrawal, relayer, fee, l1Fee, encryptedOutput1, encryptedOutput2 }: Params) {
+function getExtDataHash({ recipient, extAmount, relayer, fee, encryptedOutput1, encryptedOutput2, membershipProofURI }: Params) {
   const abi = new utils.AbiCoder()
 
   const encodedData = abi.encode(
     [
-      'tuple(address recipient,int256 extAmount,address relayer,uint256 fee,bytes encryptedOutput1,bytes encryptedOutput2,bool isL1Withdrawal,uint256 l1Fee)',
+      'tuple(address recipient,int256 extAmount,address relayer,uint256 fee,bytes encryptedOutput1,bytes encryptedOutput2,string membershipProofURI)',
     ],
     [
       {
@@ -51,8 +50,7 @@ function getExtDataHash({ recipient, extAmount, isL1Withdrawal, relayer, fee, l1
         fee: toFixedHex(fee),
         encryptedOutput1: encryptedOutput1,
         encryptedOutput2: encryptedOutput2,
-        isL1Withdrawal: isL1Withdrawal,
-        l1Fee: toFixedHex(l1Fee),
+        membershipProofURI: membershipProofURI,
       },
     ]
   )
