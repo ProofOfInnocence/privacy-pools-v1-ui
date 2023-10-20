@@ -205,7 +205,7 @@ function makeMutClosure(arg0, arg1, dtor, f) {
     return real;
 }
 function __wbg_adapter_26(arg0, arg1, arg2) {
-    wasm._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h97b1a1506527143e(arg0, arg1, addHeapObject(arg2));
+    wasm._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h258cc74006aa23c6(arg0, arg1, addHeapObject(arg2));
 }
 
 /**
@@ -287,45 +287,47 @@ export function get_path(url, filename) {
 * @param {string} pp_str
 * @param {string} r1cs_path
 * @param {string} wasm_path
-* @param {string} input_path
-* @param {string} start_path
+* @param {number} mode
+* @param {string} input_path_or_str
+* @param {string} start_path_or_str
 * @param {string} base
 * @returns {Promise<string>}
 */
-export function generate_proof(pp_str, r1cs_path, wasm_path, input_path, start_path, base) {
+export function generate_proof(pp_str, r1cs_path, wasm_path, mode, input_path_or_str, start_path_or_str, base) {
     const ptr0 = passStringToWasm0(pp_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passStringToWasm0(r1cs_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
     const ptr2 = passStringToWasm0(wasm_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len2 = WASM_VECTOR_LEN;
-    const ptr3 = passStringToWasm0(input_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const ptr3 = passStringToWasm0(input_path_or_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len3 = WASM_VECTOR_LEN;
-    const ptr4 = passStringToWasm0(start_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const ptr4 = passStringToWasm0(start_path_or_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len4 = WASM_VECTOR_LEN;
     const ptr5 = passStringToWasm0(base, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len5 = WASM_VECTOR_LEN;
-    const ret = wasm.generate_proof(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3, ptr4, len4, ptr5, len5);
+    const ret = wasm.generate_proof(ptr0, len0, ptr1, len1, ptr2, len2, mode, ptr3, len3, ptr4, len4, ptr5, len5);
     return takeObject(ret);
 }
 
 /**
 * @param {string} pp_str
 * @param {string} proof_str
-* @param {string} start_path
+* @param {number} mode
+* @param {string} start_path_or_str
 * @param {string} base
 * @returns {Promise<boolean>}
 */
-export function verify_compressed_proof(pp_str, proof_str, start_path, base) {
+export function verify_compressed_proof(pp_str, proof_str, mode, start_path_or_str, base) {
     const ptr0 = passStringToWasm0(pp_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len0 = WASM_VECTOR_LEN;
     const ptr1 = passStringToWasm0(proof_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len1 = WASM_VECTOR_LEN;
-    const ptr2 = passStringToWasm0(start_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const ptr2 = passStringToWasm0(start_path_or_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len2 = WASM_VECTOR_LEN;
     const ptr3 = passStringToWasm0(base, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
     const len3 = WASM_VECTOR_LEN;
-    const ret = wasm.verify_compressed_proof(ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+    const ret = wasm.verify_compressed_proof(ptr0, len0, ptr1, len1, mode, ptr2, len2, ptr3, len3);
     return takeObject(ret);
 }
 
@@ -362,7 +364,7 @@ function handleError(f, args) {
     }
 }
 function __wbg_adapter_70(arg0, arg1, arg2, arg3) {
-    wasm.wasm_bindgen__convert__closures__invoke2_mut__hc56b428ab50416e8(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+    wasm.wasm_bindgen__convert__closures__invoke2_mut__h3960e0d0fff8d810(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
 /**
@@ -502,10 +504,6 @@ function __wbg_get_imports() {
         const ret = generate_witness_browser_async(getStringFromWasm0(arg0, arg1), getStringFromWasm0(arg2, arg3));
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_object_clone_ref = function(arg0) {
-        const ret = getObject(arg0);
-        return addHeapObject(ret);
-    };
     imports.wbg.__wbindgen_link_22046963fe0b707a = function(arg0) {
         const ret = "data:application/javascript," + encodeURIComponent(`onmessage = function (ev) {
             let [ia, index, value] = ev.data;
@@ -518,6 +516,10 @@ function __wbg_get_imports() {
         const len1 = WASM_VECTOR_LEN;
         getInt32Memory0()[arg0 / 4 + 1] = len1;
         getInt32Memory0()[arg0 / 4 + 0] = ptr1;
+    };
+    imports.wbg.__wbindgen_object_clone_ref = function(arg0) {
+        const ret = getObject(arg0);
+        return addHeapObject(ret);
     };
     imports.wbg.__wbg_waitAsync_60fb5e2e86467e31 = function() {
         const ret = Atomics.waitAsync;

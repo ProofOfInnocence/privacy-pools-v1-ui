@@ -32,20 +32,22 @@ export function get_path(url: string, filename: string): string;
 * @param {string} pp_str
 * @param {string} r1cs_path
 * @param {string} wasm_path
-* @param {string} input_path
-* @param {string} start_path
+* @param {number} mode
+* @param {string} input_path_or_str
+* @param {string} start_path_or_str
 * @param {string} base
 * @returns {Promise<string>}
 */
-export function generate_proof(pp_str: string, r1cs_path: string, wasm_path: string, input_path: string, start_path: string, base: string): Promise<string>;
+export function generate_proof(pp_str: string, r1cs_path: string, wasm_path: string, mode: number, input_path_or_str: string, start_path_or_str: string, base: string): Promise<string>;
 /**
 * @param {string} pp_str
 * @param {string} proof_str
-* @param {string} start_path
+* @param {number} mode
+* @param {string} start_path_or_str
 * @param {string} base
 * @returns {Promise<boolean>}
 */
-export function verify_compressed_proof(pp_str: string, proof_str: string, start_path: string, base: string): Promise<boolean>;
+export function verify_compressed_proof(pp_str: string, proof_str: string, mode: number, start_path_or_str: string, base: string): Promise<boolean>;
 /**
 * @param {string} path
 * @returns {Promise<Uint8Array>}
@@ -90,8 +92,8 @@ export interface InitOutput {
   readonly read_filen: (a: number, b: number, c: number, d: number) => number;
   readonly generate_params: (a: number, b: number, c: number, d: number, e: number) => number;
   readonly get_path: (a: number, b: number, c: number, d: number, e: number) => void;
-  readonly generate_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => number;
-  readonly verify_compressed_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => number;
+  readonly generate_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => number;
+  readonly verify_compressed_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => number;
   readonly init_panic_hook: () => void;
   readonly __wbg_wbg_rayon_poolbuilder_free: (a: number) => void;
   readonly wbg_rayon_poolbuilder_numThreads: (a: number) => number;
@@ -105,11 +107,11 @@ export interface InitOutput {
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
   readonly __wbindgen_export_3: WebAssembly.Table;
-  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h97b1a1506527143e: (a: number, b: number, c: number) => void;
+  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h258cc74006aa23c6: (a: number, b: number, c: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;
-  readonly wasm_bindgen__convert__closures__invoke2_mut__hc56b428ab50416e8: (a: number, b: number, c: number, d: number) => void;
+  readonly wasm_bindgen__convert__closures__invoke2_mut__h3960e0d0fff8d810: (a: number, b: number, c: number, d: number) => void;
   readonly __wbindgen_thread_destroy: (a: number, b: number) => void;
   readonly __wbindgen_start: () => void;
 }
