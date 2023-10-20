@@ -2,7 +2,7 @@
 /* eslint-disable */
 
 import Jszip from 'jszip'
-import { BigNumber } from 'ethers'
+import { BigNumber, ethers } from 'ethers'
 import MerkleTree from 'fixed-merkle-tree'
 import axios, { AxiosResponse } from 'axios'
 import { BytesLike } from '@ethersproject/bytes'
@@ -24,19 +24,21 @@ import { Utxo } from './utxo'
 import { prove } from './prover'
 import { toFixedHex, poseidonHash2, getExtDataHash, shuffle } from './utils'
 
-import { getProvider, Keypair } from '@/services'
+import { getProvider, Keypair, workerProvider } from '@/services'
 import { commitmentsFactory } from '@/services/commitments'
 import { CommitmentEvents } from '@/services/events/@types'
 
 import { ChainId } from '@/types'
 import { getTornadoPool } from '@/contracts'
 import { Element } from 'fixed-merkle-tree'
+import { proveInclusion } from './poi'
+import { TxRecord } from './txRecord'
 
 const ADDRESS_BYTES_LENGTH = 20
 
 const jszip = new Jszip()
 
-const poseidonHash2Wrapper = (left: Element, right: Element) => toFixedHex(poseidonHash2(left.toString(), right.toString()))
+export const poseidonHash2Wrapper = (left: Element, right: Element) => toFixedHex(poseidonHash2(left.toString(), right.toString()))
 
 function buildMerkleTree({ events }: { events: CommitmentEvents }) {
   const leaves = events.sort((a, b) => a.index - b.index).map((e) => toFixedHex(e.commitment))
@@ -44,6 +46,8 @@ function buildMerkleTree({ events }: { events: CommitmentEvents }) {
 }
 
 async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmount, fee, recipient, relayer }: ProofParams) {
+  console.log('GET PROOF IS CALLED')
+  console.log(extAmount)
   // inputs = shuffle(inputs)
   // outputs = shuffle(outputs)
 
@@ -73,7 +77,9 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
   console.log(tree.layers)
 
   const [output1, output2] = outputs
-
+  console.log("Calculating extAmount:")
+  console.log(extAmount)
+  console.log(toFixedHex(extAmount))
   const extData = {
     recipient: toFixedHex(recipient, ADDRESS_BYTES_LENGTH),
     extAmount: toFixedHex(extAmount),
@@ -81,8 +87,7 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
     fee: toFixedHex(fee),
     encryptedOutput1: output1.encrypt(),
     encryptedOutput2: output2.encrypt(),
-    isL1Withdrawal,
-    l1Fee: toFixedHex(l1Fee),
+    membershipProofURI: '',
   }
 
   const extDataHash = getExtDataHash(extData)
@@ -127,7 +132,7 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
   const args: ArgsProof = {
     proof,
     root: toFixedHex(input.root),
-    inputNullifiers: inputs.map((x) => toFixedHex(x.getNullifier())),
+    inputNullifiers: inputs.map((x) => toFixedHex(x.getNullifier())) as [string, string],
     outputCommitments: outputs.map((x) => toFixedHex(x.getCommitment())) as [BytesLike, BytesLike],
     publicAmount: toFixedHex(input.publicAmount),
     extDataHash: toFixedHex(extDataHash),
@@ -164,6 +169,7 @@ async function prepareTransaction({
   let extAmount = BigNumber.from(fee)
     .add(outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
     .sub(inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+  console.log('EXT AMOUNT IS: ', extAmount)
 
   const amount = extAmount.gt(0) ? extAmount : BG_ZERO
 
@@ -293,10 +299,54 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     //   console.log('LAST ROOT = ', params.rootHex)
     // } else {
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
+    params.outputs = params.outputs || []
+    while (params.outputs.length < 2) {
+      params.outputs.push(new Utxo({keypair}))
+    }
+    params.inputs = params.inputs || []
+    while (params.inputs.length < 2) {
+      const newBlinding = BigNumber.from(
+        '0x' +
+          ethers.utils
+            .keccak256(
+              ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
+            )
+            .slice(2, 64)
+      ).mod(FIELD_SIZE)
 
+      const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
+      params.inputs.push(newUtxo)
+    }
+
+    if (params.recipient) {
+      const txRecordEvents = await workerProvider.getTxRecordEvents()
+      console.log('TX RECORD EVENTS: ', txRecordEvents)
+      params.events = await commitmentsService.fetchCommitments(keypair)
+
+      params.fee = params.fee || BG_ZERO
+      let extAmount = BigNumber.from(params.fee)
+        .add(params.outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+        .sub(params.inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+
+      const publicAmount = BigNumber.from(extAmount).sub(params.fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString()
+      const finalTxRecord = new TxRecord({
+        publicAmount,
+        inputs: params.inputs,
+        outputs: params.outputs,
+      })
+      console.log('FINAL TX RECORD: ', finalTxRecord)
+      console.log('COMMITMENTS: ', params.events)
+
+      const membershipProof = await proveInclusion(keypair, params, {
+        txRecordEvents,
+        nullifierToUtxo: undefined,
+        commitmentToUtxo: undefined,
+        finalTxRecord: finalTxRecord,
+      })
+      console.log('JHGVJIOHUGYFTUHIOJHUGYFTDRXESTGFRYGUIOPJHUGYTFRDESRXTRFYGUIOJPHUGYTFHRDGHYKO:')
+      console.log(membershipProof)
+    }
     params.events = await commitmentsService.fetchCommitments(keypair)
-    // console.log('Events:', params.events)
-    // }
 
     const { extData, args, amount } = await prepareTransaction(params)
 

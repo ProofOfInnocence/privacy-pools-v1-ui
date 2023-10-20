@@ -1,7 +1,9 @@
 import { BigNumber, BigNumberish } from 'ethers'
 
 import { BytesLike } from '@ethersproject/bytes'
-import { CommitmentEvents } from '@/services/events/@types'
+import { CommitmentEvents, TxRecordEvents } from '@/services/events/@types'
+import MerkleTree from 'fixed-merkle-tree'
+import { TxRecord } from '../txRecord'
 
 export interface UtxoOptions {
   amount?: BigNumber | number | string
@@ -61,6 +63,20 @@ export type PrepareTxParams = {
   l1Fee?: BigNumber
 }
 
+export type ProveInclusionParams = {
+  txRecordEvents: TxRecordEvents
+  nullifierToUtxo?: Map<string, BaseUtxo>
+  commitmentToUtxo?: Map<string, BaseUtxo>
+  finalTxRecord: TxRecord
+}
+
+export type GeneratePoiStepParams = {
+  txRecordsMerkleTree: MerkleTree
+  allowedTxRecordsMerkleTree: MerkleTree
+  accInnocentCommitments: BigNumber[]
+  isLastStep: boolean
+}
+
 export type ProofParams = {
   inputs: BaseUtxo[]
   outputs: BaseUtxo[]
@@ -76,19 +92,18 @@ export type ProofParams = {
 
 export type ExtData = {
   recipient: string
-  extAmount: string
+  extAmount: string | bigint
   relayer: string
   fee: string
   encryptedOutput1: BytesLike
   encryptedOutput2: BytesLike
-  isL1Withdrawal: boolean
-  l1Fee: string
+  membershipProofURI: string
 }
 
 export type ArgsProof = {
   proof: BytesLike
   root: BytesLike
-  inputNullifiers: string[]
+  inputNullifiers: [string, string]
   outputCommitments: [BytesLike, BytesLike]
   publicAmount: BigNumberish
   extDataHash: string

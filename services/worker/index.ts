@@ -3,7 +3,7 @@ import { getIPFSPrefix } from '@/utilities'
 import { workerEvents, numbers } from '@/constants/worker'
 
 import { BaseKeypair } from '@/services/core/@types'
-import { CommitmentEvents, NullifierEvents } from '@/services/events/@types'
+import { CommitmentEvents, NullifierEvents, TxRecordEvents } from '@/services/events/@types'
 
 import { EventsPayload, DecryptedEvents, GetEventsFromTxHashParams } from './@types'
 
@@ -12,18 +12,26 @@ import { EventsPayload, DecryptedEvents, GetEventsFromTxHashParams } from './@ty
 
 import NWorker from '@/assets/nullifier.worker.js'
 import EWorker from '@/assets/events.worker.js'
+import VWorker from '@/assets/nova.worker.js'
 
 export interface WorkerProvider {
   workerSetup: (chainId: ChainId) => void
   getCommitmentEvents: () => Promise<CommitmentEvents>
+  getTxRecordEvents: () => Promise<TxRecordEvents>
   getNullifierEventsFromTxHash: (nullifiers: NullifierEvents, txHash: string) => Promise<NullifierEvents>
   getDecryptedEventsFromTxHash: (keypair: BaseKeypair, txHash: string) => Promise<DecryptedEvents>
+  generate_pp: () => Promise<void>
+  generate_ppx: () => Promise<string>
+  provex: () => Promise<string>
+  verifyx: () => Promise<boolean>
   // channels
+  readonly openNovaChannel: <P, R>(eventName: string, payload: P, workerIndex?: number) => Promise<R>
   readonly openNullifierChannel: <P, R>(eventName: string, payload: P, workerIndex?: number) => Promise<R>
   readonly openEventsChannel: <P, R>(eventName: string, payload: P, workerIndex?: number) => Promise<R>
   // workers
   readonly nullifierWorkers: Worker[]
   readonly eventsWorkers: Worker[]
+  readonly novaWorkers: Worker[]
 }
 
 const MIN_CORES = 2
@@ -35,6 +43,7 @@ const CORES = Math.max(AVAILABLE_CORES, MIN_CORES)
 class Provider implements WorkerProvider {
   public readonly nullifierWorkers: Worker[]
   public readonly eventsWorkers: Worker[]
+  public readonly novaWorkers: Worker[]
 
   public constructor() {
     const ipfsPathPrefix = getIPFSPrefix()
@@ -50,6 +59,8 @@ class Provider implements WorkerProvider {
     this.nullifierWorkers = new Array(CORES).fill('').map(() => new NWorker())
     // @ts-expect-error
     this.eventsWorkers = new Array(CORES).fill('').map(() => new EWorker())
+    const CORESX = 1
+    this.novaWorkers = new Array(CORESX).fill('').map(() => new VWorker())
   }
 
   public workerSetup = (chainId: ChainId) => {
@@ -58,8 +69,76 @@ class Provider implements WorkerProvider {
       const params = { eventName: workerEvents.INIT_WORKER, payload: chainId }
       this.nullifierWorkers.forEach((worker) => worker.postMessage(params))
       this.eventsWorkers.forEach((worker) => worker.postMessage(params))
+      this.novaWorkers.forEach((worker) => worker.postMessage(params))
     } catch (err) {
       console.error('workerSetup has error: ', err.message)
+    }
+  }
+
+  public generate_pp = async () => {
+    try {
+      console.log("generate pp called")
+      const py = {
+        mode: 0,
+        pp_path: 'poi.r1cs'
+      }
+      const params = { eventName: workerEvents.GENERATE_PP, payload: py }
+      console.log("start post messages")
+      this.novaWorkers.forEach((worker) => worker.postMessage(params))
+    } catch (err) {
+      throw new Error(`Events worker method getCommitmentEvents has error: ${err}`)
+    }
+  }
+
+  public generate_ppx = async (): Promise<string> => {
+    try {
+      console.log("generate pp x - 0")
+      let pp = await this.openNovaChannel<{mode: number, pp_path: string, base: string}, string>(workerEvents.GENERATE_PP, {
+        mode: 2,
+        pp_path: 'poi-pp.cbor',
+        base: 'http://localhost:3000'
+      })
+      console.log("generate pp x - 1")
+      console.log("ppx: ", pp)
+
+      return pp
+    } catch (err) {
+      throw new Error(`Nova worker method generate pp has error: ${err}`)
+    }
+  }
+
+  public provex = async (): Promise<string> => {
+    try {
+      console.log("prove x - 0")
+      const proof = await this.openNovaChannel<{r1cs_path: string, wasm_path: string, input_path: string, start_path: string, base: string}, string>(workerEvents.PROVE, {
+        r1cs_path: 'poi.r1cs',
+        wasm_path: 'poi.wasm',
+        input_path: 'poi-inputs.json',
+        start_path: 'poi-start.json',
+        base: 'http://localhost:3000'
+      })
+      console.log("prove x - 1")
+      console.log("proofx: ", proof)
+
+      return proof
+    } catch (err) {
+      throw new Error(`Nova worker method generate pp has error: ${err}`)
+    }
+  }
+
+  public verifyx = async (): Promise<boolean> => {
+    try {
+      console.log("verify x - 0")
+      const correct = await this.openNovaChannel<{start_path: string, base: string}, boolean>(workerEvents.VERIFY, {
+        start_path: 'poi-start.json',
+        base: 'http://localhost:3000'
+      })
+      console.log("verify x - 1")
+      console.log("verifyx: ", correct)
+
+      return correct
+    } catch (err) {
+      throw new Error(`Nova worker method generate pp has error: ${err}`)
     }
   }
 
@@ -73,6 +152,19 @@ class Provider implements WorkerProvider {
       return commitmentEvents
     } catch (err) {
       throw new Error(`Events worker method getCommitmentEvents has error: ${err}`)
+    }
+  }
+
+  public getTxRecordEvents = async (lastSyncBlock?: number): Promise<TxRecordEvents> => {
+    try {
+      const txRecordEvents = await this.openEventsChannel<EventsPayload, TxRecordEvents>(workerEvents.GET_TX_RECORD_EVENTS, {
+        lastSyncBlock,
+        withCache: true,
+      })
+
+      return txRecordEvents
+    } catch (err) {
+      throw new Error(`Events worker method getTxRecordEvents has error: ${err}`)
     }
   }
 
@@ -118,6 +210,31 @@ class Provider implements WorkerProvider {
     } catch (err) {
       throw new Error(`Events worker method getNullifierEvent has error: ${err}`)
     }
+  }
+
+  public readonly openNovaChannel = async <P, R>(eventName: string, payload: P, workerIndex = numbers.ZERO) => {
+    return await new Promise<R>((resolve, reject) => {
+      console.log("nova channel - 0", eventName, workerIndex)
+      const novaChannel = new MessageChannel()
+      console.log("nova channel - 1")
+      novaChannel.port1.onmessage = ({ data }) => {
+        console.log("nova channel on message - 0", data)
+        const { result, errorMessage = 'unknown error' } = data
+        console.log("nova channel on message - 1")
+        novaChannel.port1.close()
+        console.log("nova channel on message - 2", result)
+        if (result) {
+          console.log("nova channel on message - 3.1", result)
+          resolve(result)
+          console.log("nova channel on message - 3.2")
+        } else {
+          reject(errorMessage)
+        }
+      }
+      console.log("nova channel - 2")
+      this.novaWorkers[workerIndex].postMessage({ eventName, payload }, [novaChannel.port2])
+      console.log("nova channel - 3")
+    })
   }
 
   public readonly openNullifierChannel = async <R, P>(eventName: string, payload: P, workerIndex = numbers.ZERO) => {
