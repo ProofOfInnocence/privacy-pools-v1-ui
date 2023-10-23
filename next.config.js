@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+  // reactStrictMode: true,
   webpack: (config, options) => {
     // Add worker-loader rule
     config.module.rules.push({
@@ -13,14 +13,14 @@ const nextConfig = {
           publicPath: '/_next/',
         },
       },
-    });
+    })
 
     // Configure webpack resolve and externals
-    config.resolve.fallback = { fs: false, net: false, tls: false };
-    config.externals.push('pino-pretty', 'lokijs', 'encoding');
+    config.resolve.fallback = { fs: false, net: false, tls: false }
+    config.externals.push('pino-pretty', 'lokijs', 'encoding')
 
-    return config;
+    return config
   },
-};
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

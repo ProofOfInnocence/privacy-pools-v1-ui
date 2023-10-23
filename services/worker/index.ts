@@ -13,6 +13,7 @@ import { EventsPayload, DecryptedEvents, GetEventsFromTxHashParams } from './@ty
 import NWorker from '@/assets/nullifier.worker.js'
 import EWorker from '@/assets/events.worker.js'
 import VWorker from '@/assets/nova.worker.js'
+// const HARDWARE_CORESS = window.navigator.hardwareConcurrency
 
 export interface WorkerProvider {
   workerSetup: (chainId: ChainId) => void
@@ -34,7 +35,7 @@ export interface WorkerProvider {
 
 const MIN_CORES = 2
 const WORKERS_TYPES = 2
-const HARDWARE_CORES = window.navigator.hardwareConcurrency
+const HARDWARE_CORES = 2
 const AVAILABLE_CORES = HARDWARE_CORES / WORKERS_TYPES || MIN_CORES
 const CORES = Math.max(AVAILABLE_CORES, MIN_CORES)
 
@@ -44,22 +45,20 @@ class Provider implements WorkerProvider {
   public readonly novaWorkers: Worker[]
 
   public constructor() {
-    const ipfsPathPrefix = getIPFSPrefix()
+    if (process.browser) {
+      const basePath = 'http://localhost:3000'
+      console.log(`${basePath}/nullifier.worker.js`)
+      // this.nullifierWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/nullifier.worker.js`))
+      // this.eventsWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/events.worker.js`))
 
-    console.log('ipfsPathPrefix', ipfsPathPrefix)
-
-    const basePath = `${window.location.origin}${ipfsPathPrefix}`
-    console.log(`${basePath}/nullifier.worker.js`)
-    // this.nullifierWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/nullifier.worker.js`))
-    // this.eventsWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/events.worker.js`))
-
-    // @ts-expect-error
-    this.nullifierWorkers = new Array(CORES).fill('').map(() => new NWorker())
-    // @ts-expect-error
-    this.eventsWorkers = new Array(CORES).fill('').map(() => new EWorker())
-    const CORESX = 1
-    // @ts-expect-error
-    this.novaWorkers = new Array(CORESX).fill('').map(() => new VWorker())
+      // @ts-expect-error
+      this.nullifierWorkers = new Array(CORES).fill('').map(() => new NWorker())
+      // @ts-expect-error
+      this.eventsWorkers = new Array(CORES).fill('').map(() => new EWorker())
+      const CORESX = 1
+      // @ts-expect-error
+      this.novaWorkers = new Array(CORESX).fill('').map(() => new VWorker())
+    }
   }
 
   public workerSetup = (chainId: ChainId) => {
@@ -76,10 +75,10 @@ class Provider implements WorkerProvider {
 
   public generate_public_parameters = async (): Promise<string> => {
     try {
-      let pp = await this.openNovaChannel<{mode: number, pp_path: string, base: string}, string>(workerEvents.GENERATE_PP, {
+      let pp = await this.openNovaChannel<{ mode: number; pp_path: string; base: string }, string>(workerEvents.GENERATE_PP, {
         mode: 2,
         pp_path: 'poi-pp-22.cbor',
-        base: `${window.location.origin}`
+        base: 'http://localhost:3000',
       })
       return pp
     } catch (err) {
@@ -89,13 +88,16 @@ class Provider implements WorkerProvider {
 
   public prove_membership = async (inputjson: string, startjson: string): Promise<string> => {
     try {
-      const proof = await this.openNovaChannel<{r1cs_path: string, wasm_path: string, mode: number, input_path_or_str: string, start_path_or_str: string, base: string}, string>(workerEvents.PROVE, {
+      const proof = await this.openNovaChannel<
+        { r1cs_path: string; wasm_path: string; mode: number; input_path_or_str: string; start_path_or_str: string; base: string },
+        string
+      >(workerEvents.PROVE, {
         r1cs_path: 'poi-22.r1cs',
         wasm_path: 'poi-22.wasm',
         mode: 1,
         input_path_or_str: inputjson,
         start_path_or_str: startjson,
-        base: `${window.location.origin}`
+        base: 'http://localhost:3000',
       })
       return proof
     } catch (err) {

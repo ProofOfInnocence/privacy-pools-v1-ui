@@ -3,21 +3,6 @@ import { BigNumber } from 'ethers'
 import { WalletInfo, ChainId } from '@/types'
 // import { localConnector } from '@/services'
 
-const SUPPORTED_WALLETS: { [key: string]: WalletInfo } = {
-  METAMASK: {
-    connector: () => window.ethereum,
-    name: 'MetaMask',
-    iconName: 'metamask',
-    description: 'Easy-to-use browser extension.',
-  },
-  // LOCAL: {
-  //   connector: () => localConnector(),
-  //   name: 'Local',
-  //   iconName: 'local',
-  //   description: 'Frontend wallet.',
-  // },
-}
-
 const numbers = {
   ZERO: 0,
   ONE: 1,
@@ -99,7 +84,6 @@ export {
   MIN_GAS_PRICE,
   registerGuideUrl,
   MAX_REDUCE_LENGTH,
-  SUPPORTED_WALLETS,
   operationGasLimits,
   SESSION_STORAGE_KEY,
   REGISTRY_DEPLOYED_BLOCK,

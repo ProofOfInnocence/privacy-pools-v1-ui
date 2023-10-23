@@ -1,3 +1,5 @@
+'use client'
+
 import React, { CSSProperties } from 'react'
 
 function ErrorModal({ errorMessage }: { errorMessage: string }) {
@@ -38,7 +40,7 @@ function ErrorModal({ errorMessage }: { errorMessage: string }) {
         <p>{errorMessage}</p>
         <p>Note: Our frontend is currently under development. We apologize for the inconvenience.</p>
         <p>Please refresh the browser and try again.</p>
-        <button style={styles.closeButton} onClick={() => window.location.reload()}>
+        <button style={styles.closeButton} onClick={() => {}}>
           Refresh
         </button>
       </div>

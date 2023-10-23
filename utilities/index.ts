@@ -7,6 +7,6 @@ export * from './errors'
 export * from './helpers'
 export * from './stringUtils'
 export * from './getIPFSPrefix'
-export * from './copyToClipboard'
+// export * from './copyToClipboard'
 
 export { debounce, isEmpty, uniqBy }
