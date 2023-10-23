@@ -1,7 +1,7 @@
 'use client'
 
 import { Keypair, Utxo, createTransactionData, getProvider, utxoFactory, workerProvider } from '@/services'
-import { ChainId } from '@/types'
+import { ChainId, LogLevel } from '@/types'
 import { toWei } from 'web3-utils'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useContractWrite, usePrepareContractWrite, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
@@ -39,6 +39,16 @@ export default function Home() {
   const [keypair, setKeypair] = useState<Keypair | null>(null)
   const [activeTab, setActiveTab] = useState('deposit')
 
+  const logger = (message: string, logType: LogLevel = LogLevel.DEBUG) => {
+    if (logType === LogLevel.ERROR) {
+      setError(message)
+    }
+    if (logType === LogLevel.LOADING) {
+      setLoadingMessage(message)
+    }
+    console.log(message)
+  }
+
   const { signMessage } = useSignMessage({
     message: SIGN_MESSAGE,
     onSuccess(data) {
@@ -58,22 +68,33 @@ export default function Home() {
   const { data: walletClient } = useWalletClient()
 
   useEffect(() => {
-
-    initializeKeypair();
+    initializeKeypair()
   }, [connector, keypair, signMessage])
 
   async function initializeKeypair() {
     if (!keypair && connector != null) {
       try {
-      setLoadingMessage('Sign message to initialize')
-      await signMessage()
-      setLoadingMessage('')
+        setLoadingMessage('Sign message to initialize')
+        await signMessage()
+        setLoadingMessage('')
       } catch (error) {
         setLoadingMessage('')
         setError(error.message)
       }
     }
   }
+
+  async function syncPoolBalance() {
+    if(!keypair) {
+      return
+    }
+    if(!address) {
+      return
+    }
+    const { totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
+    setPoolBalance(totalAmount)
+  }
+
 
   async function initKeypair(keypair: Keypair) {
     try {
@@ -83,7 +104,7 @@ export default function Home() {
         throw new Error('Address is null')
       }
 
-      const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
+      const { totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
       setPoolBalance(totalAmount)
       setLoadingMessage('')
     } catch (error) {
@@ -101,7 +122,7 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
-      await handleAllowance({ publicClient, walletClient }, amount)
+      await handleAllowance({ publicClient, walletClient, logger }, amount)
       if (!address) {
         throw new Error('Address is null')
         return
@@ -111,7 +132,7 @@ export default function Home() {
         amount: BigNumber.from(toWei(amount)),
         address: address,
       })
-      await transact({ publicClient, walletClient }, { args, extData })
+      await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
       setLoadingMessage('')
     } catch (error) {
       setLoadingMessage('')
@@ -146,7 +167,7 @@ export default function Home() {
       let newExtData: ExtData = { ...extData }
       newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
 
-      await transact({ publicClient, walletClient }, { args, extData: newExtData })
+      await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
       setLoadingMessage('')
     } catch (error) {
       setLoadingMessage('')

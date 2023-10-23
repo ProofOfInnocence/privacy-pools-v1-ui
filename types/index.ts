@@ -70,3 +70,11 @@ export type RelayerInfo = {
   fee: number;
   rewardAddress: string;
 };
+
+export enum LogLevel {
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+  LOADING = 'loading',
+}

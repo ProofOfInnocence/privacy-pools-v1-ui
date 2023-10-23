@@ -1,6 +1,6 @@
 import { POOL_CONTRACT } from '@/constants'
 import { ArgsProof, ExtData } from '@/services/core/@types'
-import { ChainId } from '@/types'
+import { ChainId, LogLevel } from '@/types'
 import { toHexString, toWei } from '@/utilities'
 import { WalletClient, PublicClient } from 'viem'
 import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
@@ -13,9 +13,13 @@ export async function transact(
   {
     walletClient,
     publicClient,
+    logger,
+    syncPoolBalance
   }: {
     walletClient: WalletClient
     publicClient: PublicClient
+    logger: (message: string, logLevel: LogLevel) => void
+    syncPoolBalance: () => Promise<void>
   },
   {
     args,
@@ -41,16 +45,21 @@ export async function transact(
     account: address,
   })
   const hash = await walletClient.writeContract(request)
+  logger('Waiting for transaction ' + hash, LogLevel.LOADING)
   await publicClient.waitForTransactionReceipt({ hash })
+  await syncPoolBalance()
+
 }
 
 export async function handleAllowance(
   {
     walletClient,
     publicClient,
+    logger
   }: {
     walletClient: WalletClient
     publicClient: PublicClient
+    logger: (message: string, logLevel: LogLevel) => void
   },
   amount: string
 ) {
@@ -70,6 +79,7 @@ export async function handleAllowance(
       value: rem.toBigInt(),
     })
     const hash = await walletClient.writeContract(request)
+    logger('Waiting for transaction ' + hash, LogLevel.LOADING)
     await publicClient.waitForTransactionReceipt({ hash })
   }
   const curAllowance = await weth.allowance(address, POOL_CONTRACT[ChainId.ETHEREUM_GOERLI])
@@ -83,6 +93,7 @@ export async function handleAllowance(
       account: address,
     })
     const hash = await walletClient.writeContract(request)
+    logger('Waiting for transaction ' + hash, LogLevel.LOADING)
     await publicClient.waitForTransactionReceipt({ hash })
   }
 }
