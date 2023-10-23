@@ -46,8 +46,8 @@ class Provider implements WorkerProvider {
 
   public constructor() {
     if (process.browser) {
-      const basePath = 'http://localhost:3000'
-      console.log(`${basePath}/nullifier.worker.js`)
+      // const basePath = window.location.origin
+      // console.log(`${basePath}/nullifier.worker.js`)
       // this.nullifierWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/nullifier.worker.js`))
       // this.eventsWorkers = new Array(CORES).fill('').map(() => new Worker(`${basePath}/events.worker.js`))
 
@@ -78,7 +78,7 @@ class Provider implements WorkerProvider {
       let pp = await this.openNovaChannel<{ mode: number; pp_path: string; base: string }, string>(workerEvents.GENERATE_PP, {
         mode: 2,
         pp_path: 'poi-pp-22.cbor',
-        base: 'http://localhost:3000',
+        base: window.location.origin,
       })
       return pp
     } catch (err) {
@@ -97,7 +97,7 @@ class Provider implements WorkerProvider {
         mode: 1,
         input_path_or_str: inputjson,
         start_path_or_str: startjson,
-        base: 'http://localhost:3000',
+        base: window.location.origin,
       })
       return proof
     } catch (err) {
