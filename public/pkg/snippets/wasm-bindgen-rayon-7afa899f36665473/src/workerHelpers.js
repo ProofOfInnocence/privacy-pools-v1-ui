@@ -66,7 +66,7 @@ waitForMsgType(self, 'wasm_bindgen_worker_init').then(async data => {
 // prevent them from getting GC-d.
 let _workers;
 
-export async function startWorkers(module, memory, builder) {
+async function startWorkers(module, memory, builder) {
   const workerInit = {
     type: 'wasm_bindgen_worker_init',
     module,

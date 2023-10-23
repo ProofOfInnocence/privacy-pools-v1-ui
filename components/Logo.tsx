@@ -1,3 +1,5 @@
+'use client'
+
 // Logo.js
 import React from 'react';
 

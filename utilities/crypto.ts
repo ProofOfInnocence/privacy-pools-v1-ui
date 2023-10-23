@@ -8,7 +8,7 @@ import { keccak256 } from '@ethersproject/keccak256'
 import { entropyToMnemonic } from '@ethersproject/hdnode'
 
 import { numbers, CHAINS } from '@/constants'
-import { ChainId, L1ChainId } from '@/types'
+import { ChainId } from '@/types'
 // import { getBridgeHelper, getMulticall } from '@/contracts'
 import { ArgsProof, ExtData } from '@/services/core/@types'
 import { TransactionReceipt } from '@ethersproject/abstract-provider'
@@ -69,15 +69,15 @@ export function fromWei(balance: BigNumberish, unitName: string | BigNumberish |
 //   100: '',
 // }
 
-const AMB_EXPLORER_SUFFIXES: { [chainId in ChainId]: string } = {
-  1: 'xdai',
-  56: 'bsc',
-  100: 'xdai',
-}
+// const AMB_EXPLORER_SUFFIXES: { [chainId in ChainId]: string } = {
+//   1: 'xdai',
+//   56: 'bsc',
+//   100: 'xdai',
+// }
 
-export function getAmbBridgeTxLink(chainId: ChainId, data: string): string {
-  return `https://alm-${AMB_EXPLORER_SUFFIXES[chainId]}.tornado.ws/${chainId}/${data}`
-}
+// export function getAmbBridgeTxLink(chainId: ChainId, data: string): string {
+//   return `https://alm-${AMB_EXPLORER_SUFFIXES[chainId]}.tornado.ws/${chainId}/${data}`
+// }
 
 // export function getEtherscanLink(chainId: ChainId, data: string, type: 'transaction' | 'token' | 'address' | 'block'): string {
 //   let prefix = `https://${ETHERSCAN_PREFIXES[chainId]}etherscan.io`

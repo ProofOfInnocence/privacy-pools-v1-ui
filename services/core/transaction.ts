@@ -33,6 +33,7 @@ import { getTornadoPool } from '@/contracts'
 import { Element } from 'fixed-merkle-tree'
 import { proveInclusion } from './poi'
 import { TxRecord } from './txRecord'
+import { getIPFSCid } from '@/utilities/getIPFSCid'
 
 const ADDRESS_BYTES_LENGTH = 20
 
@@ -45,7 +46,18 @@ function buildMerkleTree({ events }: { events: CommitmentEvents }) {
   return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper, zeroElement: ZERO_LEAF.toString() })
 }
 
-async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmount, fee, recipient, relayer }: ProofParams) {
+async function getProof({
+  inputs,
+  isL1Withdrawal,
+  l1Fee,
+  outputs,
+  tree,
+  extAmount,
+  fee,
+  recipient,
+  relayer,
+  membershipProofURI,
+}: ProofParams) {
   console.log('GET PROOF IS CALLED')
   console.log(extAmount)
   // inputs = shuffle(inputs)
@@ -87,7 +99,7 @@ async function getProof({ inputs, isL1Withdrawal, l1Fee, outputs, tree, extAmoun
     fee: toFixedHex(fee),
     encryptedOutput1: output1.encrypt(),
     encryptedOutput2: output2.encrypt(),
-    membershipProofURI: '',
+    membershipProofURI: membershipProofURI,
   }
 
   const extDataHash = getExtDataHash(extData)
@@ -155,6 +167,7 @@ async function prepareTransaction({
   relayer = BG_ZERO,
   recipient = BG_ZERO,
   isL1Withdrawal = true,
+  membershipProofURI = '',
 }: PrepareTxParams) {
   if (inputs.length > numbers.INPUT_LENGTH_2 || outputs.length > numbers.INPUT_LENGTH_2) {
     throw new Error('Incorrect inputs/outputs count')
@@ -183,6 +196,7 @@ async function prepareTransaction({
     l1Fee,
     recipient,
     relayer,
+    membershipProofURI,
   }
 
   if (!rootHex) {
@@ -329,20 +343,23 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       console.log('FINAL TX RECORD: ', finalTxRecord)
       console.log('COMMITMENTS: ', params.events)
 
-      membershipProof = await proveInclusion(keypair, params, {
+      const membershipProofInputs = await proveInclusion(keypair, params, {
         txRecordEvents,
         nullifierToUtxo: undefined,
         commitmentToUtxo: undefined,
         finalTxRecord: finalTxRecord,
       })
-      console.log('JHGVJIOHUGYFTUHIOJHUGYFTDRXESTGFRYGUIOPJHUGYTFRDESRXTRFYGUIOJPHUGYTFHRDGHYKO:')
-      console.log(membershipProof)
+      const inputjson = JSON.stringify(membershipProofInputs)
+      const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProofInputs[0].step_in).toHexString()] })
+      console.log('inputjson', inputjson)
+      console.log('startjson', startjson)
+      await workerProvider.generate_public_parameters()
+      membershipProof = await workerProvider.prove_membership(inputjson, startjson)
+      params.membershipProofURI = getIPFSCid(membershipProof)
     }
     params.events = await commitmentsService.fetchCommitments(keypair)
 
     const { extData, args, amount } = await prepareTransaction(params)
-
-    // await estimateTransact({ extData, args })
 
     return { extData, args, amount, membershipProof }
   } catch (err) {

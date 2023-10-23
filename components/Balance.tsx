@@ -1,3 +1,5 @@
+'use client'
+
 // Balance.js
 import React from 'react'
 import { fromWei } from 'web3-utils'

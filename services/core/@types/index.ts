@@ -61,6 +61,7 @@ export type PrepareTxParams = {
   events?: CommitmentEvents
   isL1Withdrawal?: boolean
   l1Fee?: BigNumber
+  membershipProofURI?: string
 }
 
 export type ProveInclusionParams = {
@@ -88,6 +89,7 @@ export type ProofParams = {
   fee: BigNumber
   recipient: string | BigNumber
   relayer: string | BigNumber
+  membershipProofURI: string
 }
 
 export type ExtData = {
@@ -146,6 +148,7 @@ export type CreateTransactionParams = {
   events?: CommitmentEvents
   isL1Withdrawal?: boolean
   l1Fee?: BigNumber
+  membershipProofURI?: string
 }
 
 export type EstimateTransactParams = {

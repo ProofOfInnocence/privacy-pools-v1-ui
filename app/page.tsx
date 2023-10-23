@@ -329,17 +329,7 @@ export default function Home() {
     console.log('Args', args)
     let newExtData: ExtData = { ...extData }
     newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
-    console.log('INPUT.JSON->')
-    console.log(JSON.stringify(membershipProof))
-    if (membershipProof) {
-      const inputjson = JSON.stringify(membershipProof)
-      const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProof[0].step_in).toHexString()] })
-      console.log('inputjson', inputjson)
-      console.log('startjson', startjson)
-      await workerProvider.generate_public_parameters()
-      const proof = await workerProvider.prove_membership(inputjson, startjson)
-      console.log(proof)
-    }
+
     await transact({ args, extData: newExtData })
     // await sendToRelayer(relayer.rewardAddress, { extData, args })
   }

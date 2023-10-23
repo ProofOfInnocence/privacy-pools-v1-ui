@@ -152,6 +152,7 @@ async function proveInclusion(
     relayer = BG_ZERO,
     recipient = BG_ZERO,
     isL1Withdrawal = true,
+    membershipProofURI = ""
   }: PrepareTxParams,
   { txRecordEvents, nullifierToUtxo = undefined, commitmentToUtxo = undefined, finalTxRecord }: ProveInclusionParams
 ) {

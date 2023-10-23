@@ -9,7 +9,7 @@ import {
   GetCashedEventsPayload,
 } from './@types'
 
-import { TornadoPool } from '@/_contracts'
+import { PrivacyPool as TornadoPool } from '@/_contracts'
 import { getTornadoPool } from '@/contracts'
 
 import { numbers, workerEvents } from '@/constants/worker'

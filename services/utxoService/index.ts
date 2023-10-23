@@ -17,7 +17,7 @@ import {
   FetchBatchUtxoPayload,
 } from './@types'
 
-import { TornadoPool } from '@/_contracts'
+import { PrivacyPool as TornadoPool } from '@/_contracts'
 import { getTornadoPool } from '@/contracts'
 
 import { BG_ZERO } from '@/constants'

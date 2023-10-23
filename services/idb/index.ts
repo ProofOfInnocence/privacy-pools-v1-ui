@@ -89,6 +89,7 @@ class IndexedDB<S extends DBSchema> implements IDB<S> {
       const storedItem = tx.objectStore(storeName)
 
       if (storedItem.add) {
+        // @ts-ignore
         await storedItem.add(data)
         await tx.done
       }
@@ -108,6 +109,7 @@ class IndexedDB<S extends DBSchema> implements IDB<S> {
 
       data.forEach((item) => {
         if (item && tx.store && tx.store.put) {
+          // @ts-ignore
           tx.store.put({ ...item, ...index })
         }
       })
@@ -137,6 +139,7 @@ class IndexedDB<S extends DBSchema> implements IDB<S> {
 
       const store = this.db.transaction(storeName).objectStore(storeName)
 
+      // @ts-ignore
       const value = await store.get(key)
       return value
     } catch (err) {
@@ -147,9 +150,11 @@ class IndexedDB<S extends DBSchema> implements IDB<S> {
   public async addItem<P>({ storeName, data, key }: AddItemParams<S, P>) {
     try {
       const tx = this.db.transaction(storeName, 'readwrite')
+      // @ts-ignore
       const isExist = await tx.objectStore(storeName).get(key)
 
       if (!isExist) {
+        // @ts-ignore
         await tx.objectStore(storeName).add(data)
       }
     } catch (err) {
@@ -164,6 +169,7 @@ class IndexedDB<S extends DBSchema> implements IDB<S> {
       }
 
       const tx = this.db.transaction(storeName, 'readwrite')
+      // @ts-ignore
       await tx.objectStore(storeName).put(data)
     } catch (err) {
       throw new Error(`Method putItem has error: ${err.message}`)
