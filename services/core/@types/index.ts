@@ -111,6 +111,8 @@ export type ArgsProof = {
   extDataHash: string
 }
 
+export type MembershipProof = string
+
 export type InputByType = {
   base64: string
   string: string
