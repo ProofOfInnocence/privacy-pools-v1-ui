@@ -24,6 +24,8 @@ declare module 'circomlib' {
     poseidon: CallableFunction
   }
 }
+declare module 'ipfs-only-hash';
+
 
 // declare module 'vue/types/vue' {
 //   interface Vue {

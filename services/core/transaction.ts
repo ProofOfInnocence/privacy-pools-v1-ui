@@ -355,7 +355,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       console.log('startjson', startjson)
       await workerProvider.generate_public_parameters()
       membershipProof = await workerProvider.prove_membership(inputjson, startjson)
-      params.membershipProofURI = getIPFSCid(membershipProof)
+      params.membershipProofURI = await getIPFSCid(membershipProof)
     }
     params.events = await commitmentsService.fetchCommitments(keypair)
 

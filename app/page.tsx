@@ -85,16 +85,15 @@ export default function Home() {
   }
 
   async function syncPoolBalance() {
-    if(!keypair) {
+    if (!keypair) {
       return
     }
-    if(!address) {
+    if (!address) {
       return
     }
     const { totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
     setPoolBalance(totalAmount)
   }
-
 
   async function initKeypair(keypair: Keypair) {
     try {
