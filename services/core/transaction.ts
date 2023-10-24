@@ -34,6 +34,7 @@ import { Element } from 'fixed-merkle-tree'
 import { proveInclusion } from './poi'
 import { TxRecord } from './txRecord'
 import { getIPFSCid } from '@/utilities/getIPFSCid'
+import { saveAsFile } from '@/utilities'
 
 const ADDRESS_BYTES_LENGTH = 20
 
@@ -355,7 +356,10 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       console.log('startjson', startjson)
       await workerProvider.generate_public_parameters()
       membershipProof = await workerProvider.prove_membership(inputjson, startjson)
-      params.membershipProofURI = await getIPFSCid(membershipProof)
+      const membershipProofJSON = JSON.parse(membershipProof)
+      console.log('MEMBERSHIP PROOF: ', membershipProofJSON)
+      params.membershipProofURI = await getIPFSCid(JSON.stringify(membershipProofJSON))
+      saveAsFile(JSON.stringify(membershipProofJSON), 'membership_proof_save_to_ipfs_if_you_dont_trust_relayers_pinning_service.txt')
     }
     params.events = await commitmentsService.fetchCommitments(keypair)
 
