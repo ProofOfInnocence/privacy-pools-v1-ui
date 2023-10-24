@@ -20,6 +20,7 @@
     "find-replacement-tx": "^1.2.1",
     "fixed-merkle-tree": "^0.7.3",
     "idb": "6.0.0",
+    "ipfs-only-hash": "^4.0.0",
     "jszip": "^3.7.1",
     "lodash": "^4.17.21",
     "next": "13.5.4",

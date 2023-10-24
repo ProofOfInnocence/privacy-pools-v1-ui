@@ -5,11 +5,7 @@
     "incremental": true,
     "target": "ES2018",
     "module": "ESNext",
-    "lib": [
-      "ESNext",
-      "ESNext.AsyncIterable",
-      "DOM"
-    ],
+    "lib": ["ESNext", "ESNext.AsyncIterable", "DOM"],
     "importHelpers": true,
     "moduleResolution": "node",
     "experimentalDecorators": true,
@@ -39,8 +35,9 @@
     ],
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "typeRoots": ["./types", "./node_modules/@types"]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "./types/**/*"],
   "exclude": ["node_modules"]
 }

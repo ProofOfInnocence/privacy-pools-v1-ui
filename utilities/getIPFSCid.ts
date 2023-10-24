@@ -1,10 +1,8 @@
-import { ethers } from 'ethers'
+// @ts-expect-error
+import Hash from 'ipfs-only-hash';
 
 type MembershipProof = string
 
-export function getIPFSCid(file: MembershipProof) {
-  console.log('getIPFSCid is called', file)
-  const cid = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(file))
-  console.log('cid:', cid)
-  return cid
+export async function getIPFSCid(file: MembershipProof) {
+  return await Hash.of(file)
 }
