@@ -72,7 +72,7 @@ export default function Home() {
 
   useEffect(() => {
     if (curChainId != 0 && chain && chain.id !== curChainId) {
-      alert('Please switch to Goerli testnet')
+      setError('Unsupported chain')
     }
   }, [chain])
 
@@ -92,6 +92,7 @@ export default function Home() {
     try {
       setLoadingMessage('Sign message to initialize')
       setCurAddress(address)
+      setCurChainId(chain?.id || 0)
       await signMessage()
       setLoadingMessage('')
     } catch (error) {
@@ -233,7 +234,7 @@ export default function Home() {
           ) : (
             <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />
           )}
-          <ErrorModal errorMessage={error} />
+          <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
           <LoadingSpinner loadingMessage={loadingMessage} />
         </div>
       </div>

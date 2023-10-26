@@ -1,51 +1,29 @@
-'use client'
+import React from 'react';
 
-import React, { CSSProperties } from 'react'
+interface ErrorModalProps {
+  message: string;
+  isVisible: boolean;
+  onClose: () => void;
+}
 
-function ErrorModal({ errorMessage }: { errorMessage: string }) {
-  if (!errorMessage) {
-    return null // If there's no error, don't display the modal.
-  }
-
-  const styles = {
-    overlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000,
-    } as CSSProperties,
-    modal: {
-      width: '70%',
-      maxWidth: '400px',
-      backgroundColor: 'white',
-      padding: '20px',
-      borderRadius: '8px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-    },
-    closeButton: {
-      marginTop: '20px',
-    },
+const ErrorModal: React.FC<ErrorModalProps> = ({ message, isVisible, onClose }) => {
+  if (!isVisible) {
+    return null;
   }
 
   return (
-    <div style={styles.overlay}>
-      <div style={styles.modal}>
-        <h2>Error</h2>
-        <p>{errorMessage}</p>
-        <p>Note: Our frontend is currently under development. We apologize for the inconvenience.</p>
-        <p>Please refresh the browser and try again.</p>
-        <button style={styles.closeButton} onClick={() => {}}>
-          Refresh
-        </button>
+    <div className="fixed bottom-4 right-4 z-50">
+      <div className="bg-white border-red-500 border-2 rounded-lg shadow-lg p-4 w-72">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-bold text-red-500">Error</h3>
+          <button onClick={onClose} className="text-red-500 hover:text-red-600">
+            ×
+          </button>
+        </div>
+        <p>{message}</p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ErrorModal
+export default ErrorModal;
