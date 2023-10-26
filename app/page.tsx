@@ -80,6 +80,7 @@ export default function Home() {
     if (curAddress != '' && address && address !== curAddress) {
       setKeypair(null)
       setPoolBalance(0)
+      setCurAddress('')
     }
   }, [address])
 
@@ -208,7 +209,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Main content */}
+      { curAddress && (
       <div className="flex justify-center pt-8">
         <div className="bg-white rounded-lg shadow-md p-0 w-96">
           {/* Tabs */}
@@ -226,10 +227,9 @@ export default function Home() {
               Withdraw
             </button>
           </div>
-
           {/* Tab content */}
           {activeTab === 'deposit' ? (
-            <DepositComponent deposit={deposit} balance={0.0001} />
+            <DepositComponent deposit={deposit} address={curAddress} />
           ) : (
             <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />
           )}
@@ -237,6 +237,7 @@ export default function Home() {
           <LoadingSpinner loadingMessage={loadingMessage} />
         </div>
       </div>
+      )}
     </div>
   )
 }

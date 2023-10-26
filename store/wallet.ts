@@ -1,4 +1,4 @@
-import { POOL_CONTRACT } from '@/constants'
+import { APPROVAL_MESSAGE, POOL_CONTRACT } from '@/constants'
 import { ArgsProof, ExtData } from '@/services/core/@types'
 import { ChainId, LogLevel } from '@/types'
 import { toHexString, toWei } from '@/utilities'
@@ -44,6 +44,7 @@ export async function transact(
     args: [args, extData],
     account: address,
   })
+  logger('Confirm transaction in your wallet', LogLevel.LOADING)
   const hash = await walletClient.writeContract(request)
   logger('Waiting for transaction ' + hash, LogLevel.LOADING)
   await publicClient.waitForTransactionReceipt({ hash })
@@ -63,25 +64,25 @@ export async function handleAllowance(
   },
   amount: string
 ) {
-  const amountInWei = toWei(amount)
+  // const amountInWei = toWei(amount)
   const weth = getWrappedToken(ChainId.ETHEREUM_GOERLI)
   const [address] = await walletClient.getAddresses()
-  const wrappedAmount = await weth.balanceOf(address)
-  console.log('Wrapped amount', wrappedAmount.toString())
-  if (wrappedAmount.lt(amountInWei)) {
-    const rem = BigNumber.from(amountInWei).sub(wrappedAmount)
-    const { request } = await publicClient.simulateContract({
-      address: toHexString(weth.address),
-      abi: WETH__factory.abi,
-      functionName: 'deposit',
-      args: [],
-      account: address,
-      value: rem.toBigInt(),
-    })
-    const hash = await walletClient.writeContract(request)
-    logger('Waiting for transaction ' + hash, LogLevel.LOADING)
-    await publicClient.waitForTransactionReceipt({ hash })
-  }
+  // const wrappedAmount = await weth.balanceOf(address)
+  // console.log('Wrapped amount', wrappedAmount.toString())
+  // if (wrappedAmount.lt(amountInWei)) {
+  //   const rem = BigNumber.from(amountInWei).sub(wrappedAmount)
+  //   const { request } = await publicClient.simulateContract({
+  //     address: toHexString(weth.address),
+  //     abi: WETH__factory.abi,
+  //     functionName: 'deposit',
+  //     args: [],
+  //     account: address,
+  //     value: rem.toBigInt(),
+  //   })
+  //   const hash = await walletClient.writeContract(request)
+  //   logger('Waiting for transaction ' + hash, LogLevel.LOADING)
+  //   await publicClient.waitForTransactionReceipt({ hash })
+  // }
   const curAllowance = await weth.allowance(address, POOL_CONTRACT[ChainId.ETHEREUM_GOERLI])
 
   if (curAllowance.lt(toWei(amount))) {
@@ -89,9 +90,10 @@ export async function handleAllowance(
       address: toHexString(weth.address),
       abi: WETH__factory.abi,
       functionName: 'approve',
-      args: [POOL_CONTRACT[ChainId.ETHEREUM_GOERLI], amountInWei],
+      args: [POOL_CONTRACT[ChainId.ETHEREUM_GOERLI], 115792089237316195423570985008687907853269984665640564039457.584007913129639935],
       account: address,
     })
+    logger(APPROVAL_MESSAGE, LogLevel.LOADING)
     const hash = await walletClient.writeContract(request)
     logger('Waiting for transaction ' + hash, LogLevel.LOADING)
     await publicClient.waitForTransactionReceipt({ hash })

@@ -60,6 +60,9 @@ const APP_ENS_NAME = 'nova.tornadocash.eth'
 const SESSION_STORAGE_KEY = 'tornado_key'
 
 const SIGN_MESSAGE = `Sign this message to generate your Privacy Pools Privacy Key. This key lets the application decrypt your balance in Privacy Pools.\n\nIMPORTANT: Only sign this message if you trust the application.`
+const APPROVAL_MESSAGE = 'Allow WETH to be used for Privacy Pools.'
+const TOKEN_NAME = 'Wrapped Ether'
+const TOKEN_SYMBOL = 'WETH'
 
 const REGISTRY_DEPLOYED_BLOCK: Record<ChainId, number> = {
   // [ChainId.MAINNET]: 14173129,
@@ -88,5 +91,8 @@ export {
   SESSION_STORAGE_KEY,
   REGISTRY_DEPLOYED_BLOCK,
   L1_WITHDRAW_GAS_LIMIT,
-  ZERO_LEAF
+  ZERO_LEAF,
+  APPROVAL_MESSAGE,
+  TOKEN_NAME,
+  TOKEN_SYMBOL
 }
