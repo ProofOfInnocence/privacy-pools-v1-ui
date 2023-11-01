@@ -11,6 +11,7 @@ export async function sendToRelayer(
     {
       args,
       extData,
+      membershipProof
     },
     {
       headers: {

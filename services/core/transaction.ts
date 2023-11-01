@@ -325,6 +325,12 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       params.inputs.push(newUtxo)
     }
 
+    // print input blindings
+    console.log('INPUT BLINDINGS: ')
+    for (const input of params.inputs) {
+      console.log(input.blinding)
+    }
+
     if (params.recipient) {
       const txRecordEvents = await workerProvider.getTxRecordEvents()
       console.log('TX RECORD EVENTS: ', txRecordEvents)
@@ -354,8 +360,9 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProofInputs[0].step_in).toHexString()] })
       console.log('inputjson', inputjson)
       console.log('startjson', startjson)
-      await workerProvider.generate_public_parameters()
-      membershipProof = await workerProvider.prove_membership(inputjson, startjson)
+      // await workerProvider.generate_public_parameters()
+      // membershipProof = await workerProvider.prove_membership(inputjson, startjson)
+      membershipProof = JSON.stringify({proof:"No proof, PRIVATE TRANSACTION"})
       const membershipProofJSON = JSON.parse(membershipProof)
       console.log('MEMBERSHIP PROOF: ', membershipProofJSON)
       params.membershipProofURI = await getIPFSCid(JSON.stringify(membershipProofJSON))

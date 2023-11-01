@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@mycrypto/gas-estimation": "^1.1.0",
     "@rainbow-me/rainbowkit": "^1.1.1",
     "axios": "^0.27.2",
     "circomlib": "git+https://github.com/tornadocash/circomlib.git#d20d53411d1bef61f38c99a8b36d5d0cc4836aa1",

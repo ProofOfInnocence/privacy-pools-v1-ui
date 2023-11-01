@@ -26,11 +26,10 @@ import ErrorModal from '@/components/Error'
 import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
 import LoadingSpinner from '@/components/Loading'
 import WrapEtherComponent from '@/components/WrapEtherComponent'
+import { sendToRelayer } from '@/store/relayer'
 
 const relayers: RelayerInfo[] = [
-  { name: 'Relayer1', api: 'http://172.16.20.111:8000', fee: 0.05, rewardAddress: '0x9fCDf8f60d3009656E50Bf805Cd53C7335b284Fb' },
-  { name: 'Relayer2', api: 'http://api2.com', fee: 15, rewardAddress: '0x9fCDf8f60d3009656E50Bf805Cd53C7335b284Fb' },
-  // ... other relayers
+  { name: 'Local Relayer', api: 'http://127.0.0.1:8000', fee: "10000000000", rewardAddress: "0x952198215a9D99bE8CEFc791337B909bF520d98F" },
 ]
 
 export default function Home() {
@@ -157,7 +156,7 @@ export default function Home() {
     }
   }
 
-  async function withdrawWithRelayer(amount: string, recipient: string, relayer: RelayerInfo) {
+  async function withdrawWithRelayer(amount: string, feeInWei: string, recipient: string, relayer: RelayerInfo) {
     try {
       setLoadingMessage('Withdrawing...')
       if (!keypair) {
@@ -171,26 +170,31 @@ export default function Home() {
         throw new Error('Wallet client is null')
       }
       const totalAmount = BigNumber.from(toWei(amount))
+      const fee = BigNumber.from(feeInWei)
+
       const { extData, args, membershipProof } = await prepareTransaction({
         keypair,
-        amount: totalAmount,
+        amount: totalAmount.sub(fee),
         address: toChecksumAddress(address),
-        fee: BG_ZERO,
-        // relayer: toChecksumAddress(relayer.rewardAddress),
+        fee: fee,
         recipient: toChecksumAddress(recipient),
+        relayer: toChecksumAddress(relayer.rewardAddress)
       })
       console.log('Ext data', extData)
       console.log('Args', args)
       let newExtData: ExtData = { ...extData }
       newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
-
-      await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
+      if(!membershipProof) {
+        throw new Error('Membership proof is null')
+      }
+      await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
+      // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
       setLoadingMessage('')
     } catch (error) {
       setLoadingMessage('')
       setError(error.message)
     }
-    // await sendToRelayer(relayer.rewardAddress, { extData, args })
+    
   }
 
 
@@ -261,7 +265,7 @@ export default function Home() {
 
             {activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
             {activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />}
-            {activeTab === 'withdraw' && <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />}
+            {activeTab === 'withdraw' && <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} logger={logger} />}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
             <LoadingSpinner loadingMessage={loadingMessage} />
