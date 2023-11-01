@@ -23,8 +23,9 @@ import { getWrappedToken } from '@/contracts'
 import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
 import { getUtxoFromKeypair, prepareTransaction } from '@/store/account'
 import ErrorModal from '@/components/Error'
-import { handleAllowance, transact } from '@/store/wallet'
+import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
 import LoadingSpinner from '@/components/Loading'
+import WrapEtherComponent from '@/components/WrapEtherComponent'
 
 const relayers: RelayerInfo[] = [
   { name: 'Relayer1', api: 'http://172.16.20.111:8000', fee: 0.05, rewardAddress: '0x9fCDf8f60d3009656E50Bf805Cd53C7335b284Fb' },
@@ -192,6 +193,28 @@ export default function Home() {
     // await sendToRelayer(relayer.rewardAddress, { extData, args })
   }
 
+
+  async function wrapEther(amount: string) {
+    try {
+      setLoadingMessage('Depositing...')
+      if (!walletClient) {
+        throw new Error('Wallet client is null')
+      }
+      if (!address) {
+        throw new Error('Address is null')
+        return
+      }
+
+      await handleWrapEther({ publicClient, walletClient, logger }, amount)
+
+      setLoadingMessage('')
+    } catch (error) {
+      setLoadingMessage('')
+      setError(error.message)
+    }
+  }
+
+
   return (
     <div className="h-screen bg-gray-100">
       {/* Header */}
@@ -210,34 +233,40 @@ export default function Home() {
         </div>
       </header>
 
-      { curAddress && (
-      <div className="flex justify-center pt-8">
-        <div className="bg-white rounded-lg shadow-md p-0 w-96">
-          {/* Tabs */}
-          <div className="mb-4 flex border-b">
-            <button
-              onClick={() => setActiveTab('deposit')}
-              className={`py-2 px-4 ${activeTab === 'deposit' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
-            >
-              Deposit
-            </button>
-            <button
-              onClick={() => setActiveTab('withdraw')}
-              className={`py-2 px-4 ${activeTab === 'withdraw' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
-            >
-              Withdraw
-            </button>
+      {curAddress && (
+        <div className="flex justify-center pt-8">
+          <div className="bg-white rounded-lg shadow-md p-0 w-96">
+            {/* Tabs */}
+            <div className="mb-4 flex border-b">
+              <button
+                onClick={() => setActiveTab('deposit')}
+                className={`py-2 px-4 ${activeTab === 'deposit' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
+              >
+                Deposit
+              </button>
+              <button
+                onClick={() => setActiveTab('withdraw')}
+                className={`py-2 px-4 ${activeTab === 'withdraw' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
+              >
+                Withdraw
+              </button>
+
+              <button
+                onClick={() => setActiveTab('wrapEther')}
+                className={`py-2 px-4 ${activeTab === 'wrapEther' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
+              >
+                Wrap ETH
+              </button>
+            </div>
+
+            {activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
+            {activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />}
+            {activeTab === 'withdraw' && <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />}
+
+            <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
+            <LoadingSpinner loadingMessage={loadingMessage} />
           </div>
-          {/* Tab content */}
-          {activeTab === 'deposit' ? (
-            <DepositComponent deposit={deposit} address={curAddress} />
-          ) : (
-            <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} />
-          )}
-          <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
-          <LoadingSpinner loadingMessage={loadingMessage} />
         </div>
-      </div>
       )}
     </div>
   )

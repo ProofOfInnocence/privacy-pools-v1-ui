@@ -14,7 +14,7 @@ export async function transact(
     walletClient,
     publicClient,
     logger,
-    syncPoolBalance
+    syncPoolBalance,
   }: {
     walletClient: WalletClient
     publicClient: PublicClient
@@ -49,14 +49,13 @@ export async function transact(
   logger('Waiting for transaction ' + hash, LogLevel.LOADING)
   await publicClient.waitForTransactionReceipt({ hash })
   await syncPoolBalance()
-
 }
 
 export async function handleAllowance(
   {
     walletClient,
     publicClient,
-    logger
+    logger,
   }: {
     walletClient: WalletClient
     publicClient: PublicClient
@@ -98,4 +97,33 @@ export async function handleAllowance(
     logger('Waiting for transaction ' + hash, LogLevel.LOADING)
     await publicClient.waitForTransactionReceipt({ hash })
   }
+}
+
+export async function handleWrapEther(
+  {
+    walletClient,
+    publicClient,
+    logger,
+  }: {
+    walletClient: WalletClient
+    publicClient: PublicClient
+    logger: (message: string, logLevel: LogLevel) => void
+  },
+  amount: string
+) {
+  const weth = getWrappedToken(ChainId.ETHEREUM_GOERLI)
+  const [address] = await walletClient.getAddresses()
+
+  const { request } = await publicClient.simulateContract({
+    address: toHexString(weth.address),
+    abi: WETH__factory.abi,
+    functionName: 'deposit',
+    args: [],
+    account: address,
+    value: toWei(amount).toBigInt(),
+  })
+  logger('Confirm transaction in your wallet', LogLevel.LOADING)
+  const hash = await walletClient.writeContract(request)
+  logger('Waiting for transaction ' + hash, LogLevel.LOADING)
+  await publicClient.waitForTransactionReceipt({ hash })
 }
