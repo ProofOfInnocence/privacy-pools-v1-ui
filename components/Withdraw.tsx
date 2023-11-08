@@ -21,7 +21,7 @@ const WithdrawComponent: React.FC<WithdrawComponentProps> = ({ withdrawWithRelay
   const [fee, setFee] = useState<string | undefined>(undefined)
 
   const handleWithdrawClick = () => {
-    if(!fee) {
+    if (!fee) {
       logger('Fee is undefined', LogLevel.ERROR)
       return
     }
@@ -34,7 +34,7 @@ const WithdrawComponent: React.FC<WithdrawComponentProps> = ({ withdrawWithRelay
     const serviceFee = BigNumber.from(selectedRelayer.fee)
     console.log('serviceFee:', serviceFee)
     // const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_GOERLI)
-    const fast = 20;
+    const fast = 20
     console.log('fast:', fast)
     const gasLimit = BigNumber.from(2000000)
     const operationFee = BigNumber.from(fast).mul(gasLimit)
@@ -49,15 +49,23 @@ const WithdrawComponent: React.FC<WithdrawComponentProps> = ({ withdrawWithRelay
   }
 
   useEffect(() => {
-    const intervalId = setInterval(async () => {
+    // Define the async function to fetch and set the fee.
+    const fetchFee = async () => {
       try {
         const desiredFee = await calculateFee()
         setFee(desiredFee.toString())
       } catch (error) {
         logger(error.message, LogLevel.ERROR)
       }
-    }, 15000) // every 15 seconds
+    }
 
+    // Call the fetchFee function immediately on component mount.
+    fetchFee()
+
+    // Then set up the interval to call fetchFee every 15 seconds.
+    const intervalId = setInterval(fetchFee, 15000)
+
+    // Clear the interval on component unmount.
     return () => {
       clearInterval(intervalId)
     }

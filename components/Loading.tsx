@@ -5,18 +5,19 @@ interface LoadingSpinnerProps {
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ loadingMessage }) => {
+  // If no loading message is provided, render nothing.
   if (!loadingMessage) {
-    return null;
+    return <></>;
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-      <div className="bg-white p-5 rounded-lg shadow-md flex flex-col items-center">
-        <div className="w-10 h-10 border-t-4 border-black border-solid border-t-2 border-r-2 rounded-full animate-spin"></div>
-        <p className="mt-3">{loadingMessage}</p>
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+        <p className="text-white text-lg font-semibold">{loadingMessage}</p>
       </div>
     </div>
   );
-}
+};
 
 export default LoadingSpinner;
