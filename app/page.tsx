@@ -26,10 +26,13 @@ import ErrorModal from '@/components/Error'
 import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
 import LoadingSpinner from '@/components/Loading'
 import WrapEtherComponent from '@/components/WrapEtherComponent'
-import { sendToRelayer } from '@/store/relayer'
+import { useAppDispatch } from '@/lib/hooks'
+import { getUtxoFromKeypairThunk, prepareTransactionThunk } from '@/lib/features/accountSlice'
+import { handleAllowanceThunk, handleWrapEtherThunk, transactThunk } from '@/lib/features/walletSlice'
+import { sendToRelayerThunk } from '@/lib/features/relayerSlice'
 
 const relayers: RelayerInfo[] = [
-  { name: 'Local Relayer', api: 'http://127.0.0.1:8000', fee: "10000000000", rewardAddress: "0x952198215a9D99bE8CEFc791337B909bF520d98F" },
+  { name: 'Local Relayer', api: 'http://127.0.0.1:8000', fee: '10000000000', rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F' },
 ]
 
 export default function Home() {
@@ -45,6 +48,9 @@ export default function Home() {
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const { chain } = useNetwork()
+
+  // redux
+  const dispatch = useAppDispatch()
 
   const logger = (message: string, logType: LogLevel = LogLevel.DEBUG) => {
     if (logType === LogLevel.ERROR) {
@@ -108,7 +114,10 @@ export default function Home() {
     if (!address) {
       return
     }
-    const { totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
+
+    const { totalAmount } = await dispatch(getUtxoFromKeypairThunk({ keypair, accountAddress: address, withCache: false })).unwrap()
+
+    // const { totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
     setPoolBalance(totalAmount)
   }
 
@@ -119,8 +128,8 @@ export default function Home() {
       if (!address) {
         throw new Error('Address is null')
       }
-
-      const { totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
+      const { totalAmount } = await dispatch(getUtxoFromKeypairThunk({ keypair, accountAddress: address, withCache: false })).unwrap()
+      // const { totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
       setPoolBalance(totalAmount)
       setLoadingMessage('')
     } catch (error) {
@@ -138,17 +147,24 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
-      await handleAllowance({ publicClient, walletClient, logger }, amount)
+      await dispatch(handleAllowanceThunk({ publicClient, walletClient, logger, amount }))
+      // await handleAllowance({ publicClient, walletClient, logger }, amount)
       if (!address) {
         throw new Error('Address is null')
         return
       }
-      const { extData, args } = await prepareTransaction({
-        keypair,
-        amount: BigNumber.from(toWei(amount)),
-        address: address,
-      })
-      await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
+      const { extData, args } = await dispatch(
+        prepareTransactionThunk({ keypair, amount: BigNumber.from(toWei(amount)), address: address })
+      ).unwrap()
+
+      // const { extData, args } = await prepareTransaction({
+      //   keypair,
+      //   amount: BigNumber.from(toWei(amount)),
+      //   address: address,
+      // })
+
+      await dispatch(transactThunk({ walletClient, publicClient, logger, syncPoolBalance, args, extData }))
+      // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
       setLoadingMessage('')
     } catch (error) {
       setLoadingMessage('')
@@ -172,31 +188,41 @@ export default function Home() {
       const totalAmount = BigNumber.from(toWei(amount))
       const fee = BigNumber.from(feeInWei)
 
-      const { extData, args, membershipProof } = await prepareTransaction({
-        keypair,
-        amount: totalAmount.sub(fee),
-        address: toChecksumAddress(address),
-        fee: fee,
-        recipient: toChecksumAddress(recipient),
-        relayer: toChecksumAddress(relayer.rewardAddress)
-      })
+      const { extData, args, membershipProof } = await dispatch(
+        prepareTransactionThunk({
+          keypair,
+          amount: totalAmount.sub(fee),
+          address: toChecksumAddress(address),
+          fee: fee,
+          recipient: toChecksumAddress(recipient),
+          relayer: toChecksumAddress(relayer.rewardAddress),
+        })
+      ).unwrap()
+
+      // const { extData, args, membershipProof } = await prepareTransaction({
+      //   keypair,
+      //   amount: totalAmount.sub(fee),
+      //   address: toChecksumAddress(address),
+      //   fee: fee,
+      //   recipient: toChecksumAddress(recipient),
+      //   relayer: toChecksumAddress(relayer.rewardAddress),
+      // })
       console.log('Ext data', extData)
       console.log('Args', args)
       let newExtData: ExtData = { ...extData }
       newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
-      if(!membershipProof) {
+      if (!membershipProof) {
         throw new Error('Membership proof is null')
       }
-      await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
+      await dispatch(sendToRelayerThunk({ relayer, extData: newExtData, args, membershipProof }))
+      // await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
       setLoadingMessage('')
     } catch (error) {
       setLoadingMessage('')
       setError(error.message)
     }
-    
   }
-
 
   async function wrapEther(amount: string) {
     try {
@@ -208,8 +234,9 @@ export default function Home() {
         throw new Error('Address is null')
         return
       }
+      await dispatch(handleWrapEtherThunk({ publicClient, walletClient, logger, amount }))
 
-      await handleWrapEther({ publicClient, walletClient, logger }, amount)
+      // await handleWrapEther({ publicClient, walletClient, logger }, amount)
 
       setLoadingMessage('')
     } catch (error) {
@@ -217,7 +244,6 @@ export default function Home() {
       setError(error.message)
     }
   }
-
 
   return (
     <div className="h-screen bg-gray-100">
@@ -265,7 +291,9 @@ export default function Home() {
 
             {activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
             {activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />}
-            {activeTab === 'withdraw' && <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} logger={logger} />}
+            {activeTab === 'withdraw' && (
+              <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} logger={logger} />
+            )}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
             <LoadingSpinner loadingMessage={loadingMessage} />
