@@ -171,5 +171,5 @@ const accountSlice = createSlice({
 });
 
 // Export actions and reducer
-// export const { setAccountAddress, setAccountBalance } = accountSlice.actions
+// export const { setAccountBalance } = accountSlice.actions
 export default accountSlice.reducer;

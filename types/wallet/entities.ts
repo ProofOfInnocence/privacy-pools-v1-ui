@@ -1,7 +1,7 @@
 export type WalletAccount = {
     address: string
     ensName: string
-    balance: number
+    balance: string
 }
 
 export type Provider = {

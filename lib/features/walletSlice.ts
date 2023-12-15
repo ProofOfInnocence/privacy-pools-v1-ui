@@ -137,7 +137,7 @@ const initialState: WalletState = {
     account: {
         ensName: '',
         address: '',
-        balance: 0,
+        balance: '0',
     },
 }
 
@@ -146,9 +146,13 @@ const initialState: WalletState = {
 const walletSlice = createSlice({
     name: 'wallet',
     initialState,
-    reducers: {}
+    reducers: {
+        setAccountBalance: (state, action: PayloadAction<string>) => {
+            state.account.balance = action.payload
+        }
+    }
 });
 
 // Export actions and reducer
-// export const { updateAccountBalance } = walletSlice.actions;
+export const { setAccountBalance } = walletSlice.actions;
 export default walletSlice.reducer;

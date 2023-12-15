@@ -4,16 +4,21 @@ import { WRAPPED_TOKEN } from '@/constants'
 import { ChainId } from '@/types'
 import React, { useState } from 'react'
 import { useBalance } from 'wagmi'
+import { useAppDispatch, useAppSelector } from '@/lib/hooks'
+import { setAccountBalance } from '@/lib/features/walletSlice'
 
 const DepositComponent = ({ deposit, address }: { deposit: (amount: string) => void; address: string }) => {
+  const dispatch = useAppDispatch()
+  const balance = useAppSelector((state) => state.wallet.account.balance)
   const [amount, setAmount] = useState('')
-  const [balance, setBalance] = useState('0')
+  // const [balance, setBalance] = useState('0')
   const WETHbalance = useBalance({
     address: address as `0x${string}`,
     token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
     watch: true,
     onSuccess(data) {
-      setBalance(data.formatted)
+      // setBalance(data.formatted)
+      dispatch(setAccountBalance(data.formatted))
     },
   })
 
