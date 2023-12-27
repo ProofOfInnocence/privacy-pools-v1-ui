@@ -8,7 +8,7 @@ import { useAccount, useContractWrite, useNetwork, usePrepareContractWrite, useP
 import { BG_ZERO, POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
 import { encodeTransactData, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { BaseError, ContractFunctionRevertedError, numberToHex, toRlp } from 'viem'
+import { BaseError, ContractFunctionRevertedError, encodeFunctionData, numberToHex, toRlp } from 'viem'
 import { UnspentUtxoData } from '@/services/utxoService/@types'
 import { BigNumber } from 'ethers'
 
@@ -183,10 +183,25 @@ export default function Home() {
       console.log('Ext data', extData)
       console.log('Args', args)
       let newExtData: ExtData = { ...extData }
-      newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
-      if(!membershipProof) {
+      newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt().toString()
+      if (!membershipProof) {
         throw new Error('Membership proof is null')
       }
+      try {
+        const { request } = await publicClient.simulateContract({
+          address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI]),
+          abi: TornadoPool__factory.abi,
+          functionName: 'transact',
+          args: [args, newExtData],
+          account: toHexString(relayer.rewardAddress || ''),
+        })
+        console.log('Request', request)
+      } catch (error) {
+        console.log('Error in simulate contract', error.message)
+      }
+      const functionData = encodeFunctionData({ abi: TornadoPool__factory.abi, functionName: 'transact', args: [args, newExtData] })
+      console.log('Function data', functionData)
+
       await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
       setLoadingMessage('')
