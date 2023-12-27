@@ -1,6 +1,6 @@
 'use client'
 
-import { Keypair, Utxo, createTransactionData, utxoFactory, workerProvider } from '@/services'
+import { Keypair, Utxo, createTransactionData, getProvider, utxoFactory, workerProvider } from '@/services'
 import { ChainId } from '@/types'
 import { toWei } from 'web3-utils'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
@@ -8,8 +8,7 @@ import { useAccount, useContractWrite, usePrepareContractWrite, usePublicClient,
 import { BG_ZERO, POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
 import { encodeTransactData, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { TornadoPool__factory, WETH__factory } from '@/_contracts'
-import { BaseError, ContractFunctionRevertedError } from 'viem'
+import { BaseError, ContractFunctionRevertedError, numberToHex, toRlp } from 'viem'
 import { UnspentUtxoData } from '@/services/utxoService/@types'
 import { BigNumber } from 'ethers'
 import { ArgsProof, ExtData } from '@/services/core/@types'
@@ -20,6 +19,7 @@ import Logo from '@/components/Logo'
 import { RelayerInfo } from '@/types'
 import Balance from '@/components/Balance'
 import { getWrappedToken } from '@/contracts'
+import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
 
 async function getUtxoFromKeypair({
   keypair,
@@ -84,9 +84,14 @@ async function prepareTransaction({
   recipient?: string | BigNumber
 }) {
   try {
-    // const etherAmount = BigNumber.from(toWei(amount))
+    // console.log("AAGAGSDVAJGHSDJHASHJFVADHJKGFJVBGKVJAKBJKJK")
+    // console.log('Amount:', amount.toString())
+    // console.log('Fee:', fee.toString())
+    // // const etherAmount = BigNumber.from(toWei(amount))
+    // const amountWithFee = amount.sub(fee)
+    // console.log('Amount with fee:', amountWithFee.toString())
+    // const etherAmount = toWei(amount)
     const amountWithFee = amount.add(fee)
-    console.log('Amount with fee:', amountWithFee.toString())
 
     const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({
       keypair,
@@ -95,21 +100,37 @@ async function prepareTransaction({
     })
     console.log('Total amount:', totalAmount.toString())
 
-    if (totalAmount.lt(amountWithFee)) {
-      throw new Error('Insufficient balance')
+    // let outputAmount
+    // if (recipient == 0) {
+    //   outputAmount = BigNumber.from(amount).add(inputAmount)
+    // } else {
+    //   if (inputAmount.lt(BigNumber.from(amount))) {
+    //     throw new Error('Not enough funds')
+    //   }
+    //   outputAmount = inputAmount.sub(BigNumber.from(amount))
+    // }
+
+    let outputAmount
+    if (recipient == BG_ZERO) {
+      outputAmount = totalAmount.add(amountWithFee)
+    } else {
+      if (totalAmount.lt(amountWithFee)) {
+        throw new Error('Not enough funds')
+      }
+      outputAmount = totalAmount.sub(amountWithFee)
     }
 
     if (unspentUtxo.length > 2) {
       throw new Error('Too many inputs')
     }
-    const outputs = [new Utxo({ amount: totalAmount.sub(amountWithFee), keypair })]
+    const outputs = [new Utxo({ amount: outputAmount, keypair })]
 
     const { extData, args } = await createTransactionData(
       {
         outputs,
         inputs: unspentUtxo.length > 2 ? unspentUtxo.slice(0, 2) : unspentUtxo,
-        recipient: recipient ? toChecksumAddress(recipient) : undefined,
-        relayer: relayer ? toChecksumAddress(relayer) : undefined,
+        recipient: recipient !== BG_ZERO ? toChecksumAddress(recipient) : undefined,
+        relayer: relayer !== BG_ZERO ? toChecksumAddress(relayer) : undefined,
         fee: fee,
       },
       keypair
@@ -300,11 +321,18 @@ export default function Home() {
       amount: totalAmount,
       address: toChecksumAddress(address),
       fee: BG_ZERO,
-      relayer: toChecksumAddress(relayer.rewardAddress),
+      // relayer: toChecksumAddress(relayer.rewardAddress),
       recipient: toChecksumAddress(recipient),
     })
-
-    await sendToRelayer(relayer.rewardAddress, { extData, args })
+    console.log('Ext data', extData)
+    console.log('Args', args)
+    let newExtData : ExtData = { ...extData }
+    newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
+    // extData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
+    // await genpp()
+    // await prove()
+    await transact({ args, extData: newExtData })
+    // await sendToRelayer(relayer.rewardAddress, { extData, args })
   }
 
   async function transact({ args, extData }: { args: ArgsProof; extData: ExtData }) {
@@ -315,6 +343,9 @@ export default function Home() {
 
     const [address] = await walletClient.getAddresses()
     console.log('Address', address)
+    console.log('Args', args)
+    console.log('Ext data', extData)
+    console.log('Pool contract', POOL_CONTRACT[ChainId.ETHEREUM_GOERLI])
 
     const { request } = await publicClient.simulateContract({
       address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI]),
@@ -330,6 +361,27 @@ export default function Home() {
     }
     const hash = await walletClient.writeContract(request)
     console.log(hash)
+  }
+
+  async function genpp() {
+    // workerProvider.workerSetup(ChainId.XDAI)
+    console.log('genpp called')
+    let ppx = await workerProvider.generate_ppx()
+    console.log('genpp done', ppx)
+  }
+
+  async function prove() {
+    // workerProvider.workerSetup(ChainId.XDAI)
+    console.log('prove called')
+    await workerProvider.provex()
+    console.log('prove done')
+  }
+
+  async function verify() {
+    // workerProvider.workerSetup(ChainId.XDAI)
+    console.log('verify called')
+    await workerProvider.verifyx()
+    console.log('verify done')
   }
 
   return (
