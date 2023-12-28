@@ -1,26 +1,23 @@
 'use client'
 
-import { Keypair, Utxo, createTransactionData, getProvider, utxoFactory, workerProvider } from '@/services'
+import { Keypair, workerProvider } from '@/services'
 import { ChainId, LogLevel } from '@/types'
 import { toWei } from 'web3-utils'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
-import { useAccount, useContractWrite, useNetwork, usePrepareContractWrite, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
-import { BG_ZERO, POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
+import { useAccount, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
+import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
-import { encodeTransactData, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { BaseError, ContractFunctionRevertedError, numberToHex, toRlp } from 'viem'
-import { UnspentUtxoData } from '@/services/utxoService/@types'
+import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
+import { encodeFunctionData } from 'viem'
 import { BigNumber } from 'ethers'
+import { PrivacyPool__factory as TornadoPool__factory } from '@/_contracts'
 
-import { ArgsProof, ExtData, MembershipProof } from '@/services/core/@types'
-import axios from 'axios'
+import { ExtData } from '@/services/core/@types'
 import DepositComponent from '@/components/Deposit'
 import WithdrawComponent from '@/components/Withdraw'
 import Logo from '@/components/Logo'
 import { RelayerInfo } from '@/types'
 import Balance from '@/components/Balance'
-import { getWrappedToken } from '@/contracts'
-import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
 import { getUtxoFromKeypair, prepareTransaction } from '@/store/account'
 import ErrorModal from '@/components/Error'
 import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
@@ -29,7 +26,7 @@ import WrapEtherComponent from '@/components/WrapEtherComponent'
 import { sendToRelayer } from '@/store/relayer'
 
 const relayers: RelayerInfo[] = [
-  { name: 'Local Relayer', api: 'http://127.0.0.1:8000', fee: "10000000000", rewardAddress: "0x952198215a9D99bE8CEFc791337B909bF520d98F" },
+  { name: 'Local Relayer', api: 'http://127.0.0.1:8000', fee: '10000000000', rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F' },
 ]
 
 export default function Home() {
@@ -93,7 +90,7 @@ export default function Home() {
       setLoadingMessage('Sign message to initialize')
       setCurAddress(address)
       setCurChainId(chain?.id || 0)
-      await signMessage()
+      signMessage()
       setLoadingMessage('')
     } catch (error) {
       setLoadingMessage('')
@@ -141,7 +138,6 @@ export default function Home() {
       await handleAllowance({ publicClient, walletClient, logger }, amount)
       if (!address) {
         throw new Error('Address is null')
-        return
       }
       const { extData, args } = await prepareTransaction({
         keypair,
@@ -161,7 +157,6 @@ export default function Home() {
       setLoadingMessage('Withdrawing...')
       if (!keypair) {
         throw new Error('Keypair is null')
-        return
       }
       if (!address) {
         throw new Error('Address is null')
@@ -178,15 +173,29 @@ export default function Home() {
         address: toChecksumAddress(address),
         fee: fee,
         recipient: toChecksumAddress(recipient),
-        relayer: toChecksumAddress(relayer.rewardAddress)
+        relayer: toChecksumAddress(relayer.rewardAddress),
       })
       console.log('Ext data', extData)
       console.log('Args', args)
       let newExtData: ExtData = { ...extData }
-      newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt()
-      if(!membershipProof) {
+      newExtData.extAmount = BigNumber.from(extData.extAmount).toBigInt().toString()
+      if (!membershipProof) {
         throw new Error('Membership proof is null')
       }
+      try {
+        const { request } = await publicClient.simulateContract({
+          address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI]),
+          abi: TornadoPool__factory.abi,
+          functionName: 'transact',
+          args: [args, newExtData],
+          account: toHexString(relayer.rewardAddress || ''),
+        })
+        console.log('Request', request)
+      } catch (error) {
+        console.log('Error in simulate contract', error.message)
+      }
+      const functionData = encodeFunctionData({ abi: TornadoPool__factory.abi, functionName: 'transact', args: [args, newExtData] })
+      console.log('Function data', functionData)
       await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
       setLoadingMessage('')
@@ -194,9 +203,7 @@ export default function Home() {
       setLoadingMessage('')
       setError(error.message)
     }
-    
   }
-
 
   async function wrapEther(amount: string) {
     try {
@@ -206,7 +213,6 @@ export default function Home() {
       }
       if (!address) {
         throw new Error('Address is null')
-        return
       }
 
       await handleWrapEther({ publicClient, walletClient, logger }, amount)
@@ -217,7 +223,6 @@ export default function Home() {
       setError(error.message)
     }
   }
-
 
   return (
     <div className="h-screen bg-gray-100">
@@ -265,7 +270,9 @@ export default function Home() {
 
             {activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
             {activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />}
-            {activeTab === 'withdraw' && <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} logger={logger} />}
+            {activeTab === 'withdraw' && (
+              <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} logger={logger} />
+            )}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
             <LoadingSpinner loadingMessage={loadingMessage} />

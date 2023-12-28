@@ -1,21 +1,21 @@
-import React from 'react';
+import React from 'react'
 
 type Operation = {
-  ButtonName: string;
-  Function: () => void;
-};
-
-interface ModalProps {
-  title: string;
-  text: string;
-  operations: Operation[];
-  isVisible: boolean;
-  onClose: () => void;
+  ButtonName: string
+  Function: () => void
 }
 
-const Modal: React.FC<ModalProps> = ({ title, text, operations, isVisible, onClose }) => {
+interface ModalProps {
+  title: string
+  text: string
+  operations: Operation[]
+  isVisible: boolean
+  onClose: () => void
+}
+
+function Modal({ title, text, operations, isVisible, onClose }: ModalProps) {
   if (!isVisible) {
-    return null;
+    return null
   }
 
   return (
@@ -37,12 +37,9 @@ const Modal: React.FC<ModalProps> = ({ title, text, operations, isVisible, onClo
         </div>
       </div>
 
-      <div
-        onClick={onClose}
-        className="absolute top-0 left-0 w-full h-full bg-black opacity-50 cursor-pointer"
-      ></div>
+      <div onClick={onClose} className="absolute top-0 left-0 w-full h-full bg-black opacity-50 cursor-pointer"></div>
     </div>
-  );
-};
+  )
+}
 
-export default Modal;
+export default Modal

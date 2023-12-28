@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
-import { ChainId, LogLevel, RelayerInfo } from '@/types'
-import { getGasPriceFromRpc } from '@/services/gasOracle'
+import { useEffect, useState } from 'react'
+import { LogLevel, RelayerInfo } from '@/types'
 import { BigNumber } from 'ethers'
 import { fromWei, shortenAddress, toWei } from '@/utilities'
 import { TOKEN_SYMBOL } from '@/constants'
@@ -13,7 +12,7 @@ type WithdrawComponentProps = {
   logger: (message: string, logLevel: LogLevel) => void
 }
 
-const WithdrawComponent: React.FC<WithdrawComponentProps> = ({ withdrawWithRelayer, relayers, logger }) => {
+function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawComponentProps) {
   const [amount, setAmount] = useState('0.0001')
   const [recipient, setRecipient] = useState('0xcbef1A6b6a001eEe4B75d99cf484DCe5D00F8925')
   const [selectedRelayer, setSelectedRelayer] = useState(relayers[0])

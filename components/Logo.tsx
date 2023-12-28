@@ -1,10 +1,14 @@
-import React from 'react';
+'use client'
 
-const Logo = () => (
-  <div className="flex items-center relative">
-    <span className="text-xl font-bold">Privacy Pools V1</span>
-    <span className="absolute text-red-500 text-xs" style={{ top: 0, right: '-30px' }}>beta</span>
-  </div>
-);
+function Logo() {
+  return (
+    <div className="flex items-center relative">
+      <span className="text-xl font-bold">Privacy Pools V1</span>
+      <span className="absolute text-red-500 text-xs" style={{ top: 0, right: '-30px' }}>
+        beta
+      </span>
+    </div>
+  )
+}
 
-export default Logo;
+export default Logo

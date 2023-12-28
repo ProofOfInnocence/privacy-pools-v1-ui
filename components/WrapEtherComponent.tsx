@@ -4,11 +4,11 @@ import React, { useState } from 'react'
 import { useBalance } from 'wagmi'
 
 interface WrapEtherProps {
-  wrapEther: (amount: string) => void;
-  address: string;
+  wrapEther: (amount: string) => void
+  address: string
 }
 
-const WrapEtherComponent: React.FC<WrapEtherProps> = ({ wrapEther, address }) => {
+function WrapEtherComponent({ wrapEther, address }: WrapEtherProps) {
   const [amount, setAmount] = useState('')
   const [balance, setBalance] = useState('0')
   const ETHbalance = useBalance({

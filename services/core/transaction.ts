@@ -7,7 +7,7 @@ import MerkleTree from 'fixed-merkle-tree'
 import axios, { AxiosResponse } from 'axios'
 import { BytesLike } from '@ethersproject/bytes'
 
-import { APP_ENS_NAME, BG_ZERO, FIELD_SIZE, numbers, ZERO_LEAF } from '@/constants'
+import { BG_ZERO, FIELD_SIZE, numbers, ZERO_LEAF } from '@/constants'
 
 import {
   ArgsProof,
@@ -22,9 +22,9 @@ import {
 
 import { Utxo } from './utxo'
 import { prove } from './prover'
-import { toFixedHex, poseidonHash2, getExtDataHash, shuffle } from './utils'
+import { toFixedHex, poseidonHash2, getExtDataHash } from './utils'
 
-import { getProvider, Keypair, workerProvider } from '@/services'
+import { Keypair, workerProvider } from '@/services'
 import { commitmentsFactory } from '@/services/commitments'
 import { CommitmentEvents } from '@/services/events/@types'
 
@@ -49,8 +49,6 @@ function buildMerkleTree({ events }: { events: CommitmentEvents }) {
 
 async function getProof({
   inputs,
-  isL1Withdrawal,
-  l1Fee,
   outputs,
   tree,
   extAmount,
@@ -201,7 +199,7 @@ async function prepareTransaction({
   }
 
   if (!rootHex) {
-    params.tree = await buildMerkleTree({ events })
+    params.tree = buildMerkleTree({ events })
   }
 
   // console.log("NEW EXPERIMENT IS COMING")
@@ -285,22 +283,22 @@ async function download({ prefix, name, contentType }: DownloadParams) {
   }
 }
 
-async function estimateTransact(payload: EstimateTransactParams) {
-  try {
-    const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
+// async function estimateTransact(payload: EstimateTransactParams) {
+//   try {
+//     const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
 
-    const gas = await tornadoPool.estimateGas.transact(payload.args, payload.extData, {
-      from: tornadoPool.address,
-    })
+//     const gas = await tornadoPool.estimateGas.transact(payload.args, payload.extData, {
+//       from: tornadoPool.address,
+//     })
 
-    return gas
-  } catch (err) {
-    console.error('estimateTransact has error:', err.message)
-    throw new Error(
-      `Looks like you are accessing an outdated version of the user interface. Reload page or try an alternative gateway. If that doesn't work please contact support`
-    )
-  }
-}
+//     return gas
+//   } catch (err) {
+//     console.error('estimateTransact has error:', err.message)
+//     throw new Error(
+//       `Looks like you are accessing an outdated version of the user interface. Reload page or try an alternative gateway. If that doesn't work please contact support`
+//     )
+//   }
+// }
 
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair) {
   try {
@@ -314,11 +312,11 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     while (params.inputs.length < 2) {
       const newBlinding = BigNumber.from(
         '0x' +
-          ethers.utils
-            .keccak256(
-              ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
-            )
-            .slice(2, 64)
+        ethers.utils
+          .keccak256(
+            ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
+          )
+          .slice(2, 64)
       ).mod(FIELD_SIZE)
 
       const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
@@ -362,7 +360,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       console.log('startjson', startjson)
       // await workerProvider.generate_public_parameters()
       // membershipProof = await workerProvider.prove_membership(inputjson, startjson)
-      membershipProof = JSON.stringify({proof:"No proof, PRIVATE TRANSACTION"})
+      membershipProof = JSON.stringify({ proof: "No proof, PRIVATE TRANSACTION" })
       const membershipProofJSON = JSON.parse(membershipProof)
       console.log('MEMBERSHIP PROOF: ', membershipProofJSON)
       params.membershipProofURI = await getIPFSCid(JSON.stringify(membershipProofJSON))
