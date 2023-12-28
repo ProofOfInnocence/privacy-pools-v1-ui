@@ -1,5 +1,3 @@
-import React from 'react'
-
 type Operation = {
   ButtonName: string
   Function: () => void
