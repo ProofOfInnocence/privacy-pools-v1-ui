@@ -7,6 +7,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
 import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
+
 import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
 import { encodeFunctionData } from 'viem'
 import { BigNumber } from 'ethers'
@@ -196,6 +197,7 @@ export default function Home() {
       }
       const functionData = encodeFunctionData({ abi: TornadoPool__factory.abi, functionName: 'transact', args: [args, newExtData] })
       console.log('Function data', functionData)
+
       await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
       setLoadingMessage('')
