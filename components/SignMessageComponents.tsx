@@ -1,6 +1,6 @@
-import React from 'react'
+'use client'
 
-const SignMessageComponent = ({ signMessage }: { signMessage: () => Promise<void> }) => {
+function SignMessageComponent({ signMessage }: { signMessage: () => Promise<void> }) {
   return (
     <div className="flex justify-center pt-8">
       <div className="bg-white rounded-lg shadow-md p-0 w-96">

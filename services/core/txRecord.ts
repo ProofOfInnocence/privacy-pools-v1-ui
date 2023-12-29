@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers'
 import { TxRecordEvent } from '../events/@types'
 import { BaseUtxo, GeneratePoiStepParams } from './@types'
-import { poseidonHash, poseidonHash2, toFixedHex } from './utils'
+import { poseidonHash, toFixedHex } from './utils'
 
 class TxRecord {
   public inputs: BaseUtxo[]

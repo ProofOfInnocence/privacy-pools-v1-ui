@@ -1,13 +1,11 @@
-import React from 'react';
-
 interface LoadingSpinnerProps {
-  loadingMessage?: string;
+  loadingMessage?: string
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ loadingMessage }) => {
+function LoadingSpinner({ loadingMessage }: LoadingSpinnerProps) {
   // If no loading message is provided, render nothing.
   if (!loadingMessage) {
-    return <></>;
+    return <></>
   }
 
   return (
@@ -17,7 +15,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ loadingMessage }) => {
         <p className="text-white text-lg font-semibold">{loadingMessage}</p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LoadingSpinner;
+export default LoadingSpinner

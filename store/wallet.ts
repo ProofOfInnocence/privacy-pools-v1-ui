@@ -5,9 +5,8 @@ import { toHexString, toWei } from '@/utilities'
 import { WalletClient, PublicClient } from 'viem'
 import { PrivacyPool__factory as TornadoPool__factory, WETH__factory } from '@/_contracts'
 import { getWrappedToken } from '@/contracts'
-import { BigNumber } from 'ethers'
 
-export async function signStartMessage() {}
+// export async function signStartMessage() { }
 
 export async function transact(
   {

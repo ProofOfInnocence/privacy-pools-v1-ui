@@ -1,14 +1,12 @@
-import React from 'react';
-
 interface ErrorModalProps {
-  message: string;
-  isVisible: boolean;
-  onClose: () => void;
+  message: string
+  isVisible: boolean
+  onClose: () => void
 }
 
-const ErrorModal: React.FC<ErrorModalProps> = ({ message, isVisible, onClose }) => {
+function ErrorModal({ message, isVisible, onClose }: ErrorModalProps) {
   if (!isVisible) {
-    return null;
+    return null
   }
 
   return (
@@ -23,7 +21,7 @@ const ErrorModal: React.FC<ErrorModalProps> = ({ message, isVisible, onClose }) 
         <p>{message}</p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ErrorModal;
+export default ErrorModal

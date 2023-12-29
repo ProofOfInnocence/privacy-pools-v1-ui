@@ -2,10 +2,15 @@
 
 import { WRAPPED_TOKEN } from '@/constants'
 import { ChainId } from '@/types'
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useBalance } from 'wagmi'
 
-const DepositComponent = ({ deposit, address }: { deposit: (amount: string) => void; address: string }) => {
+interface DepositProps {
+  deposit: (amount: string) => void
+  address: string
+}
+
+function DepositComponent({ deposit, address }: DepositProps) {
   const [amount, setAmount] = useState('')
   const [balance, setBalance] = useState('0')
   const WETHbalance = useBalance({
