@@ -7,6 +7,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
 import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
+import axios from 'axios'
 
 import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
 import { encodeFunctionData } from 'viem'
@@ -25,9 +26,15 @@ import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
 import LoadingSpinner from '@/components/Loading'
 import WrapEtherComponent from '@/components/WrapEtherComponent'
 import { sendToRelayer } from '@/store/relayer'
+import Modal, { ModalProps } from '@/components/Modal'
 
 const relayers: RelayerInfo[] = [
-  { name: 'Local Relayer', api: 'http://127.0.0.1:8000', fee: '10000000000', rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F' },
+  {
+    name: 'Demo Relayer',
+    api: 'http://64.225.93.152:8000',
+    fee: '10000000000',
+    rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F',
+  },
 ]
 
 export default function Home() {
@@ -38,6 +45,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('deposit')
   const [curChainId, setCurChainId] = useState(0)
   const [curAddress, setCurAddress] = useState('')
+  const [modalData, setModalData] = useState({} as ModalProps)
+  const [txStatus, setTxStatus] = useState('')
 
   const { address, connector } = useAccount()
   const publicClient = usePublicClient()
@@ -145,8 +154,25 @@ export default function Home() {
         amount: BigNumber.from(toWei(amount)),
         address: address,
       })
-      await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
+      let txReceipt = await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
       setLoadingMessage('')
+      console.log('Tx receipt', txReceipt)
+      setModalData({
+        title: 'Deposit success',
+        text: 'Your deposit is successful, Explorer link: https://goerli.etherscan.io/tx/' + txReceipt.transactionHash,
+        operations: [
+          {
+            ButtonName: 'OK',
+            Function: () => {
+              location.reload()
+            },
+          },
+        ],
+        isVisible: true,
+        onClose: () => {
+          location.reload()
+        },
+      })
     } catch (error) {
       setLoadingMessage('')
       setError(error.message)
@@ -198,13 +224,48 @@ export default function Home() {
       const functionData = encodeFunctionData({ abi: TornadoPool__factory.abi, functionName: 'transact', args: [args, newExtData] })
       console.log('Function data', functionData)
 
-      await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
+      const res = await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
+      await checkWithdrawal(relayers[0], res)
+
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
-      setLoadingMessage('')
     } catch (error) {
       setLoadingMessage('')
       setError(error.message)
     }
+  }
+
+  async function checkWithdrawal(relayer: RelayerInfo, jobId: void) {
+    setInterval(async () => {
+      const { data: res } = await axios.get(`${relayer.api}/job/${jobId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      if (res.status === 'SENT') {
+        setLoadingMessage('')
+        getWithdrawModal(res.txHash)
+      }
+      console.log('STATUS', res)
+    }, 1000)
+  }
+
+  function getWithdrawModal(txHash: string) {
+    setModalData({
+      title: 'Withdraw success',
+      text: `Your withdraw is successful, Explorer link: <a href="https://goerli.etherscan.io/tx/${txHash}" target="_blank">https://goerli.etherscan.io/tx/${txHash}</a>`,
+      operations: [
+        {
+          ButtonName: 'OK',
+          Function: () => {
+            location.reload()
+          },
+        },
+      ],
+      isVisible: true,
+      onClose: () => {
+        location.reload()
+      },
+    })
   }
 
   async function wrapEther(amount: string) {
@@ -277,6 +338,7 @@ export default function Home() {
             )}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
+            {modalData && <Modal {...modalData} />}
             <LoadingSpinner loadingMessage={loadingMessage} />
           </div>
         </div>

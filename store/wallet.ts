@@ -46,8 +46,9 @@ export async function transact(
   logger('Confirm transaction in your wallet', LogLevel.LOADING)
   const hash = await walletClient.writeContract(request)
   logger('Waiting for transaction ' + hash, LogLevel.LOADING)
-  await publicClient.waitForTransactionReceipt({ hash })
+  let txReceipt = await publicClient.waitForTransactionReceipt({ hash })
   await syncPoolBalance()
+  return txReceipt;
 }
 
 export async function handleAllowance(
