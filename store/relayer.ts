@@ -19,5 +19,7 @@ export async function sendToRelayer(
       },
     }
   )
-  console.log(res)
+  console.log("Send TO RELAYER: ", res)
+  // const txStatus = await checkWithdrawal(relayer, res)
+  return res
 }

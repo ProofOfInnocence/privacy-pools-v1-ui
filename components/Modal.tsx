@@ -15,6 +15,11 @@ function Modal({ title, text, operations, isVisible, onClose }: ModalProps) {
   if (!isVisible) {
     return null
   }
+
+  const createMarkup = (html: string) => {
+    return { __html: html }
+  }
+
   return (
     <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50">
       {/* Overlay */}
@@ -23,7 +28,7 @@ function Modal({ title, text, operations, isVisible, onClose }: ModalProps) {
       {/* Modal */}
       <div className="bg-white rounded-lg shadow-lg p-6 w-96 z-50">
         <h3 className="text-xl font-bold mb-4">{title}</h3>
-        <p className="mb-4">{text}</p>
+        <p className="mb-4 overflow-hidden overflow-ellipsis max-h-16" dangerouslySetInnerHTML={createMarkup(text)}></p>
 
         <div className="flex justify-end space-x-4">
           {operations.map((op, index) => (
