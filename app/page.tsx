@@ -159,12 +159,18 @@ export default function Home() {
       console.log('Tx receipt', txReceipt)
       setModalData({
         title: 'Deposit success',
-        text: 'Your deposit is successful, Explorer link: https://goerli.etherscan.io/tx/' + txReceipt.transactionHash,
+        text: 'Your deposit is successful',
         operations: [
           {
             ButtonName: 'OK',
             Function: () => {
               location.reload()
+            },
+          },
+          {
+            ButtonName: 'Explorer',
+            Function: () => {
+              window.open(`https://goerli.etherscan.io/tx/${txReceipt.transactionHash}`, '_blank')
             },
           },
         ],
@@ -252,12 +258,18 @@ export default function Home() {
   function getWithdrawModal(txHash: string) {
     setModalData({
       title: 'Withdraw success',
-      text: `Your withdraw is successful, Explorer link: <a href="https://goerli.etherscan.io/tx/${txHash}" target="_blank">https://goerli.etherscan.io/tx/${txHash}</a>`,
+      text: `Your withdraw is successful`,
       operations: [
         {
           ButtonName: 'OK',
           Function: () => {
             location.reload()
+          },
+        },
+        {
+          ButtonName: 'Explorer',
+          Function: () => {
+            window.open(`https://goerli.etherscan.io/tx/${txHash}`, '_blank')
           },
         },
       ],

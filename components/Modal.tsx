@@ -28,7 +28,7 @@ function Modal({ title, text, operations, isVisible, onClose }: ModalProps) {
       {/* Modal */}
       <div className="bg-white rounded-lg shadow-lg p-6 w-96 z-50">
         <h3 className="text-xl font-bold mb-4">{title}</h3>
-        <p className="mb-4 overflow-hidden overflow-ellipsis max-h-16" dangerouslySetInnerHTML={createMarkup(text)}></p>
+        <p className="mb-4 overflow-hidden overflow-ellipsis" dangerouslySetInnerHTML={createMarkup(text)}></p>
 
         <div className="flex justify-end space-x-4">
           {operations.map((op, index) => (

@@ -13,8 +13,8 @@ type WithdrawComponentProps = {
 }
 
 function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawComponentProps) {
-  const [amount, setAmount] = useState('0.0001')
-  const [recipient, setRecipient] = useState('0xcbef1A6b6a001eEe4B75d99cf484DCe5D00F8925')
+  const [amount, setAmount] = useState<string | undefined>(undefined)
+  const [recipient, setRecipient] = useState<string | undefined>(undefined)
   const [selectedRelayer, setSelectedRelayer] = useState(relayers[0])
   // use state for fee with string or undefined
   const [fee, setFee] = useState<string | undefined>(undefined)
@@ -22,6 +22,14 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawCo
   const handleWithdrawClick = () => {
     if (!fee) {
       logger('Fee is undefined', LogLevel.ERROR)
+      return
+    }
+    if (!recipient) {
+      logger('Recipient is undefined', LogLevel.ERROR)
+      return
+    }
+    if (!amount) {
+      logger('Amount is undefined', LogLevel.ERROR)
       return
     }
     withdrawWithRelayer(amount, fee, recipient, selectedRelayer)
@@ -112,9 +120,11 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawCo
       {fee && (
         <>
           <p>Fee: {fromWei(fee)}</p>
-          <p>
-            Address {shortenAddress(recipient)} will get {fromWei(toWei(amount).sub(BigNumber.from(fee)))} {TOKEN_SYMBOL}
-          </p>
+          {recipient && amount && (
+            <p>
+              Address {shortenAddress(recipient)} will get {fromWei(toWei(amount).sub(BigNumber.from(fee)))} {TOKEN_SYMBOL}
+            </p>
+          )}
 
           <button onClick={handleWithdrawClick} className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
             Withdraw
