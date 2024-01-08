@@ -28,7 +28,7 @@ import { sendToRelayer } from '@/store/relayer'
 import Modal, { ModalProps } from '@/components/Modal'
 
 const relayers: RelayerInfo[] = [
-  { name: 'Local Relayer', api: 'http://127.0.0.1:8000', fee: '10000000000', rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F' },
+  { name: 'Demo Relayer', api: 'http://64.225.93.152:8000', fee: '10000000000', rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F' },
 ]
 
 export default function Home() {
