@@ -3,7 +3,7 @@ type Operation = {
   Function: () => void
 }
 
-interface ModalProps {
+export interface ModalProps {
   title: string
   text: string
   operations: Operation[]
@@ -15,10 +15,13 @@ function Modal({ title, text, operations, isVisible, onClose }: ModalProps) {
   if (!isVisible) {
     return null
   }
-
   return (
     <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-96">
+      {/* Overlay */}
+      <div onClick={onClose} className="absolute top-0 left-0 w-full h-full bg-black opacity-50 cursor-pointer z-40"></div>
+
+      {/* Modal */}
+      <div className="bg-white rounded-lg shadow-lg p-6 w-96 z-50">
         <h3 className="text-xl font-bold mb-4">{title}</h3>
         <p className="mb-4">{text}</p>
 
@@ -34,8 +37,6 @@ function Modal({ title, text, operations, isVisible, onClose }: ModalProps) {
           ))}
         </div>
       </div>
-
-      <div onClick={onClose} className="absolute top-0 left-0 w-full h-full bg-black opacity-50 cursor-pointer"></div>
     </div>
   )
 }
