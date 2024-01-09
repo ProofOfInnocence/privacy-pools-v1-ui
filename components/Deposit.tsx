@@ -13,12 +13,14 @@ interface DepositProps {
 function DepositComponent({ deposit, address }: DepositProps) {
   const [amount, setAmount] = useState('')
   const [balance, setBalance] = useState('0')
+
   const WETHbalance = useBalance({
     address: address as `0x${string}`,
     token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
     watch: true,
     onSuccess(data) {
-      setBalance(data.formatted)
+      const formattedNumber = parseFloat(data.formatted).toFixed(3)
+      setBalance(formattedNumber)
     },
   })
 
@@ -32,25 +34,33 @@ function DepositComponent({ deposit, address }: DepositProps) {
   }
 
   return (
-    <div className="p-4">
-      <div className="flex items-center mb-4">
+    <div className="pb-4 pt-8 px-10">
+      <div className="relative flex items-center mb-6">
+        <label className="absolute left-8 top-8 font-bold text-black text-opacity-40">You Deposit</label>
         <input
-          type="text"
-          placeholder="Enter deposit amount"
+          type="number"
+          placeholder="0"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="flex-1 p-2 border rounded"
+          className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-4xl w-full text-black text-opacity-70 placeholder:text-black placeholder:text-opacity-10"
         />
-        <button onClick={handleMaxClick} className="ml-2 px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
-          Max
-        </button>
+        <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
+          <p className="relative left-8 text-black text-opacity-40">${balance}</p>
+          <div className="flex relative right-8">
+            <p className="text-black text-opacity-40">Balance: {balance} ETH</p>
+            <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">
+              Max
+            </button>
+          </div>
+        </div>
       </div>
-      <button onClick={handleDepositClick} className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
+      <button
+        onClick={handleDepositClick}
+        disabled={amount === '' || address === ''}
+        className="px-4 py-3 text-lg text-white font-bold bg-[#1A73E8] rounded-[40px] hover:bg-[#1a73e8c4] hover:cursor-pointer disabled:text-black disabled:text-opacity-30 disabled:bg-[#F5F5F5] disabled:cursor-not-allowed w-full"
+      >
         Deposit
       </button>
-      <div className="mt-4">
-        <p>Balance: {balance}</p>
-      </div>
     </div>
   )
 }
