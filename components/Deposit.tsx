@@ -34,7 +34,7 @@ function DepositComponent({ deposit, address }: DepositProps) {
   }
 
   return (
-    <div className="pb-4 pt-8 px-10">
+    <div className="pb-4 pt-10 px-10">
       <div className="relative flex items-center mb-6">
         <label className="absolute left-8 top-8 font-bold text-black text-opacity-40">You Deposit</label>
         <input
@@ -42,7 +42,7 @@ function DepositComponent({ deposit, address }: DepositProps) {
           placeholder="0"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-4xl w-full text-black text-opacity-70 placeholder:text-black placeholder:text-opacity-10"
+          className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10"
         />
         <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
           <p className="relative left-8 text-black text-opacity-40">${balance}</p>

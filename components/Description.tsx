@@ -1,6 +1,6 @@
 'use client'
 import Image from 'next/image'
-import infoIcon from 'public/images/info-icon.svg'
+import arrowIcon from 'public/images/arrow.svg'
 import { useState } from 'react'
 
 function Description() {
@@ -39,20 +39,21 @@ function Description() {
   }
 
   return (
-    <div className="w-full text-center my-12">
-      <div className="font-bold text-3xl flex justify-center items-center">
-        Send assets anonymously with
-        <span className="underline flex ml-2">full compliance. </span>
-        <div className="relative flex items-center justify-center">
+    <div className="bg-black w-full text-center mb-2 py-2 z-20">
+      <div className="text-white text-lg font-normal flex justify-center items-center">
+        With Privacy Pools, you can send assets anonymously with full compliance: AML, CTF, KYC, CDD, & more.
+        <div className="relative flex items-center justify-center hover:underline ">
+          <a href="#" target="_blank" rel="noopener noreferrer" className="ml-2 font-bold">
+            Click to learn more{' '}
+          </a>
           <Image
             onMouseEnter={() => setIsOpen(true)}
-            className="mb-3 z-40 w-auto h-auto p-1"
-            src={infoIcon}
-            alt="info icon"
-            width={13}
-            height={13}
+            className="ml-2 z-40 w-auto h-auto p-1"
+            src={arrowIcon}
+            alt="arrow icon"
+            width={15}
+            height={15}
           />
-          {isOpen && descriptionModal()}
         </div>
       </div>
     </div>

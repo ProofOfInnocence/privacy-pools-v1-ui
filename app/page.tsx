@@ -8,6 +8,8 @@ import { useAccount, useNetwork, usePublicClient, useSignMessage, useWalletClien
 import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import Image from 'next/image'
+import bgPattern from '@/public/images/bg-pattern.webp'
 
 import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
 import { encodeFunctionData } from 'viem'
@@ -24,7 +26,7 @@ import { getUtxoFromKeypair, prepareTransaction } from '@/store/account'
 import ErrorModal from '@/components/Error'
 import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
 import LoadingSpinner from '@/components/Loading'
-import WrapEtherComponent from '@/components/WrapEtherComponent'
+// import WrapEtherComponent from '@/components/WrapEtherComponent'
 import { sendToRelayer } from '@/store/relayer'
 import Modal, { ModalProps } from '@/components/Modal'
 import Description from '@/components/Description'
@@ -306,11 +308,13 @@ export default function Home() {
 
   return (
     <div className="h-screen bg-white">
+      {/* With Privacy Pools... */}
+      <Description />
       {/* Header */}
-      <header className="pt-14 px-14 flex justify-between items-center">
+      <header className="pt-14 pb-12 px-14 flex justify-between items-center">
         <Logo />
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-4 z-20">
           {keypair && <Balance shieldedBalance={poolBalance} />}
 
           {/* {!keypair && (
@@ -321,32 +325,41 @@ export default function Home() {
           <ConnectButton />
         </div>
       </header>
-      {/* Send assets... */}
-      <Description />
 
       {(!isKeyGenerated || curAddress) && (
         <div className="flex justify-center pt-8">
-          <div className="bg-white rounded-[40px] shadow-[0_7px_50px_0_rgba(0,0,0,0.10)] py-8 w-full max-w-xl">
+          <div className="flex top-24 justify-center items-center absolute w-full h-full">
+            <div className="absolute top-48 left-0 right-0 mx-auto z-0 bg-[#1A73E833] bg-opacity-20 filter blur-[300px] w-2/4 h-2/4"></div>
+            <Image
+              className="absolute top-0 left-0 right-0 mx-auto z-0"
+              src={bgPattern}
+              alt="background pattern"
+              width={1441}
+              height={1025}
+            />
+          </div>
+
+          <div className="bg-white rounded-[40px] shadow-[0_7px_50px_0_rgba(0,0,0,0.10)] py-8 w-full max-w-xl z-20 mb-16">
             {/* Tabs */}
             <div className="border-b border-[#F5F5F5">
               <div className="flex ml-10">
                 <button
                   onClick={() => setActiveTab('deposit')}
-                  className={`pb-4 px-3  mr-6 box-border ${activeTab === 'deposit' ? 'border-b-2 border-blue-500' : ''} font-bold text-lg`}
+                  className={`pb-4 px-3  mr-8 box-border ${activeTab === 'deposit' ? 'border-b-2 border-blue-500' : ''} font-bold text-lg`}
                 >
                   Deposit
                 </button>
                 <button
                   onClick={() => setActiveTab('withdraw')}
                   disabled={isDisabled}
-                  className={`pb-4 px-3 mr-6 box-border ${
+                  className={`pb-4 px-3 mr-8 box-border ${
                     activeTab === 'withdraw' ? 'border-b-2 border-blue-500' : ''
                   } disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg`}
                 >
                   Withdraw
                 </button>
 
-                <button
+                {/* <button
                   onClick={() => setActiveTab('wrapEther')}
                   disabled={isDisabled}
                   className={`pb-4 px-3 mr-6 box-border ${
@@ -354,13 +367,13 @@ export default function Home() {
                   } disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg`}
                 >
                   Wrap ETH
-                </button>
+                </button> */}
               </div>
             </div>
 
             {!isKeyGenerated && <GeneratePool initializeKeypair={initializeKeypair} />}
             {isKeyGenerated && activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
-            {isKeyGenerated && activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />}
+            {/* {isKeyGenerated && activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />} */}
             {isKeyGenerated && activeTab === 'withdraw' && (
               <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} logger={logger} />
             )}
