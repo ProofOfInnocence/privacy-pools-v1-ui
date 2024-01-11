@@ -12,18 +12,19 @@ type WithdrawComponentProps = {
   withdrawWithRelayer: (amount: string, fee: string, recipient: string, relayer: RelayerInfo) => void
   relayers: RelayerInfo[]
   logger: (message: string, logLevel: LogLevel) => void
+  shieldedBalance: number
 }
 
-function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawComponentProps) {
+function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBalance }: WithdrawComponentProps) {
   const [amount, setAmount] = useState<string | undefined>(undefined)
   const [recipient, setRecipient] = useState<string | undefined>(undefined)
   const [selectedRelayer, setSelectedRelayer] = useState(relayers[0])
-  const [balance, setBalance] = useState('0')
+  const [balance, setBalance] = useState('0.0000')
   // use state for fee with string or undefined
   const [fee, setFee] = useState<string | undefined>(undefined)
 
   const handleMaxClick = () => {
-    setAmount(balance)
+    setAmount(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
   }
 
   const handleWithdrawClick = () => {
@@ -98,9 +99,9 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawCo
           className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
         <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
-          <p className="relative left-8 text-black text-opacity-40">${balance}</p>
+          <p className="relative left-8 text-black text-opacity-40">${amount === '' || amount === undefined ? '0' : amount}</p>
           <div className="flex relative right-8">
-            <p className="text-black text-opacity-40">Balance: {balance} ETH</p>
+            <p className="text-black text-opacity-40">Balance: {parseFloat(fromWei(shieldedBalance.toString())).toFixed(4)} ETH</p>
             <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">
               Max
             </button>

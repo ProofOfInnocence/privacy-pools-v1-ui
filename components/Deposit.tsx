@@ -46,7 +46,7 @@ function DepositComponent({ deposit, address }: DepositProps) {
           className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
         <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
-          <p className="relative left-8 text-black text-opacity-40">${balance}</p>
+          <p className="relative left-8 text-black text-opacity-40">${amount === '' || amount === undefined ? '0' : amount}</p>
           <div className="flex relative right-8">
             <p className="text-black text-opacity-40">Balance: {balance} ETH</p>
             <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">

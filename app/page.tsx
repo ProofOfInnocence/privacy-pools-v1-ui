@@ -21,7 +21,6 @@ import DepositComponent from '@/components/Deposit'
 import WithdrawComponent from '@/components/Withdraw'
 import Logo from '@/components/Logo'
 import { RelayerInfo } from '@/types'
-import Balance from '@/components/Balance'
 import { getUtxoFromKeypair, prepareTransaction } from '@/store/account'
 import ErrorModal from '@/components/Error'
 import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
@@ -375,7 +374,12 @@ export default function Home() {
             {isKeyGenerated && activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
             {/* {isKeyGenerated && activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />} */}
             {isKeyGenerated && activeTab === 'withdraw' && (
-              <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} logger={logger} />
+              <WithdrawComponent
+                withdrawWithRelayer={withdrawWithRelayer}
+                relayers={relayers}
+                logger={logger}
+                shieldedBalance={poolBalance}
+              />
             )}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
