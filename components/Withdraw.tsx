@@ -5,6 +5,8 @@ import { LogLevel, RelayerInfo } from '@/types'
 import { BigNumber } from 'ethers'
 import { fromWei, shortenAddress, toWei } from '@/utilities'
 import { TOKEN_SYMBOL } from '@/constants'
+import Image from 'next/image'
+import selectArrowIcon from 'public/images/select-arrow.svg'
 
 type WithdrawComponentProps = {
   withdrawWithRelayer: (amount: string, fee: string, recipient: string, relayer: RelayerInfo) => void
@@ -92,7 +94,8 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawCo
           placeholder="0"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10"
+          min={0}
+          className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
         <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
           <p className="relative left-8 text-black text-opacity-40">${balance}</p>
@@ -112,17 +115,17 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawCo
           placeholder="Enter recipient address"
           value={recipient}
           onChange={(e) => setRecipient(e.target.value)}
-          className="w-full px-8 py-4 font-bold text-xl rounded-[40px] bg-[#F5F5F5] text-black placeholder:text-black placeholder:text-opacity-30"
+          className="w-full px-8 py-4 font-bold text-xl rounded-[40px] bg-[#F5F5F5] text-black placeholder:text-black placeholder:text-opacity-30 transition-all duration-150 hover:bg-[#eaeaea]"
         />
       </div>
       <div className="mb-8">
         <label className="block mb-8 ml-6 text-lg font-bold">Select Relayer:</label>
         <div className="flex justify-start items-center">
-          <span className="absolute ml-6 block w-4 h-4 bg-green-400 rounded-full"></span>
+          <span className="absolute ml-6 block w-4 h-4 bg-[#89FF7D] rounded-full"></span>
           <select
             value={selectedRelayer.api}
             onChange={(e) => setSelectedRelayer(relayers.find((r) => r.api === e.target.value) || relayers[0])}
-            className="w-full pr-8 pl-12 py-4 font-bold text-xl rounded-[40px] bg-[#F5F5F5] text-black"
+            className="w-full pr-8 pl-12 py-4 font-bold text-xl rounded-[40px] bg-[#F5F5F5] text-black transition-all duration-150 hover:bg-[#eaeaea] hover:cursor-pointer box-border appearance-none"
           >
             {relayers.map((relayer) => (
               <option key={relayer.api} value={relayer.api}>
@@ -130,6 +133,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawCo
               </option>
             ))}
           </select>
+          <Image className="ml-[-2.5rem]" src={selectArrowIcon} alt="arrow icon" width={16} height={9} />
         </div>
       </div>
 
@@ -147,6 +151,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawCo
 
           <button
             onClick={handleWithdrawClick}
+            disabled={amount === '' || amount === undefined || recipient === '' || recipient === undefined}
             className="px-4 py-3 text-lg text-white font-bold bg-[#1A73E8] rounded-[40px] hover:bg-[#1a73e8c4] hover:cursor-pointer disabled:text-black disabled:text-opacity-30 disabled:bg-[#F5F5F5] disabled:cursor-not-allowed w-full"
           >
             Withdraw

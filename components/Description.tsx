@@ -40,7 +40,7 @@ function Description() {
 
   return (
     <div className="bg-black w-full text-center mb-2 py-2 z-20">
-      <div className="text-white text-lg font-normal flex justify-center items-center">
+      <div className="text-white text-base font-normal flex justify-center items-center">
         With Privacy Pools, you can send assets anonymously with full compliance: AML, CTF, KYC, CDD, & more.
         <div className="relative flex items-center justify-center hover:underline ">
           <a href="#" target="_blank" rel="noopener noreferrer" className="ml-2 font-bold">
@@ -48,7 +48,7 @@ function Description() {
           </a>
           <Image
             onMouseEnter={() => setIsOpen(true)}
-            className="ml-2 z-40 w-auto h-auto p-1"
+            className="ml-1 z-40 w-auto h-auto p-1"
             src={arrowIcon}
             alt="arrow icon"
             width={15}

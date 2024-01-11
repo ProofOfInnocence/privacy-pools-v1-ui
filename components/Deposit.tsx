@@ -41,8 +41,9 @@ function DepositComponent({ deposit, address }: DepositProps) {
           type="number"
           placeholder="0"
           value={amount}
+          min={0}
           onChange={(e) => setAmount(e.target.value)}
-          className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10"
+          className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
         <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
           <p className="relative left-8 text-black text-opacity-40">${balance}</p>

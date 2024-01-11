@@ -3,7 +3,7 @@
 import { Keypair, workerProvider } from '@/services'
 import { ChainId, LogLevel } from '@/types'
 import { toWei } from 'web3-utils'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
+import CustomConnectButton from '@/components/CustomConnectButton'
 import { useAccount, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
 import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
@@ -315,14 +315,14 @@ export default function Home() {
         <Logo />
 
         <div className="flex items-center space-x-4 z-20">
-          {keypair && <Balance shieldedBalance={poolBalance} />}
+          {/* {keypair && <Balance shieldedBalance={poolBalance} />} */}
 
           {/* {!keypair && (
             <button onClick={initializeKeypair} className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
               Initialize
             </button>
           )} */}
-          <ConnectButton />
+          <CustomConnectButton shieldedBalance={poolBalance} isKeyGenerated={isKeyGenerated} />
         </div>
       </header>
 

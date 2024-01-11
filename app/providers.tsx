@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { RainbowKitProvider, connectorsForWallets } from '@rainbow-me/rainbowkit'
+import { RainbowKitProvider, connectorsForWallets, AvatarComponent } from '@rainbow-me/rainbowkit'
 import { injectedWallet } from '@rainbow-me/rainbowkit/wallets'
 import { configureChains, createConfig, WagmiConfig } from 'wagmi'
 import { goerli } from 'wagmi/chains'
