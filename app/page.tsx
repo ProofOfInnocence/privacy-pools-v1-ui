@@ -310,7 +310,7 @@ export default function Home() {
       {/* With Privacy Pools... */}
       <Description />
       {/* Header */}
-      <header className="pt-14 pb-12 px-6 md:px-14 flex justify-between items-center">
+      <header className="pt-14 pb-12 px-4 md:px-14 flex justify-between items-center">
         <Logo />
 
         <div className="flex items-center space-x-4 z-20">

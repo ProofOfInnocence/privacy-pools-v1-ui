@@ -13,7 +13,26 @@ function CustomConnectButton({ shieldedBalance, isKeyGenerated }: { shieldedBala
 
   const privateBalance = () => {
     return (
-      <div className="absolute bg-black flex items-center justify-normal ml-[-18rem] pr-20 py-[1px] text-base font-bold text-black rounded-full z-[60]">
+      <div className="absolute bg-black hidden sm:flex items-center justify-normal  ml-[-18rem] pr-20 py-[1px] text-base font-bold text-black rounded-full z-[60]">
+        <Image
+          className="mr-4 ml-2 p-2 z-50 w-auto rounded-full transition duration-150 hover:cursor-pointer hover:bg-gray-200 hover:bg-opacity-10 active:bg-opacity-25"
+          onClick={() => setShowPrivateBalance(false)}
+          src={closeEye}
+          alt="hide private balance"
+          width={22}
+          height={16}
+        />
+
+        <p className="font-normal text-white py-2">
+          Private Balance: <span className="font-bold">{parseFloat(fromWei(shieldedBalance.toString())).toFixed(4)} ETH</span>
+        </p>
+      </div>
+    )
+  }
+
+  const privateBalanceMobile = () => {
+    return (
+      <div className="absolute bg-black top-44 right-4 mt-1 flex items-center justify-normal sm:hidden pr-4 py-[1px] text-base font-bold text-black rounded-full z-[80]">
         <Image
           className="mr-4 ml-2 p-2 z-50 w-auto rounded-full transition duration-150 hover:cursor-pointer hover:bg-gray-200 hover:bg-opacity-10 active:bg-opacity-25"
           onClick={() => setShowPrivateBalance(false)}
@@ -83,6 +102,7 @@ function CustomConnectButton({ shieldedBalance, isKeyGenerated }: { shieldedBala
                         <Image className="ml-2" src={arrowIcon} alt="arrow icon" width={16} height={9} />
                       </span>
                     </button>
+                    {isKeyGenerated && showPrivateBalance && privateBalanceMobile()}
                   </div>
                 </>
               )
