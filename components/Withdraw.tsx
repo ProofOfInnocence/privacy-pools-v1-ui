@@ -91,7 +91,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
       <div className="relative flex items-center mb-8">
         <label className="absolute left-8 top-8 font-bold text-black text-opacity-40">You Withdraw</label>
         <input
-          type="number"
+          type="text"
           placeholder="0"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}

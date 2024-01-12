@@ -2,8 +2,9 @@
 
 import { WRAPPED_TOKEN } from '@/constants'
 import { ChainId } from '@/types'
-import { useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { useBalance } from 'wagmi'
+import axios from 'axios'
 
 interface DepositProps {
   deposit: (amount: string) => void
@@ -12,7 +13,9 @@ interface DepositProps {
 
 function DepositComponent({ deposit, address }: DepositProps) {
   const [amount, setAmount] = useState('')
+  const [calculatedPrice, setCalculatedPrice] = useState('')
   const [balance, setBalance] = useState('0')
+  const [ethPrice, setEthPrice] = useState('0')
 
   const WETHbalance = useBalance({
     address: address as `0x${string}`,
@@ -24,8 +27,48 @@ function DepositComponent({ deposit, address }: DepositProps) {
     },
   })
 
+  useEffect(() => {
+    fetchETHPrice()
+  }, [])
+
+  const fetchETHPrice = async () => {
+    try {
+      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const fetchedEthPrice = response.data.USD
+      console.log('ETH Price:', fetchedEthPrice)
+      setEthPrice(fetchedEthPrice)
+    } catch (error) {
+      console.error('Error fetching ETH prices:', error)
+    }
+  }
+
+  const calculatePrice = (inputAmount: string) => {
+    const calculated = (parseFloat(inputAmount) * parseFloat(ethPrice)).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    })
+    console.log('Calculated Price:', calculated)
+    setCalculatedPrice(calculated)
+  }
+
   const handleMaxClick = () => {
-    setAmount(balance)
+    setAmount(balance.toString())
+    calculatePrice(balance)
+  }
+
+  const handleInputUpdate = async (e: ChangeEvent<HTMLInputElement>) => {
+    const inputAmount = e.target.value
+    setAmount(inputAmount)
+
+    try {
+      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const fetchedEthPrice = response.data.USD
+      console.log('Input amount:', inputAmount)
+      setEthPrice(fetchedEthPrice)
+      calculatePrice(inputAmount)
+    } catch (error) {
+      console.error('Error fetching ETH prices:', error)
+    }
   }
 
   const handleDepositClick = () => {
@@ -38,15 +81,17 @@ function DepositComponent({ deposit, address }: DepositProps) {
       <div className="relative flex items-center mb-6">
         <label className="absolute left-8 top-8 font-bold text-black text-opacity-40">You Deposit</label>
         <input
-          type="number"
+          type="text"
           placeholder="0"
           value={amount}
           min={0}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => handleInputUpdate(e)}
           className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
         <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
-          <p className="relative left-8 text-black text-opacity-40">${amount === '' || amount === undefined ? '0' : amount}</p>
+          <p className="relative left-8 text-black text-opacity-40">
+            {amount === '' || amount === undefined || Number.isNaN(amount) ? '$0.00' : calculatedPrice}
+          </p>
           <div className="flex relative right-8">
             <p className="text-black text-opacity-40">Balance: {balance} ETH</p>
             <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">
