@@ -34,7 +34,7 @@ function DepositComponent({ deposit, address }: DepositProps) {
   }
 
   return (
-    <div className="pb-4 pt-10 px-10">
+    <div className="pb-4 pt-10 px-6 sm:px-10">
       <div className="relative flex items-center mb-6">
         <label className="absolute left-8 top-8 font-bold text-black text-opacity-40">You Deposit</label>
         <input

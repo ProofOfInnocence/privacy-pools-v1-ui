@@ -341,10 +341,10 @@ export default function Home() {
           <div className="bg-white rounded-[40px] shadow-[0_7px_50px_0_rgba(0,0,0,0.10)] py-8 w-full max-w-xl z-20 mb-16">
             {/* Tabs */}
             <div className="border-b border-[#F5F5F5">
-              <div className="flex ml-10">
+              <div className="flex ml-6 sm:ml-10">
                 <button
                   onClick={() => setActiveTab('deposit')}
-                  className={`pb-4 px-3  mr-8 box-border ${activeTab === 'deposit' ? 'border-b-2 border-blue-500' : ''} font-bold text-lg`}
+                  className={`pb-4 px-3 mr-8 box-border ${activeTab === 'deposit' ? 'border-b-2 border-blue-500' : ''} font-bold text-lg`}
                 >
                   Deposit
                 </button>
