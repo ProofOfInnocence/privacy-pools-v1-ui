@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { LogLevel, RelayerInfo } from '@/types'
 import { BigNumber } from 'ethers'
 import { fromWei, shortenAddress, toWei } from '@/utilities'
 import { TOKEN_SYMBOL } from '@/constants'
 import Image from 'next/image'
 import selectArrowIcon from 'public/images/select-arrow.svg'
+import axios from 'axios'
 
 type WithdrawComponentProps = {
   withdrawWithRelayer: (amount: string, fee: string, recipient: string, relayer: RelayerInfo) => void
@@ -16,15 +17,63 @@ type WithdrawComponentProps = {
 }
 
 function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBalance }: WithdrawComponentProps) {
-  const [amount, setAmount] = useState<string | undefined>(undefined)
+  // const [amount, setAmount] = useState<string | undefined>(undefined)
   const [recipient, setRecipient] = useState<string | undefined>(undefined)
   const [selectedRelayer, setSelectedRelayer] = useState(relayers[0])
-  const [balance, setBalance] = useState('0.0000')
+  // const [balance, setBalance] = useState('0.0000')
+  const [amount, setAmount] = useState('')
+  const [calculatedPrice, setCalculatedPrice] = useState('')
+  const [balance, setBalance] = useState('0')
+  const [ethPrice, setEthPrice] = useState('0')
   // use state for fee with string or undefined
   const [fee, setFee] = useState<string | undefined>(undefined)
 
+  // const handleMaxClick = () => {
+  //   setAmount(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
+  // }
+
+  useEffect(() => {
+    fetchETHPrice()
+  }, [])
+
+  const fetchETHPrice = async () => {
+    try {
+      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const fetchedEthPrice = response.data.USD
+      console.log('ETH Price:', fetchedEthPrice)
+      setEthPrice(fetchedEthPrice)
+    } catch (error) {
+      console.error('Error fetching ETH prices:', error)
+    }
+  }
+
+  const calculatePrice = (inputAmount: string) => {
+    const calculated = (parseFloat(inputAmount) * parseFloat(ethPrice)).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    })
+    console.log('Calculated Price:', calculated)
+    setCalculatedPrice(calculated)
+  }
+
+  const handleInputUpdate = async (e: ChangeEvent<HTMLInputElement>) => {
+    const inputAmount = e.target.value
+    setAmount(inputAmount)
+
+    try {
+      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const fetchedEthPrice = response.data.USD
+      console.log('Input amount:', inputAmount)
+      setEthPrice(fetchedEthPrice)
+      calculatePrice(inputAmount)
+    } catch (error) {
+      console.error('Error fetching ETH prices:', error)
+    }
+  }
+
   const handleMaxClick = () => {
     setAmount(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
+    calculatePrice(amount)
   }
 
   const handleWithdrawClick = () => {
@@ -94,12 +143,14 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
           type="text"
           placeholder="0"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={(e) => handleInputUpdate(e)}
           min={0}
           className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
         <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
-          <p className="relative left-8 text-black text-opacity-40">${amount === '' || amount === undefined ? '0' : amount}</p>
+          <p className="relative left-8 text-black text-opacity-40">
+            {amount === '' || amount === undefined || Number.isNaN(amount) ? '$0.00' : calculatedPrice}
+          </p>
           <div className="flex relative right-8">
             <p className="text-black text-opacity-40">Balance: {parseFloat(fromWei(shieldedBalance.toString())).toFixed(4)} ETH</p>
             <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">
