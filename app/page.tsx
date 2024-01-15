@@ -170,7 +170,10 @@ export default function Home() {
           {
             ButtonName: 'OK',
             Function: () => {
-              location.reload()
+              setModalData((prevModalData) => ({
+                ...prevModalData,
+                isVisible: false,
+              }))
             },
           },
           {
@@ -182,7 +185,10 @@ export default function Home() {
         ],
         isVisible: true,
         onClose: () => {
-          location.reload()
+          setModalData((prevModalData) => ({
+            ...prevModalData,
+            isVisible: false,
+          }))
         },
       })
     } catch (error) {
@@ -247,7 +253,7 @@ export default function Home() {
   }
 
   async function checkWithdrawal(relayer: RelayerInfo, jobId: void) {
-    setInterval(async () => {
+    let intervalId = setInterval(async () => {
       const { data: res } = await axios.get(`${relayer.api}/job/${jobId}`, {
         headers: {
           'Content-Type': 'application/json',
@@ -256,6 +262,7 @@ export default function Home() {
       if (res.status === 'SENT') {
         setLoadingMessage('')
         getWithdrawModal(res.txHash)
+        clearInterval(intervalId)
       }
       console.log('STATUS', res)
     }, 1000)
@@ -269,7 +276,10 @@ export default function Home() {
         {
           ButtonName: 'OK',
           Function: () => {
-            location.reload()
+            setModalData((prevModalData) => ({
+              ...prevModalData,
+              isVisible: false,
+            }))
           },
         },
         {
@@ -281,7 +291,10 @@ export default function Home() {
       ],
       isVisible: true,
       onClose: () => {
-        location.reload()
+        setModalData((prevModalData) => ({
+          ...prevModalData,
+          isVisible: false,
+        }))
       },
     })
   }
