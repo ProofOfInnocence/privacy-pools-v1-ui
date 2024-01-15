@@ -3,8 +3,7 @@
 import { ChangeEvent, useEffect, useState } from 'react'
 import { LogLevel, RelayerInfo } from '@/types'
 import { BigNumber } from 'ethers'
-import { fromWei, shortenAddress, toWei } from '@/utilities'
-import { TOKEN_SYMBOL } from '@/constants'
+import { fromWei } from '@/utilities'
 import Image from 'next/image'
 import selectArrowIcon from 'public/images/select-arrow.svg'
 import axios from 'axios'
@@ -18,7 +17,7 @@ type WithdrawComponentProps = {
 
 function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBalance }: WithdrawComponentProps) {
   // const [amount, setAmount] = useState<string | undefined>(undefined)
-  const [recipient, setRecipient] = useState<string | undefined>(undefined)
+  const [recipient, setRecipient] = useState('')
   const [selectedRelayer, setSelectedRelayer] = useState(relayers[0])
   // const [balance, setBalance] = useState('0.0000')
   const [amount, setAmount] = useState('')
@@ -34,6 +33,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
 
   useEffect(() => {
     fetchETHPrice()
+    setBalance(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
   }, [])
 
   const fetchETHPrice = async () => {
@@ -63,7 +63,6 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
     try {
       const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
       const fetchedEthPrice = response.data.USD
-      console.log('Input amount:', inputAmount)
       setEthPrice(fetchedEthPrice)
       calculatePrice(inputAmount)
     } catch (error) {
@@ -72,8 +71,8 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   }
 
   const handleMaxClick = () => {
-    setAmount(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
-    calculatePrice(amount)
+    setAmount(balance)
+    calculatePrice(balance)
   }
 
   const handleWithdrawClick = () => {
@@ -93,6 +92,8 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   }
 
   const calculateFee = async () => {
+    console.log(fee)
+
     console.log('selectedRelayer:', selectedRelayer)
     console.log('selectedRelayer.fee:', selectedRelayer.fee)
     const serviceFee = BigNumber.from(selectedRelayer.fee)
@@ -152,7 +153,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
             {amount === '' || amount === undefined || Number.isNaN(amount) ? '$0.00' : calculatedPrice}
           </p>
           <div className="flex relative right-8">
-            <p className="text-black text-opacity-40">Balance: {parseFloat(fromWei(shieldedBalance.toString())).toFixed(4)} ETH</p>
+            <p className="text-black text-opacity-40">Balance: {balance} ETH</p>
             <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">
               Max
             </button>
@@ -189,17 +190,17 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
         </div>
       </div>
 
-      {!fee && <p>Calculating fee...</p>}
+      {!fee && <p className="mb-8 ml-6 text-lg font-bold">Calculating fee...</p>}
       {fee && (
         <>
           <p className="mb-8 ml-6 text-lg font-bold">
             Withdrawal Fee: <span className="text-black text-opacity-40">{fromWei(fee)}</span>
           </p>
-          {recipient && amount && (
+          {/* {recipient && amount && (
             <p>
               Address {shortenAddress(recipient)} will get {fromWei(toWei(amount).sub(BigNumber.from(fee)))} {TOKEN_SYMBOL}
             </p>
-          )}
+          )} */}
 
           <button
             onClick={handleWithdrawClick}
