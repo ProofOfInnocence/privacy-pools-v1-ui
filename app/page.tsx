@@ -3,11 +3,13 @@
 import { Keypair, workerProvider } from '@/services'
 import { ChainId, LogLevel } from '@/types'
 import { toWei } from 'web3-utils'
-import { ConnectButton } from '@rainbow-me/rainbowkit'
+import CustomConnectButton from '@/components/CustomConnectButton'
 import { useAccount, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
 import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import Image from 'next/image'
+import bgPattern from '@/public/images/bg-pattern.webp'
 
 import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
 import { encodeFunctionData } from 'viem'
@@ -19,14 +21,15 @@ import DepositComponent from '@/components/Deposit'
 import WithdrawComponent from '@/components/Withdraw'
 import Logo from '@/components/Logo'
 import { RelayerInfo } from '@/types'
-import Balance from '@/components/Balance'
 import { getUtxoFromKeypair, prepareTransaction } from '@/store/account'
 import ErrorModal from '@/components/Error'
 import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
 import LoadingSpinner from '@/components/Loading'
-import WrapEtherComponent from '@/components/WrapEtherComponent'
+// import WrapEtherComponent from '@/components/WrapEtherComponent'
 import { sendToRelayer } from '@/store/relayer'
 import Modal, { ModalProps } from '@/components/Modal'
+import Description from '@/components/Description'
+import GeneratePool from '@/components/GeneratePool'
 
 const relayers: RelayerInfo[] = [
   {
@@ -46,7 +49,8 @@ export default function Home() {
   const [curChainId, setCurChainId] = useState(0)
   const [curAddress, setCurAddress] = useState('')
   const [modalData, setModalData] = useState({} as ModalProps)
-  const [txStatus, setTxStatus] = useState('')
+  const [isDisabled, setIsDisabled] = useState(true)
+  const [isKeyGenerated, setIsKeyGenerated] = useState(false)
 
   const { address, connector } = useAccount()
   const publicClient = usePublicClient()
@@ -130,6 +134,8 @@ export default function Home() {
       const { totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
       setPoolBalance(totalAmount)
       setLoadingMessage('')
+      setIsKeyGenerated(true)
+      setIsDisabled(false)
     } catch (error) {
       setLoadingMessage('')
       setError(error.message)
@@ -164,7 +170,10 @@ export default function Home() {
           {
             ButtonName: 'OK',
             Function: () => {
-              location.reload()
+              setModalData((prevModalData) => ({
+                ...prevModalData,
+                isVisible: false,
+              }))
             },
           },
           {
@@ -176,7 +185,10 @@ export default function Home() {
         ],
         isVisible: true,
         onClose: () => {
-          location.reload()
+          setModalData((prevModalData) => ({
+            ...prevModalData,
+            isVisible: false,
+          }))
         },
       })
     } catch (error) {
@@ -241,7 +253,7 @@ export default function Home() {
   }
 
   async function checkWithdrawal(relayer: RelayerInfo, jobId: void) {
-    setInterval(async () => {
+    let intervalId = setInterval(async () => {
       const { data: res } = await axios.get(`${relayer.api}/job/${jobId}`, {
         headers: {
           'Content-Type': 'application/json',
@@ -250,6 +262,7 @@ export default function Home() {
       if (res.status === 'SENT') {
         setLoadingMessage('')
         getWithdrawModal(res.txHash)
+        clearInterval(intervalId)
       }
       console.log('STATUS', res)
     }, 1000)
@@ -263,7 +276,10 @@ export default function Home() {
         {
           ButtonName: 'OK',
           Function: () => {
-            location.reload()
+            setModalData((prevModalData) => ({
+              ...prevModalData,
+              isVisible: false,
+            }))
           },
         },
         {
@@ -275,7 +291,10 @@ export default function Home() {
       ],
       isVisible: true,
       onClose: () => {
-        location.reload()
+        setModalData((prevModalData) => ({
+          ...prevModalData,
+          isVisible: false,
+        }))
       },
     })
   }
@@ -300,53 +319,80 @@ export default function Home() {
   }
 
   return (
-    <div className="h-screen bg-gray-100">
+    <div className="h-screen bg-white">
+      {/* With Privacy Pools... */}
+      <Description />
       {/* Header */}
-      <header className="bg-white p-4 shadow-md flex justify-between items-center">
+      <header className="pt-14 pb-12 px-4 md:px-14 flex justify-between items-center">
         <Logo />
 
-        <div className="flex items-center space-x-4">
-          {keypair && <Balance shieldedBalance={poolBalance} />}
+        <div className="flex items-center space-x-4 z-20">
+          {/* {keypair && <Balance shieldedBalance={poolBalance} />} */}
 
-          {!keypair && (
+          {/* {!keypair && (
             <button onClick={initializeKeypair} className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
               Initialize
             </button>
-          )}
-          <ConnectButton />
+          )} */}
+          <CustomConnectButton shieldedBalance={poolBalance} isKeyGenerated={isKeyGenerated} />
         </div>
       </header>
 
-      {curAddress && (
+      {(!isKeyGenerated || curAddress) && (
         <div className="flex justify-center pt-8">
-          <div className="bg-white rounded-lg shadow-md p-0 w-96">
-            {/* Tabs */}
-            <div className="mb-4 flex border-b">
-              <button
-                onClick={() => setActiveTab('deposit')}
-                className={`py-2 px-4 ${activeTab === 'deposit' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
-              >
-                Deposit
-              </button>
-              <button
-                onClick={() => setActiveTab('withdraw')}
-                className={`py-2 px-4 ${activeTab === 'withdraw' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
-              >
-                Withdraw
-              </button>
+          <div className="flex top-24 justify-center items-center absolute w-full h-full">
+            <div className="absolute top-48 left-0 right-0 mx-auto z-0 bg-[#1A73E833] bg-opacity-20 filter blur-[300px] w-2/4 h-2/4"></div>
+            <Image
+              className="absolute top-0 left-0 right-0 mx-auto z-0"
+              src={bgPattern}
+              alt="background pattern"
+              width={1441}
+              height={1025}
+            />
+          </div>
 
-              <button
-                onClick={() => setActiveTab('wrapEther')}
-                className={`py-2 px-4 ${activeTab === 'wrapEther' ? 'border-b-2 border-blue-500 font-semibold' : ''}`}
-              >
-                Wrap ETH
-              </button>
+          <div className="bg-white rounded-[40px] shadow-[0_7px_50px_0_rgba(0,0,0,0.10)] py-8 w-full max-w-xl z-20 mb-16">
+            {/* Tabs */}
+            <div className="border-b border-[#F5F5F5">
+              <div className="flex ml-6 sm:ml-10">
+                <button
+                  onClick={() => setActiveTab('deposit')}
+                  className={`pb-4 px-3 mr-8 box-border ${activeTab === 'deposit' ? 'border-b-2 border-blue-500' : ''} font-bold text-lg`}
+                >
+                  Deposit
+                </button>
+                <button
+                  onClick={() => setActiveTab('withdraw')}
+                  disabled={isDisabled}
+                  className={`pb-4 px-3 mr-8 box-border ${
+                    activeTab === 'withdraw' ? 'border-b-2 border-blue-500' : ''
+                  } disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg`}
+                >
+                  Withdraw
+                </button>
+
+                {/* <button
+                  onClick={() => setActiveTab('wrapEther')}
+                  disabled={isDisabled}
+                  className={`pb-4 px-3 mr-6 box-border ${
+                    activeTab === 'wrapEther' ? 'border-b-2 border-blue-500' : ''
+                  } disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg`}
+                >
+                  Wrap ETH
+                </button> */}
+              </div>
             </div>
 
-            {activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
-            {activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />}
-            {activeTab === 'withdraw' && (
-              <WithdrawComponent withdrawWithRelayer={withdrawWithRelayer} relayers={relayers} logger={logger} />
+            {!isKeyGenerated && <GeneratePool initializeKeypair={initializeKeypair} />}
+            {isKeyGenerated && activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
+            {/* {isKeyGenerated && activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />} */}
+            {isKeyGenerated && activeTab === 'withdraw' && (
+              <WithdrawComponent
+                withdrawWithRelayer={withdrawWithRelayer}
+                relayers={relayers}
+                logger={logger}
+                shieldedBalance={poolBalance}
+              />
             )}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
