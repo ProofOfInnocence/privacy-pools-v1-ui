@@ -8,13 +8,7 @@ import { useEffect, useState } from 'react'
 import { fromWei } from 'web3-utils'
 
 function CustomConnectButton({ shieldedBalance, isKeyGenerated }: { shieldedBalance: number; isKeyGenerated: boolean }) {
-  const [userColor, setUserColor] = useState('')
   const [showPrivateBalance, setShowPrivateBalance] = useState(false)
-
-  const fetchColor = (address: string) => {
-    setUserColor(generateColorFromAddress(address))
-    console.log(userColor)
-  }
 
   const privateBalance = () => {
     return (
@@ -58,8 +52,10 @@ function CustomConnectButton({ shieldedBalance, isKeyGenerated }: { shieldedBala
     <ConnectButton.Custom>
       {({ account, chain, openAccountModal, openConnectModal }) => {
         const connected = account && chain
+        let userColor
+
         if (connected) {
-          fetchColor(account.address)
+          userColor = generateColorFromAddress(account.address)
         }
 
         return (
