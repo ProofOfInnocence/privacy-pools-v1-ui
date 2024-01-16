@@ -85,7 +85,7 @@ export default function Home() {
     if (curChainId != 0 && chain && chain.id !== curChainId) {
       setError('Unsupported chain')
     }
-  }, [chain])
+  }, [chain, curChainId])
 
   useEffect(() => {
     if (curAddress != '' && address && address !== curAddress) {
@@ -93,7 +93,7 @@ export default function Home() {
       setPoolBalance(0)
       setCurAddress('')
     }
-  }, [address])
+  }, [address, curAddress])
 
   async function initializeKeypair() {
     if (!connector || !address) {
