@@ -11,6 +11,11 @@ function CustomConnectButton({ shieldedBalance, isKeyGenerated }: { shieldedBala
   const [userColor, setUserColor] = useState('')
   const [showPrivateBalance, setShowPrivateBalance] = useState(false)
 
+  const fetchColor = (address: string) => {
+    setUserColor(generateColorFromAddress(address))
+    console.log(userColor)
+  }
+
   const privateBalance = () => {
     return (
       <div className="absolute bg-black hidden sm:flex items-center justify-normal  ml-[-18rem] pr-20 py-[1px] text-base font-bold text-black rounded-full z-[60]">
@@ -53,13 +58,9 @@ function CustomConnectButton({ shieldedBalance, isKeyGenerated }: { shieldedBala
     <ConnectButton.Custom>
       {({ account, chain, openAccountModal, openConnectModal }) => {
         const connected = account && chain
-
-        useEffect(() => {
-          if (connected) {
-            setUserColor(generateColorFromAddress(account.address))
-            console.log(userColor)
-          }
-        }, [userColor])
+        if (connected) {
+          fetchColor(account.address)
+        }
 
         return (
           <div>

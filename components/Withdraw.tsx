@@ -34,7 +34,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   useEffect(() => {
     fetchETHPrice()
     setBalance(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
-  }, [])
+  }, [shieldedBalance])
 
   const fetchETHPrice = async () => {
     try {
