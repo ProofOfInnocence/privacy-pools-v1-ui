@@ -30,6 +30,7 @@ import { sendToRelayer } from '@/store/relayer'
 import Modal, { ModalProps } from '@/components/Modal'
 import Description from '@/components/Description'
 import GeneratePool from '@/components/GeneratePool'
+import StatsComponent from '@/components/StatsComponent'
 
 const relayers: RelayerInfo[] = [
   {
@@ -220,6 +221,7 @@ export default function Home() {
         recipient: toChecksumAddress(recipient),
         relayer: toChecksumAddress(relayer.rewardAddress),
       })
+      console.log('membershipProof', membershipProof)
       console.log('Ext data', extData)
       console.log('Args', args)
       let newExtData: ExtData = { ...extData }
@@ -370,6 +372,15 @@ export default function Home() {
                 >
                   Withdraw
                 </button>
+                <button
+                  onClick={() => setActiveTab('stats')}
+                  disabled={isDisabled}
+                  className={`pb-4 px-3 mr-8 box-border ${
+                    activeTab === 'stats' ? 'border-b-2 border-blue-500' : ''
+                  } disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg`}
+                >
+                  Stats
+                </button>
 
                 {/* <button
                   onClick={() => setActiveTab('wrapEther')}
@@ -394,6 +405,7 @@ export default function Home() {
                 shieldedBalance={poolBalance}
               />
             )}
+            {isKeyGenerated && activeTab === 'stats' && <StatsComponent />}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
 

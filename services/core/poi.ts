@@ -51,7 +51,7 @@ async function buildMappings(keypair: Keypair, commitmentEvents: CommitmentEvent
       }
       const newBlinding = BigNumber.from(
         '0x' +
-          ethers.utils.keccak256(ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(utxo.blinding)])).slice(2, 64)
+        ethers.utils.keccak256(ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(utxo.blinding)])).slice(2, 64)
       ).mod(FIELD_SIZE)
 
       const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
@@ -104,6 +104,7 @@ async function getPoiSteps({
     })
     txRecords.push(_txRecord)
   }
+
   let steps = [finalTxRecord]
   const todoProve = new Set()
   if (finalTxRecord.inputs[0].amount.gt(0)) {
@@ -115,6 +116,8 @@ async function getPoiSteps({
 
   txRecords = txRecords.filter((x) => (x.index < finalTxRecord.index ? finalTxRecord.index : x.index + 1))
   txRecords.sort((a, b) => b.index - a.index)
+  console.log("TX RECORDS:", txRecords);
+
 
   for (const txRecord of txRecords) {
     if (
