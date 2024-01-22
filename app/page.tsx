@@ -417,6 +417,7 @@ export default function Home() {
             )}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
+
             {modalData && <Modal {...modalData} />}
             <LoadingSpinner loadingMessage={loadingMessage} />
           </div>
