@@ -49,6 +49,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('deposit')
   const [curChainId, setCurChainId] = useState(0)
   const [curAddress, setCurAddress] = useState('')
+  const [connectedAddress, setConnectedAddress] = useState('')
   const [modalData, setModalData] = useState({} as ModalProps)
   const [isDisabled, setIsDisabled] = useState(true)
   const [isKeyGenerated, setIsKeyGenerated] = useState(false)
@@ -89,12 +90,10 @@ export default function Home() {
   }, [chain, curChainId])
 
   useEffect(() => {
-    if (curAddress != '' && address && address !== curAddress) {
-      setKeypair(null)
-      setPoolBalance(0)
-      setCurAddress('')
+    if (address && address !== connectedAddress) {
+      setConnectedAddress(address)
     }
-  }, [address, curAddress])
+  }, [address, connectedAddress])
 
   async function initializeKeypair() {
     if (!connector || !address) {
@@ -159,7 +158,7 @@ export default function Home() {
       const { extData, args } = await prepareTransaction({
         keypair,
         amount: BigNumber.from(toWei(amount)),
-        address: address,
+        address: curAddress,
       })
       let txReceipt = await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
       setLoadingMessage('')
@@ -216,7 +215,7 @@ export default function Home() {
       const { extData, args, membershipProof } = await prepareTransaction({
         keypair,
         amount: totalAmount.sub(fee),
-        address: toChecksumAddress(address),
+        address: toChecksumAddress(curAddress),
         fee: fee,
         recipient: toChecksumAddress(recipient),
         relayer: toChecksumAddress(relayer.rewardAddress),
@@ -395,7 +394,7 @@ export default function Home() {
             </div>
 
             {!isKeyGenerated && <GeneratePool initializeKeypair={initializeKeypair} />}
-            {isKeyGenerated && activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
+            {isKeyGenerated && activeTab === 'deposit' && <DepositComponent deposit={deposit} address={toChecksumAddress(connectedAddress)} />}
             {/* {isKeyGenerated && activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />} */}
             {isKeyGenerated && activeTab === 'withdraw' && (
               <WithdrawComponent

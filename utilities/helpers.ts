@@ -46,9 +46,9 @@ export function getOperationChecker({ checker, isRelayer, additionalCondition }:
 }
 
 export function getIsWhitelistedDomain() {
-  const domainWhiteList = ['localhost:3000', 'nova.tornadocash.eth', 'nova.tornadocash.eth.link', 'nova.tornadocash.eth.limo']
+  const domainWhiteList = ['localhost:3000']
 
-  if (window.location.host.includes('compassionate-payne-b9dc6b.netlify.app')) {
+  if (window.location.host.includes('privacy-pools-v1-demo.netlify.app')) {
     return true
   }
   return domainWhiteList.includes(window.location.host)
