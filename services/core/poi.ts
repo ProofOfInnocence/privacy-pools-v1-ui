@@ -80,6 +80,8 @@ async function getPoiSteps({
   }
   let txRecords = []
   for (const event of txRecordEvents) {
+    console.log("TX RECORD EVENT:", event);
+    
     const input1 = nullifierToUtxo.get(toFixedHex(event.inputNullifier1))
     if (!input1) {
       continue
