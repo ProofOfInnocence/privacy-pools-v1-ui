@@ -1,11 +1,11 @@
 'use client'
 
-import { WRAPPED_TOKEN } from '@/constants'
+import { WRAPPED_TOKEN, ETH_PRICE_URL } from '@/constants'
 import { ChainId } from '@/types'
 import { ChangeEvent, useEffect, useState } from 'react'
 import { useBalance } from 'wagmi'
-import axios from 'axios'
 import { formatNumber } from '@/utilities/formatNumber'
+import axios from 'axios'
 
 interface DepositProps {
   deposit: (amount: string) => void
@@ -34,7 +34,7 @@ function DepositComponent({ deposit, address }: DepositProps) {
 
   const fetchETHPrice = async () => {
     try {
-      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const response = await axios.get(ETH_PRICE_URL)
       const fetchedEthPrice = response.data.USD
       setEthPrice(fetchedEthPrice)
     } catch (error) {
@@ -58,7 +58,7 @@ function DepositComponent({ deposit, address }: DepositProps) {
     setAmount(inputAmount)
 
     try {
-      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const response = await axios.get(ETH_PRICE_URL)
       const fetchedEthPrice = response.data.USD
       setEthPrice(fetchedEthPrice)
       calculatePrice(inputAmount)

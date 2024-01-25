@@ -31,6 +31,7 @@ import Modal, { ModalProps } from '@/components/Modal'
 import Description from '@/components/Description'
 import GeneratePool from '@/components/GeneratePool'
 import StatsComponent from '@/components/StatsComponent'
+import { CHAINS } from '@/constants'
 
 const relayers: RelayerInfo[] = [
   {
@@ -180,7 +181,7 @@ export default function Home() {
           {
             ButtonName: 'Explorer',
             Function: () => {
-              window.open(`https://goerli.etherscan.io/tx/${txReceipt.transactionHash}`, '_blank')
+              window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI]}/tx/${txReceipt.transactionHash}`, '_blank')
             },
           },
         ],
@@ -287,7 +288,7 @@ export default function Home() {
         {
           ButtonName: 'Explorer',
           Function: () => {
-            window.open(`https://goerli.etherscan.io/tx/${txHash}`, '_blank')
+            window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI]}/tx/${txHash}`, '_blank')
           },
         },
       ],

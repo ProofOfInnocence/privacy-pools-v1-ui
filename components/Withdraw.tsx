@@ -8,6 +8,7 @@ import Image from 'next/image'
 import selectArrowIcon from 'public/images/select-arrow.svg'
 import axios from 'axios'
 import { formatNumber } from '@/utilities/formatNumber'
+import { ETH_PRICE_URL } from '@/constants'
 
 type WithdrawComponentProps = {
   withdrawWithRelayer: (amount: string, fee: string, recipient: string, relayer: RelayerInfo) => void
@@ -39,7 +40,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
 
   const fetchETHPrice = async () => {
     try {
-      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const response = await axios.get(ETH_PRICE_URL)
       const fetchedEthPrice = response.data.USD
       setEthPrice(fetchedEthPrice)
     } catch (error) {
@@ -58,7 +59,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
     setAmount(inputAmount)
 
     try {
-      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const response = await axios.get(ETH_PRICE_URL)
       const fetchedEthPrice = response.data.USD
       setEthPrice(fetchedEthPrice)
       calculatePrice(inputAmount)
