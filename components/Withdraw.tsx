@@ -9,6 +9,7 @@ import selectArrowIcon from 'public/images/select-arrow.svg'
 import axios from 'axios'
 import { formatNumber } from '@/utilities/formatNumber'
 import { ETH_PRICE_URL } from '@/constants'
+import { toWei } from 'web3-utils'
 
 type WithdrawComponentProps = {
   withdrawWithRelayer: (amount: string, fee: string, recipient: string, relayer: RelayerInfo) => void
@@ -69,7 +70,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   }
 
   const handleMaxClick = () => {
-    setAmount(balance)
+    setAmount(balance.toString())
     calculatePrice(balance)
   }
 

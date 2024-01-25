@@ -4,8 +4,8 @@ import { Keypair, workerProvider } from '@/services'
 import { ChainId, LogLevel } from '@/types'
 import { toWei } from 'web3-utils'
 import CustomConnectButton from '@/components/CustomConnectButton'
-import { useAccount, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
-import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
+import { useAccount, useBalance, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
+import { POOL_CONTRACT, SIGN_MESSAGE, WRAPPED_TOKEN } from '@/constants'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Image from 'next/image'
@@ -53,11 +53,22 @@ export default function Home() {
   const [modalData, setModalData] = useState({} as ModalProps)
   const [isDisabled, setIsDisabled] = useState(true)
   const [isKeyGenerated, setIsKeyGenerated] = useState(false)
+  const [wethBalance, setWethBalance] = useState('0')
 
   const { address, connector } = useAccount()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const { chain } = useNetwork()
+
+  const WETHbalance = useBalance({
+    address: curAddress as `0x${string}`,
+    token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
+    watch: true,
+    onSuccess(data) {
+      const formattedNumber = parseFloat(data.formatted).toFixed(5)
+      setWethBalance(formattedNumber)
+    },
+  })
 
   const logger = (message: string, logType: LogLevel = LogLevel.DEBUG) => {
     if (logType === LogLevel.ERROR) {
@@ -153,6 +164,15 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
+      if (BigNumber.from(toWei(amount)) > BigNumber.from(toWei(poolBalance.toString()))) {
+        throw new Error('Amount cannot be bigger than user balance!')
+      }
+      if (parseFloat(amount) < 0) {
+        throw new Error('Amount cannot be negative number!')
+      }
+      if (isNaN(parseFloat(amount))) {
+        throw new Error('Invalid decimal value')
+      }
       await handleAllowance({ publicClient, walletClient, logger }, amount)
       if (!address) {
         throw new Error('Address is null')
@@ -210,6 +230,19 @@ export default function Home() {
       }
       if (!walletClient) {
         throw new Error('Wallet client is null')
+      }
+      if (BigNumber.from(toWei(amount)) > BigNumber.from(toWei(poolBalance.toString()))) {
+        throw new Error('Amount cannot be bigger than private balance!')
+      }
+      if (toHexString(recipient) === toHexString('') || recipient === undefined || toHexString(recipient).length !== 42) {
+        throw new Error('Invalid address')
+      }
+
+      if (parseFloat(amount) < 0) {
+        throw new Error('Amount cannot be negative number!')
+      }
+      if (isNaN(parseFloat(amount))) {
+        throw new Error('Invalid decimal value')
       }
       const totalAmount = BigNumber.from(toWei(amount))
       const fee = BigNumber.from(feeInWei)
