@@ -31,6 +31,7 @@ import Modal, { ModalProps } from '@/components/Modal'
 import Description from '@/components/Description'
 import GeneratePool from '@/components/GeneratePool'
 import StatsComponent from '@/components/StatsComponent'
+import HistoryComponent from '@/components/HistoryComponent'
 import { CHAINS } from '@/constants'
 
 const relayers: RelayerInfo[] = [
@@ -415,6 +416,15 @@ export default function Home() {
                 >
                   Stats
                 </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  disabled={isDisabled}
+                  className={`pb-4 px-3 mr-8 box-border ${
+                    activeTab === 'history' ? 'border-b-2 border-blue-500' : ''
+                  } disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg`}
+                >
+                  History
+                </button>
 
                 {/* <button
                   onClick={() => setActiveTab('wrapEther')}
@@ -440,6 +450,7 @@ export default function Home() {
               />
             )}
             {isKeyGenerated && activeTab === 'stats' && <StatsComponent />}
+            {isKeyGenerated && activeTab === 'history' && <HistoryComponent />}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
 
