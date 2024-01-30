@@ -28,7 +28,6 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   const [ethPrice, setEthPrice] = useState('0')
   // use state for fee with string or undefined
   const [fee, setFee] = useState('0')
-  const [netBalance, setNetBalance] = useState(0)
 
   // const handleMaxClick = () => {
   //   setAmount(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
@@ -70,10 +69,8 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   }
 
   const handleMaxClick = () => {
-    setNetBalance(Number(balance) - Number(fromWei(fee)))
-
-    setAmount(netBalance.toFixed(5))
-    calculatePrice(netBalance.toString())
+    setAmount(balance.toString())
+    calculatePrice(balance)
   }
 
   const handleWithdrawClick = () => {
