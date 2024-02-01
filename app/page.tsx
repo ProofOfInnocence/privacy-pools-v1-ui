@@ -33,6 +33,7 @@ import GeneratePool from '@/components/GeneratePool'
 import StatsComponent from '@/components/StatsComponent'
 import HistoryComponent from '@/components/HistoryComponent'
 import { CHAINS } from '@/constants'
+import GetPoiSteps from '@/components/GetPoiSteps'
 
 const relayers: RelayerInfo[] = [
   {
@@ -55,6 +56,10 @@ export default function Home() {
   const [isDisabled, setIsDisabled] = useState(true)
   const [isKeyGenerated, setIsKeyGenerated] = useState(false)
   const [wethBalance, setWethBalance] = useState('0')
+  const [recipientPoi, setRecipientPoi] = useState('')
+  const [relayerPoi, setRelayerPoi] = useState<RelayerInfo>()
+  const [amountPoi, setAmountPoi] = useState<BigNumber | null>(null)
+  const [feePoi, setFeePoi] = useState<BigNumber | null>(null)
 
   const { address, connector } = useAccount()
   const publicClient = usePublicClient()
@@ -202,7 +207,7 @@ export default function Home() {
           {
             ButtonName: 'Explorer',
             Function: () => {
-              window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI]}/tx/${txReceipt.transactionHash}`, '_blank')
+              window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${txReceipt.transactionHash}`, '_blank')
             },
           },
         ],
@@ -221,6 +226,9 @@ export default function Home() {
   }
 
   async function withdrawWithRelayer(amount: string, feeInWei: string, recipient: string, relayer: RelayerInfo) {
+    setRecipientPoi(recipient)
+    setRelayerPoi(relayer)
+
     try {
       setLoadingMessage('Withdrawing...')
       if (!keypair) {
@@ -246,8 +254,9 @@ export default function Home() {
         throw new Error('Invalid decimal value')
       }
       const totalAmount = BigNumber.from(toWei(amount))
+      setAmountPoi(totalAmount)
       const fee = BigNumber.from(feeInWei)
-
+      setFeePoi(fee)
       const { extData, args, membershipProof } = await prepareTransaction({
         keypair,
         amount: totalAmount.sub(fee),
@@ -300,6 +309,10 @@ export default function Home() {
         setLoadingMessage('')
         getWithdrawModal(res.txHash)
         clearInterval(intervalId)
+      } else if (res.status === 'FAILED') {
+        setLoadingMessage('')
+        setError(res.failedReason)
+        clearInterval(intervalId)
       }
       console.log('STATUS', res)
     }, 1000)
@@ -322,7 +335,7 @@ export default function Home() {
         {
           ButtonName: 'Explorer',
           Function: () => {
-            window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI]}/tx/${txHash}`, '_blank')
+            window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${txHash}`, '_blank')
           },
         },
       ],
@@ -456,6 +469,16 @@ export default function Home() {
 
             {modalData && <Modal {...modalData} />}
             <LoadingSpinner loadingMessage={loadingMessage} />
+            {keypair && feePoi && amountPoi && (
+              <GetPoiSteps
+                keypair={keypair}
+                address={toChecksumAddress(address)}
+                recipient={toChecksumAddress(recipientPoi)}
+                relayer={toChecksumAddress(relayerPoi?.rewardAddress)}
+                amount={amountPoi.sub(feePoi)}
+                fee={feePoi}
+              />
+            )}
           </div>
         </div>
       )}
