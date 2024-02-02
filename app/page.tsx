@@ -1,7 +1,7 @@
 'use client'
 
 import { Keypair, workerProvider } from '@/services'
-import { ChainId, LogLevel } from '@/types'
+import { ChainId, LogLevel, LoggerType } from '@/types'
 import { toWei } from 'web3-utils'
 import CustomConnectButton from '@/components/CustomConnectButton'
 import { useAccount, useBalance, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
@@ -179,11 +179,14 @@ export default function Home() {
       if (!address) {
         throw new Error('Address is null')
       }
-      const { extData, args } = await prepareTransaction({
-        keypair,
-        amount: BigNumber.from(toWei(amount)),
-        address: address,
-      })
+      const { extData, args } = await prepareTransaction(
+        {
+          keypair,
+          amount: BigNumber.from(toWei(amount)),
+          address: address,
+        },
+        logger
+      )
       let txReceipt = await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
       setLoadingMessage('')
       console.log('Tx receipt', txReceipt)
@@ -248,15 +251,19 @@ export default function Home() {
       }
       const totalAmount = BigNumber.from(toWei(amount))
       const fee = BigNumber.from(feeInWei)
-      const { extData, args, membershipProof } = await prepareTransaction({
-        keypair,
-        amount: totalAmount.sub(fee),
-        address: toChecksumAddress(address),
-        fee: fee,
-        recipient: toChecksumAddress(recipient),
-        relayer: toChecksumAddress(relayer.rewardAddress),
-      })
-      console.log('membershipProof', membershipProof)
+
+      const { extData, args, membershipProof } = await prepareTransaction(
+        {
+          keypair,
+          amount: totalAmount.sub(fee),
+          address: toChecksumAddress(address),
+          fee: fee,
+          recipient: toChecksumAddress(recipient),
+          relayer: toChecksumAddress(relayer.rewardAddress),
+        },
+        logger
+      )
+
       console.log('Ext data', extData)
       console.log('Args', args)
       let newExtData: ExtData = { ...extData }
@@ -279,8 +286,10 @@ export default function Home() {
       const functionData = encodeFunctionData({ abi: TornadoPool__factory.abi, functionName: 'transact', args: [args, newExtData] })
       console.log('Function data', functionData)
 
+      logger('Sending to relayer', LogLevel.LOADING)
+
       const res = await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
-      await checkWithdrawal(relayers[0], res)
+      await checkWithdrawal(relayers[0], res, logger)
 
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
     } catch (error) {
@@ -289,24 +298,33 @@ export default function Home() {
     }
   }
 
-  async function checkWithdrawal(relayer: RelayerInfo, jobId: void) {
-    let intervalId = setInterval(async () => {
-      const { data: res } = await axios.get(`${relayer.api}/job/${jobId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      if (res.status === 'SENT') {
-        setLoadingMessage('')
-        getWithdrawModal(res.txHash)
-        clearInterval(intervalId)
-      } else if (res.status === 'FAILED') {
-        setLoadingMessage('')
-        setError(res.failedReason)
-        clearInterval(intervalId)
-      }
-      console.log('STATUS', res)
-    }, 1000)
+  async function checkWithdrawal(relayer: RelayerInfo, jobId: void, logger: LoggerType) {
+    return new Promise<void>((resolve, reject) => {
+      const intervalId = setInterval(async () => {
+        try {
+          logger('Waiting for relayer', LogLevel.LOADING)
+          const { data: res } = await axios.get(`${relayer.api}/job/${jobId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+
+          if (res.status === 'SENT') {
+            setLoadingMessage('')
+            getWithdrawModal(res.txHash)
+            clearInterval(intervalId)
+            resolve()
+          } else if (res.status === 'FAILED') {
+            clearInterval(intervalId)
+            reject(new Error('Withdraw failed, ' + JSON.stringify(res.failedReason)))
+          }
+          console.log('STATUS', res)
+        } catch (error) {
+          clearInterval(intervalId)
+          reject(error)
+        }
+      }, 1000)
+    })
   }
 
   function getWithdrawModal(txHash: string) {

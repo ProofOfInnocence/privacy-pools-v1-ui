@@ -103,6 +103,7 @@ async function getPoiSteps({
       outputs: [output1, output2],
       publicAmount: event.publicAmount,
       index: event.index,
+      txHash: event.transactionHash,
     })
     txRecords.push(_txRecord)
   }
@@ -159,18 +160,18 @@ async function proveInclusion(
     isL1Withdrawal = true,
     membershipProofURI = ""
   }: PrepareTxParams,
-  { txRecordEvents, nullifierToUtxo = undefined, commitmentToUtxo = undefined, finalTxRecord }: ProveInclusionParams
+  { txRecordEvents, associationSet, nullifierToUtxo = undefined, commitmentToUtxo = undefined, finalTxRecord }: ProveInclusionParams
 ) {
   if (!nullifierToUtxo || !commitmentToUtxo) {
     const { nullifierToUtxo: nullifierToUtxo_, commitmentToUtxo: commitmentToUtxo_ } = await buildMappings(keypair, events, txRecordEvents)
     nullifierToUtxo = nullifierToUtxo_
     commitmentToUtxo = commitmentToUtxo_
   }
-  const steps = await getPoiSteps({ txRecordEvents, nullifierToUtxo, commitmentToUtxo, finalTxRecord })
+  const steps = await getPoiSteps({ txRecordEvents, associationSet, nullifierToUtxo, commitmentToUtxo, finalTxRecord })
   console.log("Steps->", steps)
   console.log("txRecordsMerkleTree->", txRecordEvents)
   const txRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
-  const allowedTxRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
+  const allowedTxRecordsMerkleTree = buildTxRecordMerkleTree({ events: associationSet })
   console.log("allowedTxRecordsMerkleTree->", allowedTxRecordsMerkleTree)
   let accInnocentCommitments = [ZERO_LEAF, ZERO_LEAF]
   console.log("accInnocentCommitments->", accInnocentCommitments)
@@ -188,7 +189,7 @@ async function proveInclusion(
     )
   }
   console.log("poiInputs->", poiInputs)
-  return poiInputs
+  return {poiInputs, associationSetLeaves: allowedTxRecordsMerkleTree.elements}
 }
 
 export { proveInclusion }
