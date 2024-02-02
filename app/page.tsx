@@ -170,7 +170,7 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
-      if (BigNumber.from(toWei(amount)) > BigNumber.from(toWei(poolBalance.toString()))) {
+      if (Number(amount) > poolBalance) {
         throw new Error('Amount cannot be bigger than user balance!')
       }
       if (parseFloat(amount) < 0) {
@@ -240,7 +240,7 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
-      if (BigNumber.from(toWei(amount)) > BigNumber.from(toWei(poolBalance.toString()))) {
+      if (Number(amount) > poolBalance) {
         throw new Error('Amount cannot be bigger than private balance!')
       }
       if (toHexString(recipient) === toHexString('') || recipient === undefined || toHexString(recipient).length !== 42) {
@@ -463,22 +463,12 @@ export default function Home() {
               />
             )}
             {isKeyGenerated && activeTab === 'stats' && <StatsComponent />}
-            {isKeyGenerated && activeTab === 'history' && <HistoryComponent />}
+            {isKeyGenerated && activeTab === 'history' && keypair && feePoi && amountPoi && <HistoryComponent />}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
 
             {modalData && <Modal {...modalData} />}
             <LoadingSpinner loadingMessage={loadingMessage} />
-            {keypair && feePoi && amountPoi && (
-              <GetPoiSteps
-                keypair={keypair}
-                address={toChecksumAddress(address)}
-                recipient={toChecksumAddress(recipientPoi)}
-                relayer={toChecksumAddress(relayerPoi?.rewardAddress)}
-                amount={amountPoi.sub(feePoi)}
-                fee={feePoi}
-              />
-            )}
           </div>
         </div>
       )}
