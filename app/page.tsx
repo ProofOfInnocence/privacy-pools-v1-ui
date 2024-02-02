@@ -56,10 +56,6 @@ export default function Home() {
   const [isDisabled, setIsDisabled] = useState(true)
   const [isKeyGenerated, setIsKeyGenerated] = useState(false)
   const [wethBalance, setWethBalance] = useState('0')
-  const [recipientPoi, setRecipientPoi] = useState('')
-  const [relayerPoi, setRelayerPoi] = useState<RelayerInfo>()
-  const [amountPoi, setAmountPoi] = useState<BigNumber | null>(null)
-  const [feePoi, setFeePoi] = useState<BigNumber | null>(null)
 
   const { address, connector } = useAccount()
   const publicClient = usePublicClient()
@@ -226,9 +222,6 @@ export default function Home() {
   }
 
   async function withdrawWithRelayer(amount: string, feeInWei: string, recipient: string, relayer: RelayerInfo) {
-    setRecipientPoi(recipient)
-    setRelayerPoi(relayer)
-
     try {
       setLoadingMessage('Withdrawing...')
       if (!keypair) {
@@ -254,9 +247,7 @@ export default function Home() {
         throw new Error('Invalid decimal value')
       }
       const totalAmount = BigNumber.from(toWei(amount))
-      setAmountPoi(totalAmount)
       const fee = BigNumber.from(feeInWei)
-      setFeePoi(fee)
       const { extData, args, membershipProof } = await prepareTransaction({
         keypair,
         amount: totalAmount.sub(fee),
@@ -463,7 +454,7 @@ export default function Home() {
               />
             )}
             {isKeyGenerated && activeTab === 'stats' && <StatsComponent />}
-            {isKeyGenerated && activeTab === 'history' && keypair && feePoi && amountPoi && <HistoryComponent />}
+            {isKeyGenerated && activeTab === 'history' && keypair && <HistoryComponent />}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
 
