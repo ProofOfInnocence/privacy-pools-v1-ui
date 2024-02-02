@@ -379,8 +379,10 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
 
     if (params.recipient) {
       const txRecordEvents = await workerProvider.getTxRecordEvents()
+
       const associationSet = await getAssociationSet(ChainId.ETHEREUM_GOERLI)
       console.log('TX RECORD EVENTS: ', txRecordEvents)
+
       params.events = await commitmentsService.fetchCommitments(keypair)
 
       params.fee = params.fee || BG_ZERO
@@ -394,7 +396,6 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
         inputs: params.inputs,
         outputs: params.outputs,
       })
-      console.log('FINAL TX RECORD: ', finalTxRecord)
       console.log('COMMITMENTS: ', params.events)
 
       const { poiInputs: membershipProofInputs, associationSetLeaves } = await proveInclusion(keypair, params, {
