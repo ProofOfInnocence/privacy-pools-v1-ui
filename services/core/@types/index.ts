@@ -66,6 +66,7 @@ export type PrepareTxParams = {
 
 export type ProveInclusionParams = {
   txRecordEvents: TxRecordEvents
+  associationSet: TxRecordEvents
   nullifierToUtxo?: Map<string, BaseUtxo>
   commitmentToUtxo?: Map<string, BaseUtxo>
   finalTxRecord: TxRecord

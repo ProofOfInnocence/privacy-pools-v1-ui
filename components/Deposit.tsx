@@ -2,8 +2,9 @@
 
 import { WRAPPED_TOKEN } from '@/constants'
 import { ChainId } from '@/types'
-import { useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { useBalance } from 'wagmi'
+import axios from 'axios'
 
 interface DepositProps {
   deposit: (amount: string) => void
@@ -12,18 +13,62 @@ interface DepositProps {
 
 function DepositComponent({ deposit, address }: DepositProps) {
   const [amount, setAmount] = useState('')
+  const [calculatedPrice, setCalculatedPrice] = useState('')
   const [balance, setBalance] = useState('0')
+  const [ethPrice, setEthPrice] = useState('0')
+
   const WETHbalance = useBalance({
     address: address as `0x${string}`,
     token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
     watch: true,
     onSuccess(data) {
-      setBalance(data.formatted)
+      const formattedNumber = parseFloat(data.formatted).toFixed(3)
+      setBalance(formattedNumber)
     },
   })
 
+  useEffect(() => {
+    fetchETHPrice()
+  }, [])
+
+  const fetchETHPrice = async () => {
+    try {
+      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const fetchedEthPrice = response.data.USD
+      console.log('ETH Price:', fetchedEthPrice)
+      setEthPrice(fetchedEthPrice)
+    } catch (error) {
+      console.error('Error fetching ETH prices:', error)
+    }
+  }
+
+  const calculatePrice = (inputAmount: string) => {
+    const calculated = (parseFloat(inputAmount) * parseFloat(ethPrice)).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    })
+    console.log('Calculated Price:', calculated)
+    setCalculatedPrice(calculated)
+  }
+
   const handleMaxClick = () => {
-    setAmount(balance)
+    setAmount(balance.toString())
+    calculatePrice(balance)
+  }
+
+  const handleInputUpdate = async (e: ChangeEvent<HTMLInputElement>) => {
+    const inputAmount = e.target.value
+    setAmount(inputAmount)
+
+    try {
+      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const fetchedEthPrice = response.data.USD
+      console.log('Input amount:', inputAmount)
+      setEthPrice(fetchedEthPrice)
+      calculatePrice(inputAmount)
+    } catch (error) {
+      console.error('Error fetching ETH prices:', error)
+    }
   }
 
   const handleDepositClick = () => {
@@ -32,25 +77,36 @@ function DepositComponent({ deposit, address }: DepositProps) {
   }
 
   return (
-    <div className="p-4">
-      <div className="flex items-center mb-4">
+    <div className="pb-4 pt-10 px-6 sm:px-10">
+      <div className="relative flex items-center mb-6">
+        <label className="absolute left-8 top-8 font-bold text-black text-opacity-40">You Deposit</label>
         <input
           type="text"
-          placeholder="Enter deposit amount"
+          placeholder="0"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="flex-1 p-2 border rounded"
+          min={0}
+          onChange={(e) => handleInputUpdate(e)}
+          className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
-        <button onClick={handleMaxClick} className="ml-2 px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600">
-          Max
-        </button>
+        <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
+          <p className="relative left-8 text-black text-opacity-40">
+            {amount === '' || amount === undefined || Number.isNaN(amount) ? '$0.00' : calculatedPrice}
+          </p>
+          <div className="flex relative right-8">
+            <p className="text-black text-opacity-40">Balance: {balance} ETH</p>
+            <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">
+              Max
+            </button>
+          </div>
+        </div>
       </div>
-      <button onClick={handleDepositClick} className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
+      <button
+        onClick={handleDepositClick}
+        disabled={amount === '' || address === ''}
+        className="px-4 py-3 text-lg text-white font-bold bg-[#1A73E8] rounded-[40px] hover:bg-[#1a73e8c4] hover:cursor-pointer disabled:text-black disabled:text-opacity-30 disabled:bg-[#F5F5F5] disabled:cursor-not-allowed w-full"
+      >
         Deposit
       </button>
-      <div className="mt-4">
-        <p>Balance: {balance}</p>
-      </div>
     </div>
   )
 }

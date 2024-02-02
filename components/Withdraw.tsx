@@ -1,23 +1,79 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { ChangeEvent, useEffect, useState } from 'react'
 import { LogLevel, RelayerInfo } from '@/types'
 import { BigNumber } from 'ethers'
-import { fromWei, shortenAddress, toWei } from '@/utilities'
-import { TOKEN_SYMBOL } from '@/constants'
+import { fromWei } from '@/utilities'
+import Image from 'next/image'
+import selectArrowIcon from 'public/images/select-arrow.svg'
+import axios from 'axios'
 
 type WithdrawComponentProps = {
   withdrawWithRelayer: (amount: string, fee: string, recipient: string, relayer: RelayerInfo) => void
   relayers: RelayerInfo[]
   logger: (message: string, logLevel: LogLevel) => void
+  shieldedBalance: number
 }
 
-function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawComponentProps) {
-  const [amount, setAmount] = useState<string | undefined>(undefined)
-  const [recipient, setRecipient] = useState<string | undefined>(undefined)
+function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBalance }: WithdrawComponentProps) {
+  // const [amount, setAmount] = useState<string | undefined>(undefined)
+  const [recipient, setRecipient] = useState('')
   const [selectedRelayer, setSelectedRelayer] = useState(relayers[0])
+  // const [balance, setBalance] = useState('0.0000')
+  const [amount, setAmount] = useState('')
+  const [calculatedPrice, setCalculatedPrice] = useState('')
+  const [balance, setBalance] = useState('0')
+  const [ethPrice, setEthPrice] = useState('0')
   // use state for fee with string or undefined
   const [fee, setFee] = useState<string | undefined>(undefined)
+
+  // const handleMaxClick = () => {
+  //   setAmount(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
+  // }
+
+  useEffect(() => {
+    fetchETHPrice()
+    setBalance(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
+  }, [shieldedBalance])
+
+  const fetchETHPrice = async () => {
+    try {
+      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const fetchedEthPrice = response.data.USD
+      console.log('ETH Price:', fetchedEthPrice)
+      setEthPrice(fetchedEthPrice)
+    } catch (error) {
+      console.error('Error fetching ETH prices:', error)
+    }
+  }
+
+  const calculatePrice = (inputAmount: string) => {
+    const calculated = (parseFloat(inputAmount) * parseFloat(ethPrice)).toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    })
+    console.log('Calculated Price:', calculated)
+    setCalculatedPrice(calculated)
+  }
+
+  const handleInputUpdate = async (e: ChangeEvent<HTMLInputElement>) => {
+    const inputAmount = e.target.value
+    setAmount(inputAmount)
+
+    try {
+      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const fetchedEthPrice = response.data.USD
+      setEthPrice(fetchedEthPrice)
+      calculatePrice(inputAmount)
+    } catch (error) {
+      console.error('Error fetching ETH prices:', error)
+    }
+  }
+
+  const handleMaxClick = () => {
+    setAmount(balance)
+    calculatePrice(balance)
+  }
 
   const handleWithdrawClick = () => {
     if (!fee) {
@@ -36,6 +92,8 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawCo
   }
 
   const calculateFee = async () => {
+    console.log(fee)
+
     console.log('selectedRelayer:', selectedRelayer)
     console.log('selectedRelayer.fee:', selectedRelayer.fee)
     const serviceFee = BigNumber.from(selectedRelayer.fee)
@@ -79,54 +137,76 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger }: WithdrawCo
   }, [selectedRelayer])
 
   return (
-    <div className="p-4">
-      <div className="mb-4">
-        <label className="block mb-2">Withdraw Amount</label>
+    <div className="pb-4 pt-10 px-6 sm:px-10">
+      <div className="relative flex items-center mb-8">
+        <label className="absolute left-8 top-8 font-bold text-black text-opacity-40">You Withdraw</label>
         <input
           type="text"
-          placeholder="Enter amount"
+          placeholder="0"
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="w-full p-2 border rounded"
+          onChange={(e) => handleInputUpdate(e)}
+          min={0}
+          className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
+        <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
+          <p className="relative left-8 text-black text-opacity-40">
+            {amount === '' || amount === undefined || Number.isNaN(amount) ? '$0.00' : calculatedPrice}
+          </p>
+          <div className="flex relative right-8">
+            <p className="text-black text-opacity-40">Balance: {balance} ETH</p>
+            <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">
+              Max
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-2">Recipient Address</label>
+      <div className="mb-8">
+        <label className="block mb-8 ml-6 text-lg font-bold">Recipient Address:</label>
         <input
           type="text"
           placeholder="Enter recipient address"
           value={recipient}
           onChange={(e) => setRecipient(e.target.value)}
-          className="w-full p-2 border rounded"
+          className="w-full px-8 py-4 font-bold text-xl rounded-[40px] bg-[#F5F5F5] text-black placeholder:text-black placeholder:text-opacity-30 transition-all duration-150 hover:bg-[#eaeaea]"
         />
       </div>
-      <div className="mb-4">
-        <label className="block mb-2">Select Relayer</label>
-        <select
-          value={selectedRelayer.api}
-          onChange={(e) => setSelectedRelayer(relayers.find((r) => r.api === e.target.value) || relayers[0])}
-          className="w-full p-2 border rounded"
-        >
-          {relayers.map((relayer) => (
-            <option key={relayer.api} value={relayer.api}>
-              {relayer.name} | {relayer.api}
-            </option>
-          ))}
-        </select>
+      <div className="mb-8">
+        <label className="block mb-8 ml-6 text-lg font-bold">Select Relayer:</label>
+        <div className="flex justify-start items-center">
+          <span className="absolute ml-6 block w-4 h-4 bg-[#89FF7D] rounded-full"></span>
+          <select
+            value={selectedRelayer.api}
+            onChange={(e) => setSelectedRelayer(relayers.find((r) => r.api === e.target.value) || relayers[0])}
+            className="w-full pr-8 pl-12 py-4 font-bold text-xl rounded-[40px] bg-[#F5F5F5] text-black transition-all duration-150 hover:bg-[#eaeaea] hover:cursor-pointer box-border appearance-none"
+          >
+            {relayers.map((relayer) => (
+              <option key={relayer.api} value={relayer.api}>
+                {relayer.name}
+              </option>
+            ))}
+          </select>
+          <Image className="ml-[-2.5rem]" src={selectArrowIcon} alt="arrow icon" width={16} height={9} />
+        </div>
       </div>
 
-      {!fee && <p>Calculating fee...</p>}
+      {!fee && <p className="mb-8 ml-6 text-lg font-bold">Calculating fee...</p>}
       {fee && (
         <>
-          <p>Fee: {fromWei(fee)}</p>
-          {recipient && amount && (
+          <p className="mb-8 ml-6 text-lg font-bold">
+            Withdrawal Fee: <span className="text-black text-opacity-40">{fromWei(fee)}</span>
+          </p>
+          {/* {recipient && amount && (
             <p>
               Address {shortenAddress(recipient)} will get {fromWei(toWei(amount).sub(BigNumber.from(fee)))} {TOKEN_SYMBOL}
             </p>
-          )}
+          )} */}
 
-          <button onClick={handleWithdrawClick} className="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-600">
+          <button
+            onClick={handleWithdrawClick}
+            disabled={amount === '' || amount === undefined || recipient === '' || recipient === undefined}
+            className="px-4 py-3 text-lg text-white font-bold bg-[#1A73E8] rounded-[40px] hover:bg-[#1a73e8c4] hover:cursor-pointer disabled:text-black disabled:text-opacity-30 disabled:bg-[#F5F5F5] disabled:cursor-not-allowed w-full"
+          >
             Withdraw
           </button>
         </>
