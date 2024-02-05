@@ -26,9 +26,9 @@ import { toFixedHex, poseidonHash2, getExtDataHash } from './utils'
 
 import { Keypair, workerProvider } from '@/services'
 import { commitmentsFactory } from '@/services/commitments'
-import { CommitmentEvents } from '@/services/events/@types'
+import { CommitmentEvents, TxRecordEvent } from '@/services/events/@types'
 
-import { ChainId } from '@/types'
+import { ChainId, LoggerType, LogLevel } from '@/types'
 import { getTornadoPool } from '@/contracts'
 import { Element } from 'fixed-merkle-tree'
 import { proveInclusion } from './poi'
@@ -47,16 +47,7 @@ function buildMerkleTree({ events }: { events: CommitmentEvents }) {
   return new MerkleTree(numbers.MERKLE_TREE_HEIGHT, leaves, { hashFunction: poseidonHash2Wrapper, zeroElement: ZERO_LEAF.toString() })
 }
 
-async function getProof({
-  inputs,
-  outputs,
-  tree,
-  extAmount,
-  fee,
-  recipient,
-  relayer,
-  membershipProofURI,
-}: ProofParams) {
+async function getProof({ inputs, outputs, tree, extAmount, fee, recipient, relayer, membershipProofURI }: ProofParams) {
   console.log('GET PROOF IS CALLED')
   console.log(extAmount)
   // inputs = shuffle(inputs)
@@ -300,7 +291,64 @@ async function download({ prefix, name, contentType }: DownloadParams) {
 //   }
 // }
 
-async function createTransactionData(params: CreateTransactionParams, keypair: Keypair) {
+type ApiResponseObject = {
+  id: number
+  chain: string
+  txHash: string
+  logIndex: number
+  contractAddr: string
+  depositAddr: string
+  outputCommitment1: string
+  outputCommitment2: string
+  nullifierHash1: string
+  nullifierHash2: string
+  recordIndex: number
+  publicAmount: string
+  blockTimestamp: number
+  decisionStatus: string
+  decisionTimestamp: number
+  decisionReason: string
+}
+
+type ApiResponse = ApiResponseObject[]
+/**
+ * 
+export type TxRecordEvent = {
+  blockNumber: number
+  transactionHash: string
+  index: number
+  inputNullifier1: string,
+  inputNullifier2: string,
+  outputCommitment1: string,
+  outputCommitment2: string,
+  publicAmount: string
+}
+ */
+
+async function getAssociationSet(chain: ChainId) {
+  const tornadoPool = getTornadoPool(chain)
+  const API = 'https://api.0xbow.io/api/v1/inclusion?chain=goerli&contractAddr=0x49bf92fa466854637ae5a4cd00e97ddea43c0767'
+  const response = await axios.get(API)
+  const associationSet: ApiResponse = response.data
+  // make txRecordEvents filtering by decisionStatus == "approved"
+  const txRecordEvents: TxRecordEvent[] = associationSet
+    .filter((x: ApiResponseObject) => x.decisionStatus == 'approved')
+    .map((x: ApiResponseObject) => {
+      return {
+        blockNumber: x.blockTimestamp,
+        transactionHash: x.txHash,
+        index: x.recordIndex,
+        inputNullifier1: '0x' + x.nullifierHash1,
+        inputNullifier2: '0x' + x.nullifierHash2,
+        outputCommitment1: '0x' + x.outputCommitment1,
+        outputCommitment2: '0x' + x.outputCommitment2,
+        publicAmount: x.publicAmount,
+      } as TxRecordEvent
+    })
+  return txRecordEvents
+}
+
+async function createTransactionData(params: CreateTransactionParams, keypair: Keypair, logger: LoggerType) {
   try {
     let membershipProof
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
@@ -312,11 +360,11 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     while (params.inputs.length < 2) {
       const newBlinding = BigNumber.from(
         '0x' +
-        ethers.utils
-          .keccak256(
-            ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
-          )
-          .slice(2, 64)
+          ethers.utils
+            .keccak256(
+              ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
+            )
+            .slice(2, 64)
       ).mod(FIELD_SIZE)
 
       const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
@@ -331,7 +379,10 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
 
     if (params.recipient) {
       const txRecordEvents = await workerProvider.getTxRecordEvents()
+
+      const associationSet = await getAssociationSet(ChainId.ETHEREUM_GOERLI)
       console.log('TX RECORD EVENTS: ', txRecordEvents)
+
       params.events = await commitmentsService.fetchCommitments(keypair)
 
       params.fee = params.fee || BG_ZERO
@@ -345,11 +396,11 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
         inputs: params.inputs,
         outputs: params.outputs,
       })
-      console.log('FINAL TX RECORD: ', finalTxRecord)
       console.log('COMMITMENTS: ', params.events)
 
-      const membershipProofInputs = await proveInclusion(keypair, params, {
+      const { poiInputs: membershipProofInputs, associationSetLeaves } = await proveInclusion(keypair, params, {
         txRecordEvents,
+        associationSet,
         nullifierToUtxo: undefined,
         commitmentToUtxo: undefined,
         finalTxRecord: finalTxRecord,
@@ -358,15 +409,23 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProofInputs[0].step_in).toHexString()] })
       console.log('inputjson', inputjson)
       console.log('startjson', startjson)
-      // await workerProvider.generate_public_parameters()
-      // membershipProof = await workerProvider.prove_membership(inputjson, startjson)
-      membershipProof = JSON.stringify({ proof: "No proof, PRIVATE TRANSACTION" })
-      const membershipProofJSON = JSON.parse(membershipProof)
-      console.log('MEMBERSHIP PROOF: ', membershipProofJSON)
-      params.membershipProofURI = await getIPFSCid(JSON.stringify(membershipProofJSON))
-      saveAsFile(JSON.stringify(membershipProofJSON), 'membership_proof_save_to_ipfs_if_you_dont_trust_relayers_pinning_service.txt')
+      logger('Generating membership proof. This may take a while.', LogLevel.LOADING)
+      await workerProvider.generate_public_parameters()
+      const membershipProofTemp = await workerProvider.prove_membership(inputjson, startjson)
+      // membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
+      // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSON, associationSet: associationSetLeaves })
+      const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves }
+      membershipProof = JSON.stringify(membershipProofJSON)
+      console.log('MEMBERSHIP PROOF: ', membershipProof)
+      
+      logger('Downloading membership proof.', LogLevel.LOADING)
+      params.membershipProofURI = await getIPFSCid(membershipProof)
+      
+      saveAsFile(membershipProof, 'membership_proof_save_to_ipfs_if_you_dont_trust_relayers_pinning_service.txt')
     }
     params.events = await commitmentsService.fetchCommitments(keypair)
+
+    logger('Sending transaction...', LogLevel.LOADING)
 
     const { extData, args, amount } = await prepareTransaction(params)
 

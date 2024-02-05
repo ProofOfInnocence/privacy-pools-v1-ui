@@ -1,11 +1,11 @@
 'use client'
 
 import { Keypair, workerProvider } from '@/services'
-import { ChainId, LogLevel } from '@/types'
+import { ChainId, LogLevel, LoggerType } from '@/types'
 import { toWei } from 'web3-utils'
 import CustomConnectButton from '@/components/CustomConnectButton'
-import { useAccount, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
-import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
+import { useAccount, useBalance, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
+import { POOL_CONTRACT, SIGN_MESSAGE, WRAPPED_TOKEN } from '@/constants'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Image from 'next/image'
@@ -31,6 +31,9 @@ import Modal, { ModalProps } from '@/components/Modal'
 import Description from '@/components/Description'
 import GeneratePool from '@/components/GeneratePool'
 import StatsComponent from '@/components/StatsComponent'
+import HistoryComponent from '@/components/HistoryComponent'
+import { CHAINS } from '@/constants'
+import GetPoiSteps from '@/components/GetPoiSteps'
 
 const relayers: RelayerInfo[] = [
   {
@@ -53,11 +56,22 @@ export default function Home() {
   const [modalData, setModalData] = useState({} as ModalProps)
   const [isDisabled, setIsDisabled] = useState(true)
   const [isKeyGenerated, setIsKeyGenerated] = useState(false)
+  const [wethBalance, setWethBalance] = useState('0')
 
   const { address, connector } = useAccount()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const { chain } = useNetwork()
+
+  const WETHbalance = useBalance({
+    address: curAddress as `0x${string}`,
+    token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
+    watch: true,
+    onSuccess(data) {
+      const formattedNumber = parseFloat(data.formatted).toFixed(5)
+      setWethBalance(formattedNumber)
+    },
+  })
 
   const logger = (message: string, logType: LogLevel = LogLevel.DEBUG) => {
     if (logType === LogLevel.ERROR) {
@@ -151,6 +165,15 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
+      if (Number(amount) > poolBalance) {
+        throw new Error('Amount cannot be bigger than user balance!')
+      }
+      if (parseFloat(amount) < 0) {
+        throw new Error('Amount cannot be negative number!')
+      }
+      if (isNaN(parseFloat(amount))) {
+        throw new Error('Invalid decimal value')
+      }
       await handleAllowance({ publicClient, walletClient, logger }, amount)
       if (!address) {
         throw new Error('Address is null')
@@ -179,7 +202,7 @@ export default function Home() {
           {
             ButtonName: 'Explorer',
             Function: () => {
-              window.open(`https://goerli.etherscan.io/tx/${txReceipt.transactionHash}`, '_blank')
+              window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${txReceipt.transactionHash}`, '_blank')
             },
           },
         ],
@@ -209,8 +232,22 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
+      if (Number(amount) > poolBalance) {
+        throw new Error('Amount cannot be bigger than private balance!')
+      }
+      if (toHexString(recipient) === toHexString('') || recipient === undefined || toHexString(recipient).length !== 42) {
+        throw new Error('Invalid address')
+      }
+
+      if (parseFloat(amount) < 0) {
+        throw new Error('Amount cannot be negative number!')
+      }
+      if (isNaN(parseFloat(amount))) {
+        throw new Error('Invalid decimal value')
+      }
       const totalAmount = BigNumber.from(toWei(amount))
       const fee = BigNumber.from(feeInWei)
+
 
       const { extData, args, membershipProof } = await prepareTransaction({
         keypair,
@@ -221,6 +258,7 @@ export default function Home() {
         relayer: toChecksumAddress(relayer.rewardAddress),
       })
       console.log('membershipProof', membershipProof)
+
       console.log('Ext data', extData)
       console.log('Args', args)
       let newExtData: ExtData = { ...extData }
@@ -243,8 +281,10 @@ export default function Home() {
       const functionData = encodeFunctionData({ abi: TornadoPool__factory.abi, functionName: 'transact', args: [args, newExtData] })
       console.log('Function data', functionData)
 
+      logger('Sending to relayer', LogLevel.LOADING)
+
       const res = await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
-      await checkWithdrawal(relayers[0], res)
+      await checkWithdrawal(relayers[0], res, logger)
 
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
     } catch (error) {
@@ -253,20 +293,33 @@ export default function Home() {
     }
   }
 
-  async function checkWithdrawal(relayer: RelayerInfo, jobId: void) {
-    let intervalId = setInterval(async () => {
-      const { data: res } = await axios.get(`${relayer.api}/job/${jobId}`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-      if (res.status === 'SENT') {
-        setLoadingMessage('')
-        getWithdrawModal(res.txHash)
-        clearInterval(intervalId)
-      }
-      console.log('STATUS', res)
-    }, 1000)
+  async function checkWithdrawal(relayer: RelayerInfo, jobId: void, logger: LoggerType) {
+    return new Promise<void>((resolve, reject) => {
+      const intervalId = setInterval(async () => {
+        try {
+          logger('Waiting for relayer', LogLevel.LOADING)
+          const { data: res } = await axios.get(`${relayer.api}/job/${jobId}`, {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+
+          if (res.status === 'SENT') {
+            setLoadingMessage('')
+            getWithdrawModal(res.txHash)
+            clearInterval(intervalId)
+            resolve()
+          } else if (res.status === 'FAILED') {
+            clearInterval(intervalId)
+            reject(new Error('Withdraw failed, ' + JSON.stringify(res.failedReason)))
+          }
+          console.log('STATUS', res)
+        } catch (error) {
+          clearInterval(intervalId)
+          reject(error)
+        }
+      }, 1000)
+    })
   }
 
   function getWithdrawModal(txHash: string) {
@@ -286,7 +339,7 @@ export default function Home() {
         {
           ButtonName: 'Explorer',
           Function: () => {
-            window.open(`https://goerli.etherscan.io/tx/${txHash}`, '_blank')
+            window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${txHash}`, '_blank')
           },
         },
       ],
@@ -380,6 +433,15 @@ export default function Home() {
                 >
                   Stats
                 </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  disabled={isDisabled}
+                  className={`pb-4 px-3 mr-8 box-border ${
+                    activeTab === 'history' ? 'border-b-2 border-blue-500' : ''
+                  } disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg`}
+                >
+                  History
+                </button>
 
                 {/* <button
                   onClick={() => setActiveTab('wrapEther')}
@@ -405,6 +467,7 @@ export default function Home() {
               />
             )}
             {isKeyGenerated && activeTab === 'stats' && <StatsComponent />}
+            {isKeyGenerated && activeTab === 'history' && keypair && <HistoryComponent />}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
 

@@ -1,7 +1,7 @@
 import { BG_ZERO } from "@/constants"
 import { Keypair, Utxo, createTransactionData, utxoFactory } from "@/services"
 import { UnspentUtxoData } from "@/services/utxoService/@types"
-import { ChainId } from "@/types"
+import { ChainId, LoggerType } from "@/types"
 import { toChecksumAddress } from "@/utilities"
 import { BigNumber } from "ethers"
 
@@ -63,7 +63,7 @@ export async function getUtxoFromKeypair({
     fee?: BigNumber
     relayer?: string | BigNumber
     recipient?: string | BigNumber
-  }) {
+  }, logger: LoggerType) {
     try {
       const amountWithFee = amount.add(fee)
   
@@ -97,7 +97,8 @@ export async function getUtxoFromKeypair({
           relayer: relayer !== BG_ZERO ? toChecksumAddress(relayer) : undefined,
           fee: fee,
         },
-        keypair
+        keypair,
+        logger
       )
   
       return { extData, args, membershipProof }

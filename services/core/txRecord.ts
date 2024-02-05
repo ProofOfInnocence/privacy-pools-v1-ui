@@ -4,6 +4,7 @@ import { BaseUtxo, GeneratePoiStepParams } from './@types'
 import { poseidonHash, toFixedHex } from './utils'
 
 class TxRecord {
+  public txHash: string | undefined = undefined
   public inputs: BaseUtxo[]
   public outputs: BaseUtxo[]
   public publicAmount: string
@@ -14,16 +15,19 @@ class TxRecord {
     outputs,
     publicAmount = '',
     index = 0,
+    txHash = undefined,
   }: {
     inputs: BaseUtxo[]
     outputs: BaseUtxo[]
     publicAmount?: string
     index?: number
+    txHash?: string
   }) {
     this.inputs = inputs
     this.outputs = outputs
     this.publicAmount = publicAmount
     this.index = index
+    this.txHash = txHash
   }
 
   public hash() {
@@ -78,7 +82,7 @@ class TxRecord {
     if (BigNumber.from(this.publicAmount).lt(BigNumber.from(2).pow(240))) {
       allowedTxRecordsPathIndex = allowedTxRecordsMerkleTree.indexOf(txRecord)
       if (allowedTxRecordsPathIndex < 0) {
-        throw new Error(`txRecord ${txRecord} not found in allowedTxRecordsMerkleTree`)
+        throw new Error(`Your deposits with tx hash ${this.txHash} is not in the association set.`)
       }
       allowedTxRecordsPathElements = allowedTxRecordsMerkleTree.path(allowedTxRecordsPathIndex).pathElements
     } else {

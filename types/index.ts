@@ -65,11 +65,11 @@ export type Inject<T> = (name: string, plugin: Plugin<T> | T) => void
 // export * from './entities'
 
 export type RelayerInfo = {
-  name: string;
-  api: string;
-  fee?: string;
-  rewardAddress?: string;
-};
+  name: string
+  api: string
+  fee?: string
+  rewardAddress?: string
+}
 
 export enum LogLevel {
   DEBUG = 'debug',
@@ -78,3 +78,5 @@ export enum LogLevel {
   ERROR = 'error',
   LOADING = 'loading',
 }
+
+export type LoggerType = (message: string, logLevel: LogLevel) => void

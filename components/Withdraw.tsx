@@ -7,6 +7,8 @@ import { fromWei } from '@/utilities'
 import Image from 'next/image'
 import selectArrowIcon from 'public/images/select-arrow.svg'
 import axios from 'axios'
+import { formatNumber } from '@/utilities/formatNumber'
+import { ETH_PRICE_URL } from '@/constants'
 
 type WithdrawComponentProps = {
   withdrawWithRelayer: (amount: string, fee: string, recipient: string, relayer: RelayerInfo) => void
@@ -25,7 +27,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   const [balance, setBalance] = useState('0')
   const [ethPrice, setEthPrice] = useState('0')
   // use state for fee with string or undefined
-  const [fee, setFee] = useState<string | undefined>(undefined)
+  const [fee, setFee] = useState('0')
 
   // const handleMaxClick = () => {
   //   setAmount(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
@@ -33,14 +35,13 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
 
   useEffect(() => {
     fetchETHPrice()
-    setBalance(parseFloat(fromWei(shieldedBalance.toString())).toFixed(4))
+    setBalance(parseFloat(fromWei(shieldedBalance.toString())).toFixed(5))
   }, [shieldedBalance])
 
   const fetchETHPrice = async () => {
     try {
-      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const response = await axios.get(ETH_PRICE_URL)
       const fetchedEthPrice = response.data.USD
-      console.log('ETH Price:', fetchedEthPrice)
       setEthPrice(fetchedEthPrice)
     } catch (error) {
       console.error('Error fetching ETH prices:', error)
@@ -48,11 +49,8 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   }
 
   const calculatePrice = (inputAmount: string) => {
-    const calculated = (parseFloat(inputAmount) * parseFloat(ethPrice)).toLocaleString('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    })
-    console.log('Calculated Price:', calculated)
+    let calculated = (parseFloat(inputAmount) * parseFloat(ethPrice)).toString()
+    calculated = formatNumber(calculated)
     setCalculatedPrice(calculated)
   }
 
@@ -61,7 +59,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
     setAmount(inputAmount)
 
     try {
-      const response = await axios.get('https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD')
+      const response = await axios.get(ETH_PRICE_URL)
       const fetchedEthPrice = response.data.USD
       setEthPrice(fetchedEthPrice)
       calculatePrice(inputAmount)
@@ -71,7 +69,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   }
 
   const handleMaxClick = () => {
-    setAmount(balance)
+    setAmount(balance.toString())
     calculatePrice(balance)
   }
 
@@ -92,8 +90,6 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   }
 
   const calculateFee = async () => {
-    console.log(fee)
-
     console.log('selectedRelayer:', selectedRelayer)
     console.log('selectedRelayer.fee:', selectedRelayer.fee)
     const serviceFee = BigNumber.from(selectedRelayer.fee)
@@ -150,7 +146,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
         />
         <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
           <p className="relative left-8 text-black text-opacity-40">
-            {amount === '' || amount === undefined || Number.isNaN(amount) ? '$0.00' : calculatedPrice}
+            {amount === '' || amount === undefined || Number.isNaN(amount) ? '$0.0000' : `$${calculatedPrice}`}
           </p>
           <div className="flex relative right-8">
             <p className="text-black text-opacity-40">Balance: {balance} ETH</p>

@@ -1,27 +1,43 @@
 'use client'
 import { useBalance } from 'wagmi'
 import { useEffect, useState } from 'react'
-import { usePublicClient } from 'wagmi'
-const ADDRESS = '0x952198215a9D99bE8CEFc791337B909bF520d98F'
+import { WRAPPED_TOKEN} from '@/constants'
+import { POOL_CONTRACT } from '@/constants'
+import { ChainId } from '@/types'
 
 function StatsComponent() {
-  const [poolBalance, setPoolBalance] = useState<string | undefined>('0')
-  const [txCount, setTxCount] = useState(0)
+  const [poolBalance, setPoolBalance] = useState('0')
 
-  const result = useBalance({
-    address: ADDRESS,
+
+  const WETHbalance = useBalance({
+    address: POOL_CONTRACT[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
+    token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
+    watch: true,
+    onSuccess(data) {
+      const formattedNumber = parseFloat(data.formatted).toFixed(5)
+      setPoolBalance(formattedNumber)
+    },
   })
-  const client = usePublicClient()
 
-  useEffect(() => {
-    setPoolBalance(result.data?.formatted)
 
-    return () => {}
-  }, [])
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const withdrawCount = await client.getTransactionCount({ address: ADDRESS_WITHDRAW })
+  //     setWithdrawTxCount(withdrawCount)
+  //   }
+  //   fetchData()
+    
+  // }, [withdrawTxCount])
 
-  useEffect(() => {
-    client.getTransactionCount({ address: ADDRESS }).then((data) => setTxCount(data))
-  }, [txCount])
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     const depositCount = await client.getTransactionCount({ address: ADDRESS_DEPOSIT })
+  //     setDepositTxCount(depositCount)
+  //   }
+  //   fetchData()
+    
+  // }, [depositTxCount])
+ 
 
   return (
     <div className="pb-4 pt-10 px-6 sm:px-10">
@@ -30,10 +46,10 @@ function StatsComponent() {
           <p className="text-5xl font-bold">{Number(poolBalance).toFixed(3)} ETH</p>
           <small className="text-base font-light mt-3">Total Value Locked</small>
         </div>
-        <div className="flex flex-col items-center justify-center text-black">
-          <p className="text-5xl font-bold">{txCount}</p>
+        {/* <div className="flex flex-col items-center justify-center text-black">
+          <p className="text-5xl font-bold">{depositTxCount + withdrawTxCount}</p>
           <small className="text-base font-light mt-3">Total Transaction Count</small>
-        </div>
+        </div> */}
       </div>
     </div>
   )

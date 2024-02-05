@@ -43,8 +43,8 @@ function Description() {
       <div className="flex flex-col lg:flex-row justify-center items-center px-3 text-white text-sm md:text-base font-normal">
         <p>With Privacy Pools, you can send assets anonymously with full compliance: AML, CTF, KYC, CDD, & more.</p>
         <div className="relative flex items-center justify-center hover:underline ">
-          <a href="#" target="_blank" rel="noopener noreferrer" className="ml-2 font-bold">
-            Click to learn more{' '}
+          <a href="https://0xbow.io/" target="_blank" rel="noopener noreferrer" className="ml-2 font-bold">
+            Click to learn more
           </a>
           <Image
             // onMouseEnter={() => setIsOpen(true)}
