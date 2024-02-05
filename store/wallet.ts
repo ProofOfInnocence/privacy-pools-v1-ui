@@ -94,7 +94,7 @@ export async function handleAllowance(
     })
     logger(APPROVAL_MESSAGE, LogLevel.LOADING)
     const hash = await walletClient.writeContract(request)
-    logger('Waiting for transaction ' + hash, LogLevel.LOADING)
+    logger('Waiting for transaction ', LogLevel.LOADING)
     await publicClient.waitForTransactionReceipt({ hash })
   }
 }

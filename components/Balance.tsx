@@ -4,6 +4,7 @@
 import { fromWei } from 'web3-utils'
 
 function Balance({ shieldedBalance }: { shieldedBalance: number }) {
+  console.log('shieldedBalance', shieldedBalance)
   return (
     <div>
       <div className="text-gray-500 text-sm">Your shielded balance</div>
