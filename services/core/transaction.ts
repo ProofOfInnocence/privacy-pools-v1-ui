@@ -410,11 +410,12 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       console.log('inputjson', inputjson)
       console.log('startjson', startjson)
       logger('Generating membership proof. This may take a while.', LogLevel.LOADING)
-      await workerProvider.generate_public_parameters()
-      const membershipProofTemp = await workerProvider.prove_membership(inputjson, startjson)
-      // membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
+      // await workerProvider.generate_public_parameters()
+      // const membershipProofTemp = await workerProvider.prove_membership(inputjson, startjson)
+      membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
+      const membershipProofJSON = JSON.parse(membershipProof)
       // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSON, associationSet: associationSetLeaves })
-      const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves }
+      // const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves }
       membershipProof = JSON.stringify(membershipProofJSON)
       console.log('MEMBERSHIP PROOF: ', membershipProof)
       

@@ -182,7 +182,7 @@ export default function Home() {
         keypair,
         amount: BigNumber.from(toWei(amount)),
         address: curAddress,
-      })
+      }, logger)
       let txReceipt = await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
       setLoadingMessage('')
       console.log('Tx receipt', txReceipt)
@@ -256,7 +256,7 @@ export default function Home() {
         fee: fee,
         recipient: toChecksumAddress(recipient),
         relayer: toChecksumAddress(relayer.rewardAddress),
-      })
+      }, logger)
       console.log('membershipProof', membershipProof)
 
       console.log('Ext data', extData)
