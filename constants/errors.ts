@@ -27,14 +27,24 @@ const wallet = {
   ALREADY_PROCESSING: 'You already have the pending request in the wallet',
 }
 
+export const errorTypes = {
+  TX_EXEC_ERR: {
+    name: "TransactionExecutionError",
+    message: "User denied transaction signature."
+  },
+  USER_REJECTED_REQ_ERR: {
+    name: "UserRejectedRequestError",
+    message: "User denied message signature."
+  }
+}
+
 const processing = {
   DECLINE_OPERATION: 'You declined an operation',
 }
 
 const errorsGetter = (args: string[]) => ({
-  MAX_WITHDRAW_AMOUNT: `Amount exceeds an available limit of xDAI bridge. Right now the bridge allows withdrawing only ${
-    args[numbers.ZERO]
-  } ETH more.`,
+  MAX_WITHDRAW_AMOUNT: `Amount exceeds an available limit of xDAI bridge. Right now the bridge allows withdrawing only ${args[numbers.ZERO]
+    } ETH more.`,
 })
 
 const errors = {
