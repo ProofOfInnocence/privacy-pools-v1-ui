@@ -29,6 +29,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
     getContractFactory(
+      name: "ERC20PrivacyPool",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20PrivacyPool__factory>;
+    getContractFactory(
+      name: "ETHPrivacyPool",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ETHPrivacyPool__factory>;
+    getContractFactory(
       name: "Hasher",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Hasher__factory>;
@@ -61,9 +69,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.PrivacyPool__factory>;
     getContractFactory(
+      name: "Verifier16",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.Verifier16__factory>;
+    getContractFactory(
       name: "Verifier2",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Verifier2__factory>;
+    getContractFactory(
+      name: "ERC20",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC20__factory>;
 
     getContractAt(
       name: "Ownable",
@@ -85,6 +101,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
+    getContractAt(
+      name: "ERC20PrivacyPool",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20PrivacyPool>;
+    getContractAt(
+      name: "ETHPrivacyPool",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ETHPrivacyPool>;
     getContractAt(
       name: "Hasher",
       address: string,
@@ -126,10 +152,20 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.PrivacyPool>;
     getContractAt(
+      name: "Verifier16",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.Verifier16>;
+    getContractAt(
       name: "Verifier2",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.Verifier2>;
+    getContractAt(
+      name: "ERC20",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC20>;
 
     // default types
     getContractFactory(

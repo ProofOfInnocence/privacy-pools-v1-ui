@@ -38,7 +38,7 @@ import GetPoiSteps from '@/components/GetPoiSteps'
 const relayers: RelayerInfo[] = [
   {
     name: 'Demo Relayer',
-    api: 'http://64.225.93.152:8000',
+    api: 'http://0.0.0.0:8000',
     fee: '10000000000',
     rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F',
   },
@@ -165,16 +165,17 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
-      if (Number(amount) > poolBalance) {
-        throw new Error('Amount cannot be bigger than user balance!')
-      }
+      // if (Number(amount) > poolBalance) {
+      //   console.log(Number(amount), poolBalance);
+      //   throw new Error('Amount cannot be bigger than user balance!')
+      // }
       if (parseFloat(amount) < 0) {
         throw new Error('Amount cannot be negative number!')
       }
       if (isNaN(parseFloat(amount))) {
         throw new Error('Invalid decimal value')
       }
-      await handleAllowance({ publicClient, walletClient, logger }, amount)
+      // await handleAllowance({ publicClient, walletClient, logger }, amount)
       if (!address) {
         throw new Error('Address is null')
       }

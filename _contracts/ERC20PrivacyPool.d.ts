@@ -19,7 +19,7 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface PrivacyPoolInterface extends ethers.utils.Interface {
+interface ERC20PrivacyPoolInterface extends ethers.utils.Interface {
   functions: {
     "FIELD_SIZE()": FunctionFragment;
     "MAX_EXT_AMOUNT()": FunctionFragment;
@@ -40,6 +40,7 @@ interface PrivacyPoolInterface extends ethers.utils.Interface {
     "nextIndex()": FunctionFragment;
     "nullifierHashes(bytes32)": FunctionFragment;
     "roots(uint256)": FunctionFragment;
+    "token()": FunctionFragment;
     "transact(tuple,tuple)": FunctionFragment;
     "verifier2()": FunctionFragment;
     "verifyProof(tuple)": FunctionFragment;
@@ -101,6 +102,7 @@ interface PrivacyPoolInterface extends ethers.utils.Interface {
     values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "roots", values: [BigNumberish]): string;
+  encodeFunctionData(functionFragment: "token", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "transact",
     values: [
@@ -188,6 +190,7 @@ interface PrivacyPoolInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "roots", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "token", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "transact", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "verifier2", data: BytesLike): Result;
   decodeFunctionResult(
@@ -239,7 +242,7 @@ export type NewWithdrawalEvent = TypedEvent<
   }
 >;
 
-export class PrivacyPool extends BaseContract {
+export class ERC20PrivacyPool extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -280,7 +283,7 @@ export class PrivacyPool extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: PrivacyPoolInterface;
+  interface: ERC20PrivacyPoolInterface;
 
   functions: {
     FIELD_SIZE(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -340,6 +343,8 @@ export class PrivacyPool extends BaseContract {
     ): Promise<[boolean]>;
 
     roots(arg0: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
+
+    token(overrides?: CallOverrides): Promise<[string]>;
 
     transact(
       _args: {
@@ -430,6 +435,8 @@ export class PrivacyPool extends BaseContract {
   nullifierHashes(arg0: BytesLike, overrides?: CallOverrides): Promise<boolean>;
 
   roots(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+  token(overrides?: CallOverrides): Promise<string>;
 
   transact(
     _args: {
@@ -523,6 +530,8 @@ export class PrivacyPool extends BaseContract {
     ): Promise<boolean>;
 
     roots(arg0: BigNumberish, overrides?: CallOverrides): Promise<string>;
+
+    token(overrides?: CallOverrides): Promise<string>;
 
     transact(
       _args: {
@@ -717,6 +726,8 @@ export class PrivacyPool extends BaseContract {
 
     roots(arg0: BigNumberish, overrides?: CallOverrides): Promise<BigNumber>;
 
+    token(overrides?: CallOverrides): Promise<BigNumber>;
+
     transact(
       _args: {
         proof: BytesLike;
@@ -818,6 +829,8 @@ export class PrivacyPool extends BaseContract {
       arg0: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
+
+    token(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     transact(
       _args: {
