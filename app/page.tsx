@@ -5,14 +5,14 @@ import { ChainId, LogLevel, LoggerType } from '@/types'
 import { toWei } from 'web3-utils'
 import CustomConnectButton from '@/components/CustomConnectButton'
 import { useAccount, useBalance, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
-import { POOL_CONTRACT, SIGN_MESSAGE, WRAPPED_TOKEN } from '@/constants'
+import { POOL_CONTRACT, SIGN_MESSAGE, WRAPPED_TOKEN, errorTypes } from '@/constants'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Image from 'next/image'
 import bgPattern from '@/public/images/bg-pattern.webp'
 
 import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { encodeFunctionData } from 'viem'
+import { WriteContractErrorType, encodeFunctionData } from 'viem'
 import { BigNumber } from 'ethers'
 import { PrivacyPool__factory as TornadoPool__factory } from '@/_contracts'
 
@@ -33,7 +33,6 @@ import GeneratePool from '@/components/GeneratePool'
 import StatsComponent from '@/components/StatsComponent'
 import HistoryComponent from '@/components/HistoryComponent'
 import { CHAINS } from '@/constants'
-import GetPoiSteps from '@/components/GetPoiSteps'
 
 const relayers: RelayerInfo[] = [
   {
@@ -93,7 +92,8 @@ export default function Home() {
       initKeypair(keypair)
     },
     onError(error) {
-      setError(error.message)
+      if (error.name === errorTypes.USER_REJECTED_REQ_ERR.name) setError(errorTypes.USER_REJECTED_REQ_ERR.message)
+      else setError(error.message)
     },
   })
 
@@ -178,11 +178,14 @@ export default function Home() {
       if (!address) {
         throw new Error('Address is null')
       }
-      const { extData, args } = await prepareTransaction({
-        keypair,
-        amount: BigNumber.from(toWei(amount)),
-        address: curAddress,
-      }, logger)
+      const { extData, args } = await prepareTransaction(
+        {
+          keypair,
+          amount: BigNumber.from(toWei(amount)),
+          address: curAddress,
+        },
+        logger
+      )
       let txReceipt = await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
       setLoadingMessage('')
       console.log('Tx receipt', txReceipt)
@@ -216,7 +219,9 @@ export default function Home() {
       })
     } catch (error) {
       setLoadingMessage('')
-      setError(error.message)
+      if (error.name == errorTypes.TX_EXEC_ERR.name) {
+        setError(errorTypes.TX_EXEC_ERR.message)
+      } else setError(error.message)
     }
   }
 
@@ -248,15 +253,17 @@ export default function Home() {
       const totalAmount = BigNumber.from(toWei(amount))
       const fee = BigNumber.from(feeInWei)
 
-
-      const { extData, args, membershipProof } = await prepareTransaction({
-        keypair,
-        amount: totalAmount.sub(fee),
-        address: toChecksumAddress(curAddress),
-        fee: fee,
-        recipient: toChecksumAddress(recipient),
-        relayer: toChecksumAddress(relayer.rewardAddress),
-      }, logger)
+      const { extData, args, membershipProof } = await prepareTransaction(
+        {
+          keypair,
+          amount: totalAmount.sub(fee),
+          address: toChecksumAddress(curAddress),
+          fee: fee,
+          recipient: toChecksumAddress(recipient),
+          relayer: toChecksumAddress(relayer.rewardAddress),
+        },
+        logger
+      )
       console.log('membershipProof', membershipProof)
 
       console.log('Ext data', extData)
@@ -456,7 +463,9 @@ export default function Home() {
             </div>
 
             {!isKeyGenerated && <GeneratePool initializeKeypair={initializeKeypair} />}
-            {isKeyGenerated && activeTab === 'deposit' && <DepositComponent deposit={deposit} address={toChecksumAddress(connectedAddress)} />}
+            {isKeyGenerated && activeTab === 'deposit' && (
+              <DepositComponent deposit={deposit} address={toChecksumAddress(connectedAddress)} />
+            )}
             {/* {isKeyGenerated && activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />} */}
             {isKeyGenerated && activeTab === 'withdraw' && (
               <WithdrawComponent
