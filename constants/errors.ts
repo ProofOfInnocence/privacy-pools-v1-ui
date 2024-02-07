@@ -35,6 +35,18 @@ export const errorTypes = {
   USER_REJECTED_REQ_ERR: {
     name: "UserRejectedRequestError",
     message: "User denied message signature."
+  },
+  CONTRACT_EXEC_ERR: {
+    name: "ContractFunctionExecutionError",
+    message: "The contract function 'transact' reverted with the following reason: Invalid merkle root"
+  },
+  TX_RECEIPT_NOT_FOUND: {
+    name: "TransactionReceiptNotFoundError",
+    message: "Transaction receipt could not be found. The Transaction may not be processed on a block yet."
+  },
+  TX_NOT_FOUND_ERR: {
+    name: "TransactionNotFoundError",
+    message: "Transaction hash could not be found."
   }
 }
 

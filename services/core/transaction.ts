@@ -360,11 +360,11 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     while (params.inputs.length < 2) {
       const newBlinding = BigNumber.from(
         '0x' +
-          ethers.utils
-            .keccak256(
-              ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
-            )
-            .slice(2, 64)
+        ethers.utils
+          .keccak256(
+            ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
+          )
+          .slice(2, 64)
       ).mod(FIELD_SIZE)
 
       const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
@@ -418,10 +418,10 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       // const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves }
       membershipProof = JSON.stringify(membershipProofJSON)
       console.log('MEMBERSHIP PROOF: ', membershipProof)
-      
+
       logger('Downloading membership proof.', LogLevel.LOADING)
       params.membershipProofURI = await getIPFSCid(membershipProof)
-      
+
       saveAsFile(membershipProof, 'membership_proof_save_to_ipfs_if_you_dont_trust_relayers_pinning_service.txt')
     }
     params.events = await commitmentsService.fetchCommitments(keypair)
