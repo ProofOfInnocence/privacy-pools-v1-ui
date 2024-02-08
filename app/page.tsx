@@ -11,7 +11,7 @@ import axios from 'axios'
 import Image from 'next/image'
 import bgPattern from '@/public/images/bg-pattern.webp'
 
-import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
+import { fromWei, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
 import { WriteContractErrorType, encodeFunctionData } from 'viem'
 import { BigNumber } from 'ethers'
 import { PrivacyPool__factory as TornadoPool__factory } from '@/_contracts'
@@ -247,7 +247,7 @@ export default function Home() {
     const serviceFee = BigNumber.from(transferServiceFee)
     const desiredFee = operationFee.add(serviceFee)
     // amount * withdrawalServiceFee / 100 + desiredFee
-    const share = Number(withdrawalServiceFee) / 100;
+    const share = Number(withdrawalServiceFee) / 100
     const fee = amount.mul(toWei(share.toString())).div(toWei('1', 'ether')).add(desiredFee)
     return fee
   }
@@ -278,17 +278,20 @@ export default function Home() {
         throw new Error('Invalid decimal value')
       }
       // First we generate membership proof
-      const { membershipProof, membershipProofURI } = await prepareMembershipProof({ keypair, address: toChecksumAddress(curAddress) }, logger)
+      const { membershipProof, membershipProofURI } = await prepareMembershipProof(
+        { keypair, address: toChecksumAddress(curAddress) },
+        logger
+      )
 
       // Then we calculate the fee and the total amount
       const { transferServiceFee, withdrawalServiceFee } = await getRelayerFees(relayer)
-      console.log('Relayer fees', transferServiceFee, withdrawalServiceFee);
+      console.log('Relayer fees', transferServiceFee, withdrawalServiceFee)
 
       const totalAmount = BigNumber.from(toWei(amount))
 
       const fee = await calculateRelayerFee(totalAmount, transferServiceFee, withdrawalServiceFee)
 
-      console.log(totalAmount, fee);
+      console.log(totalAmount, fee)
 
       // After we generate transaction details.
       const { extData, args } = await prepareTransaction(
@@ -327,7 +330,7 @@ export default function Home() {
       logger('', LogLevel.LOADING)
 
       async function onSendingApproval() {
-        try{
+        try {
           logger('Sending to relayer', LogLevel.LOADING)
           const res = await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
           await checkWithdrawal(relayers[0], res, logger)
@@ -339,7 +342,7 @@ export default function Home() {
 
       setModalData({
         title: 'Are you sure',
-        text: `You are withdrawing with a membership proof to a set 0xbow provided, with a fee of ${toWei(fee.toString())} wei. Do you want to proceed?`,
+        text: `You are withdrawing with a membership proof to a set 0xbow provided.`,
         operations: [
           {
             ButtonName: 'OK',
@@ -368,9 +371,8 @@ export default function Home() {
             isVisible: false,
           }))
         },
+        feeData: fromWei(fee, 'ether'),
       })
-
-
 
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
     } catch (error) {

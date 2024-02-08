@@ -1,17 +1,16 @@
 'use client'
 import { useBalance } from 'wagmi'
 import { useEffect, useState } from 'react'
-import { WRAPPED_TOKEN} from '@/constants'
+import { WRAPPED_TOKEN } from '@/constants'
 import { POOL_CONTRACT } from '@/constants'
 import { ChainId } from '@/types'
 
 function StatsComponent() {
   const [poolBalance, setPoolBalance] = useState('0')
 
-
   const WETHbalance = useBalance({
     address: POOL_CONTRACT[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
-    token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
+    chainId: ChainId.ETHEREUM_GOERLI,
     watch: true,
     onSuccess(data) {
       const formattedNumber = parseFloat(data.formatted).toFixed(5)
@@ -19,14 +18,13 @@ function StatsComponent() {
     },
   })
 
-
   // useEffect(() => {
   //   const fetchData = async () => {
   //     const withdrawCount = await client.getTransactionCount({ address: ADDRESS_WITHDRAW })
   //     setWithdrawTxCount(withdrawCount)
   //   }
   //   fetchData()
-    
+
   // }, [withdrawTxCount])
 
   // useEffect(() => {
@@ -35,9 +33,8 @@ function StatsComponent() {
   //     setDepositTxCount(depositCount)
   //   }
   //   fetchData()
-    
+
   // }, [depositTxCount])
- 
 
   return (
     <div className="pb-4 pt-10 px-6 sm:px-10">

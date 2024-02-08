@@ -9,9 +9,10 @@ export interface ModalProps {
   operations: Operation[]
   isVisible: boolean
   onClose: () => void
+  feeData?: string
 }
 
-function Modal({ title, text, operations, isVisible, onClose }: ModalProps) {
+function Modal({ title, text, operations, isVisible, onClose, feeData }: ModalProps) {
   if (!isVisible) {
     return null
   }
@@ -28,9 +29,15 @@ function Modal({ title, text, operations, isVisible, onClose }: ModalProps) {
       <div className="bg-white rounded-lg shadow-[0_7px_50px_0_rgba(0,0,0,0.20)] py-8 px-6 w-96 z-50 ">
         <h3 className="text-xl font-bold mb-8">{title}</h3>
         <p
-          className="overflow-hidden overflow-ellipsis text-base font-bold opacity-50 mb-8"
+          className="overflow-hidden overflow-ellipsis text-base font-bold opacity-50 mb-4"
           dangerouslySetInnerHTML={createMarkup(text)}
         ></p>
+        {feeData && (
+          <p className="overflow-hidden overflow-ellipsis text-base font-bold mb-6">
+            Withdrawal Fee: <span className="opacity-50">{feeData} ETH</span>
+          </p>
+        )}
+        {feeData && <p className="overflow-hidden overflow-ellipsis text-base font-bold opacity-50 mb-8">Do you want to proceed?</p>}
 
         <div className="flex justify-end space-x-4">
           {operations.map((op, index) => (
