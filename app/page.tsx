@@ -12,7 +12,7 @@ import Image from 'next/image'
 import bgPattern from '@/public/images/bg-pattern.webp'
 
 import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { WriteContractErrorType, encodeFunctionData } from 'viem'
+import { encodeFunctionData } from 'viem'
 import { BigNumber } from 'ethers'
 import { PrivacyPool__factory as TornadoPool__factory } from '@/_contracts'
 
@@ -417,6 +417,7 @@ export default function Home() {
               alt="background pattern"
               width={1441}
               height={1025}
+              priority={true}
             />
           </div>
 
