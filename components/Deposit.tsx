@@ -18,7 +18,7 @@ function DepositComponent({ deposit, address }: DepositProps) {
   const [balance, setBalance] = useState('0')
   const [ethPrice, setEthPrice] = useState('0')
 
-  const WETHbalance = useBalance({
+  const ETHbalance = useBalance({
     address: address as `0x${string}`,
     chainId: ChainId.ETHEREUM_GOERLI,
     watch: true,

@@ -28,7 +28,6 @@ export const WRAPPED_TOKEN: { [chainId in ChainId]: string } = {
 }
 
 export const ETH_MAIN_TOKEN: { [chainId in ChainId]: string } = {
-  // [ChainId.MAINNET]: '', // WETH on mainnet
   [ChainId.ETHEREUM_GOERLI]: '0xdD69DB25F6D620A7baD3023c5d32761D353D3De9' // GETH on ethereum goerli
 }
 
