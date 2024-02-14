@@ -43,7 +43,7 @@ export async function transact(
     functionName: 'transact',
     args: [args, extData],
     account: address,
-    value: extData.extAmount
+    value: BigInt(extData.extAmount)
   })
   logger('Confirm transaction in your wallet', LogLevel.LOADING)
   const hash = await walletClient.writeContract(request)

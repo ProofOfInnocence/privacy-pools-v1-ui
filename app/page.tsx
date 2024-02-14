@@ -5,7 +5,7 @@ import { ChainId, LogLevel, LoggerType } from '@/types'
 import { toWei } from 'web3-utils'
 import CustomConnectButton from '@/components/CustomConnectButton'
 import { useAccount, useBalance, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
-import { POOL_CONTRACT, SIGN_MESSAGE, WRAPPED_TOKEN, errorTypes } from '@/constants'
+import { POOL_CONTRACT, SIGN_MESSAGE, WRAPPED_TOKEN, errorTypes, numbers } from '@/constants'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Image from 'next/image'
@@ -38,7 +38,7 @@ import { getGasPriceFromRpc } from '@/services/gasOracle'
 const relayers: RelayerInfo[] = [
   {
     name: 'Demo Relayer',
-    api: 'http://0.0.0.0:8000',
+    api: 'http://64.225.93.152:8000',
     fee: '10000000000',
     rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F',
   },
@@ -242,8 +242,9 @@ export default function Home() {
 
   async function calculateRelayerFee(amount: BigNumber, transferServiceFee: string, withdrawalServiceFee: number) {
     const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_GOERLI)
+    console.log("GAS FEE FOR FAST IS", fast)
     const gasLimit = BigNumber.from(2000000)
-    const operationFee = BigNumber.from(fast).mul(gasLimit)
+    const operationFee = BigNumber.from(fast).mul(gasLimit).mul('120').div(numbers.ONE_HUNDRED)
     const serviceFee = BigNumber.from(transferServiceFee)
     const desiredFee = operationFee.add(serviceFee)
     // amount * withdrawalServiceFee / 100 + desiredFee

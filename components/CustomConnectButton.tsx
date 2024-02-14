@@ -23,7 +23,7 @@ function CustomConnectButton({ shieldedBalance, isKeyGenerated }: { shieldedBala
         />
 
         <p className="font-normal text-white py-2">
-          Private Balance: <span className="font-bold">{parseFloat(fromWei(shieldedBalance.toString())).toFixed(4)} ETH</span>
+          Private Balance: <span className="font-bold">{parseFloat(fromWei(shieldedBalance.toString()))} ETH</span>
         </p>
       </div>
     )
@@ -42,7 +42,7 @@ function CustomConnectButton({ shieldedBalance, isKeyGenerated }: { shieldedBala
         />
 
         <p className="font-normal text-white py-2">
-          Private Balance: <span className="font-bold">{parseFloat(fromWei(shieldedBalance.toString())).toFixed(4)} ETH</span>
+          Private Balance: <span className="font-bold">{parseFloat(fromWei(shieldedBalance.toString()))} ETH</span>
         </p>
       </div>
     )
