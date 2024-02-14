@@ -1,6 +1,6 @@
 'use client'
 
-import { WRAPPED_TOKEN, ETH_PRICE_URL } from '@/constants'
+import { ETH_MAIN_TOKEN, WRAPPED_TOKEN, ETH_PRICE_URL } from '@/constants'
 import { ChainId } from '@/types'
 import { ChangeEvent, useEffect, useState } from 'react'
 import { useBalance } from 'wagmi'
@@ -18,9 +18,9 @@ function DepositComponent({ deposit, address }: DepositProps) {
   const [balance, setBalance] = useState('0')
   const [ethPrice, setEthPrice] = useState('0')
 
-  const WETHbalance = useBalance({
+  const ETHbalance = useBalance({
     address: address as `0x${string}`,
-    token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
+    chainId: ChainId.ETHEREUM_GOERLI,
     watch: true,
     onSuccess(data) {
       const formattedNumber = parseFloat(data.formatted).toFixed(5)
@@ -84,10 +84,10 @@ function DepositComponent({ deposit, address }: DepositProps) {
           onChange={(e) => handleInputUpdate(e)}
           className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
-        <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
-          <p className="relative left-8 text-black text-opacity-40">
+        <div className="flex justify-end absolute right-0 left-0 bottom-8 text-lg font-bold">
+          {/* <p className="relative left-8 text-black text-opacity-40">
             {amount === '' || amount === undefined || Number.isNaN(amount) ? '$0.0000' : `$${calculatedPrice}`}
-          </p>
+          </p> */}
           <div className="flex relative right-8">
             <p className="text-black text-opacity-40">Balance: {balance} ETH</p>
             <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">

@@ -27,6 +27,10 @@ export const WRAPPED_TOKEN: { [chainId in ChainId]: string } = {
   [ChainId.ETHEREUM_GOERLI]: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6', // WETH on ethereum goerli
 }
 
+export const ETH_MAIN_TOKEN: { [chainId in ChainId]: string } = {
+  [ChainId.ETHEREUM_GOERLI]: '0xdD69DB25F6D620A7baD3023c5d32761D353D3De9' // GETH on ethereum goerli
+}
+
 export const RPC_LIST: { [chainId in ChainId]: string } = {
   // [ChainId.BSC]: 'https://bsc-mainnet.chainnodes.org/d692ae63-0a7e-43e0-9da9-fe4f4cc6c607',
   // [ChainId.MAINNET]: 'https://mainnet.chainnodes.org/d692ae63-0a7e-43e0-9da9-fe4f4cc6c607',
