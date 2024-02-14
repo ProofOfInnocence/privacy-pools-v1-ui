@@ -29,7 +29,6 @@ interface MerkleTreeWithHistoryMockInterface extends ethers.utils.Interface {
     "getLastRoot()": FunctionFragment;
     "hashLeftRight(bytes32,bytes32)": FunctionFragment;
     "hasher()": FunctionFragment;
-    "initialize()": FunctionFragment;
     "insert(bytes32,bytes32)": FunctionFragment;
     "isKnownRoot(bytes32)": FunctionFragment;
     "levels()": FunctionFragment;
@@ -68,10 +67,6 @@ interface MerkleTreeWithHistoryMockInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "hasher", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "initialize",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "insert",
     values: [BytesLike, BytesLike]
   ): string;
@@ -107,7 +102,6 @@ interface MerkleTreeWithHistoryMockInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "hasher", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "insert", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "isKnownRoot",
@@ -188,10 +182,6 @@ export class MerkleTreeWithHistoryMock extends BaseContract {
 
     hasher(overrides?: CallOverrides): Promise<[string]>;
 
-    initialize(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     insert(
       _leaf1: BytesLike,
       _leaf2: BytesLike,
@@ -235,10 +225,6 @@ export class MerkleTreeWithHistoryMock extends BaseContract {
 
   hasher(overrides?: CallOverrides): Promise<string>;
 
-  initialize(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   insert(
     _leaf1: BytesLike,
     _leaf2: BytesLike,
@@ -278,8 +264,6 @@ export class MerkleTreeWithHistoryMock extends BaseContract {
     ): Promise<string>;
 
     hasher(overrides?: CallOverrides): Promise<string>;
-
-    initialize(overrides?: CallOverrides): Promise<void>;
 
     insert(
       _leaf1: BytesLike,
@@ -324,10 +308,6 @@ export class MerkleTreeWithHistoryMock extends BaseContract {
 
     hasher(overrides?: CallOverrides): Promise<BigNumber>;
 
-    initialize(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     insert(
       _leaf1: BytesLike,
       _leaf2: BytesLike,
@@ -371,10 +351,6 @@ export class MerkleTreeWithHistoryMock extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     hasher(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    initialize(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
 
     insert(
       _leaf1: BytesLike,

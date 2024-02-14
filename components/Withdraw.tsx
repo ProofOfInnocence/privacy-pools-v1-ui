@@ -144,10 +144,10 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
           min={0}
           className="flex-1 px-8 py-20 bg-[#F5F5F5] rounded-[40px] text-5xl w-full text-black placeholder:text-black placeholder:text-opacity-10 transition-all duration-150 hover:bg-[#eaeaea]"
         />
-        <div className="flex justify-between absolute right-0 left-0 bottom-8 text-lg font-bold">
-          <p className="relative left-8 text-black text-opacity-40">
+        <div className="flex justify-end absolute right-0 left-0 bottom-8 text-lg font-bold">
+          {/* <p className="relative left-8 text-black text-opacity-40">
             {amount === '' || amount === undefined || Number.isNaN(amount) ? '$0.0000' : `$${calculatedPrice}`}
-          </p>
+          </p> */}
           <div className="flex relative right-8">
             <p className="text-black text-opacity-40">Balance: {balance} ETH</p>
             <button onClick={handleMaxClick} className="ml-2 pl-2 text-[#1A73E8] hover:text-opacity-70">
@@ -186,27 +186,13 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
         </div>
       </div>
 
-      {!fee && <p className="mb-8 ml-6 text-lg font-bold">Calculating fee...</p>}
-      {fee && (
-        <>
-          <p className="mb-8 ml-6 text-lg font-bold">
-            Withdrawal Fee: <span className="text-black text-opacity-40">{fromWei(fee)}</span>
-          </p>
-          {/* {recipient && amount && (
-            <p>
-              Address {shortenAddress(recipient)} will get {fromWei(toWei(amount).sub(BigNumber.from(fee)))} {TOKEN_SYMBOL}
-            </p>
-          )} */}
-
-          <button
-            onClick={handleWithdrawClick}
-            disabled={amount === '' || amount === undefined || recipient === '' || recipient === undefined}
-            className="px-4 py-3 text-lg text-white font-bold bg-[#1A73E8] rounded-[40px] hover:bg-[#1a73e8c4] hover:cursor-pointer disabled:text-black disabled:text-opacity-30 disabled:bg-[#F5F5F5] disabled:cursor-not-allowed w-full"
-          >
-            Withdraw
-          </button>
-        </>
-      )}
+      <button
+        onClick={handleWithdrawClick}
+        disabled={amount === '' || amount === undefined || recipient === '' || recipient === undefined}
+        className="px-4 py-3 text-lg text-white font-bold bg-[#1A73E8] rounded-[40px] hover:bg-[#1a73e8c4] hover:cursor-pointer disabled:text-black disabled:text-opacity-30 disabled:bg-[#F5F5F5] disabled:cursor-not-allowed w-full"
+      >
+        Withdraw
+      </button>
     </div>
   )
 }

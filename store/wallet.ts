@@ -36,12 +36,14 @@ export async function transact(
   }
 
   const [address] = await walletClient.getAddresses()
+  console.log("You should send ", extData.extAmount);
   const { request } = await publicClient.simulateContract({
     address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI]),
     abi: TornadoPool__factory.abi,
     functionName: 'transact',
     args: [args, extData],
     account: address,
+    value: BigInt(extData.extAmount)
   })
   logger('Confirm transaction in your wallet', LogLevel.LOADING)
   const hash = await walletClient.writeContract(request)

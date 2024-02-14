@@ -7,7 +7,7 @@ import MerkleTree from 'fixed-merkle-tree'
 import axios, { AxiosResponse } from 'axios'
 import { BytesLike } from '@ethersproject/bytes'
 
-import { BG_ZERO, FIELD_SIZE, numbers, ZERO_LEAF } from '@/constants'
+import { BG_ZERO, FIELD_SIZE, numbers, POOL_CONTRACT, ZERO_LEAF } from '@/constants'
 
 import {
   ArgsProof,
@@ -18,6 +18,7 @@ import {
   PrepareTxParams,
   EstimateTransactParams,
   CreateTransactionParams,
+  BaseUtxo,
 } from './@types'
 
 import { Utxo } from './utxo'
@@ -326,31 +327,116 @@ export type TxRecordEvent = {
  */
 
 async function getAssociationSet(chain: ChainId) {
-  const tornadoPool = getTornadoPool(chain)
-  const API = 'https://api.0xbow.io/api/v1/inclusion?chain=goerli&contractAddr=0x49bf92fa466854637ae5a4cd00e97ddea43c0767'
-  const response = await axios.get(API)
-  const associationSet: ApiResponse = response.data
-  // make txRecordEvents filtering by decisionStatus == "approved"
-  const txRecordEvents: TxRecordEvent[] = associationSet
-    .filter((x: ApiResponseObject) => x.decisionStatus == 'approved')
-    .map((x: ApiResponseObject) => {
-      return {
-        blockNumber: x.blockTimestamp,
-        transactionHash: x.txHash,
-        index: x.recordIndex,
-        inputNullifier1: '0x' + x.nullifierHash1,
-        inputNullifier2: '0x' + x.nullifierHash2,
-        outputCommitment1: '0x' + x.outputCommitment1,
-        outputCommitment2: '0x' + x.outputCommitment2,
-        publicAmount: x.publicAmount,
-      } as TxRecordEvent
+  try {
+    const contractAddr = POOL_CONTRACT[chain];
+    const API = 'https://api.0xbow.io/api/v1/inclusion?chain=goerli&contractAddr=' + contractAddr;
+    const response = await axios.get(API)
+    console.log("ASP Response:", response);
+    const associationSet: ApiResponse = response.data || [];
+
+    // make txRecordEvents filtering by decisionStatus == "approved"
+    const txRecordEvents: TxRecordEvent[] = associationSet
+      .filter((x: ApiResponseObject) => x.decisionStatus == 'approved')
+      .map((x: ApiResponseObject) => {
+        return {
+          blockNumber: x.blockTimestamp,
+          transactionHash: x.txHash,
+          index: x.recordIndex,
+          inputNullifier1: '0x' + x.nullifierHash1,
+          inputNullifier2: '0x' + x.nullifierHash2,
+          outputCommitment1: '0x' + x.outputCommitment1,
+          outputCommitment2: '0x' + x.outputCommitment2,
+          publicAmount: x.publicAmount,
+        } as TxRecordEvent
+      })
+    return txRecordEvents
+  } catch (err) {
+    return [] // TODO: Fix this
+  }
+}
+async function createMembershipProof(params: CreateTransactionParams, keypair: Keypair, logger: LoggerType) {
+  try {
+    let membershipProof
+    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
+    params.outputs = []
+    while (params.outputs.length < 2) {
+      params.outputs.push(new Utxo({ keypair }))
+    }
+    params.inputs = params.inputs || []
+    while (params.inputs.length < 2) {
+      const newBlinding = BigNumber.from(
+        '0x' +
+        ethers.utils
+          .keccak256(
+            ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
+          )
+          .slice(2, 64)
+      ).mod(FIELD_SIZE)
+
+      const newUtxo = new Utxo({ amount: BG_ZERO, keypair, blinding: newBlinding, index: 0 })
+      params.inputs.push(newUtxo)
+    }
+
+    // print input blindings
+    console.log('INPUT BLINDINGS: ')
+    for (const input of params.inputs) {
+      console.log(input.blinding)
+    }
+
+    const txRecordEvents = await workerProvider.getTxRecordEvents()
+
+    const associationSet = await getAssociationSet(ChainId.ETHEREUM_GOERLI)
+    console.log('TX RECORD EVENTS: ', txRecordEvents)
+
+    params.events = await commitmentsService.fetchCommitments(keypair)
+
+    params.fee = params.fee || BG_ZERO
+    let extAmount = BigNumber.from(params.fee)
+      .add(params.outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+      .sub(params.inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+    const publicAmount = BigNumber.from(extAmount).sub(params.fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString()
+    const finalTxRecord = new TxRecord({
+      publicAmount,
+      inputs: params.inputs,
+      outputs: params.outputs,
     })
-  return txRecordEvents
+    console.log('COMMITMENTS: ', params.events)
+
+    const { poiInputs: membershipProofInputs, associationSetLeaves } = await proveInclusion(keypair, params, {
+      txRecordEvents,
+      associationSet,
+      nullifierToUtxo: undefined,
+      commitmentToUtxo: undefined,
+      finalTxRecord: finalTxRecord,
+    })
+    const inputjson = JSON.stringify(membershipProofInputs)
+    const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProofInputs[0].step_in).toHexString()] })
+    console.log('inputjson', inputjson)
+    console.log('startjson', startjson)
+    logger('Generating membership proof. This may take a while.', LogLevel.LOADING)
+    // await workerProvider.generate_public_parameters()
+    // const membershipProofTemp = await workerProvider.prove_membership(inputjson, startjson)
+    membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
+    const membershipProofJSON = JSON.parse(membershipProof)
+    // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSON, associationSet: associationSetLeaves })
+    // const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves }
+    membershipProof = JSON.stringify(membershipProofJSON)
+    console.log('MEMBERSHIP PROOF: ', membershipProof)
+
+    logger('Downloading membership proof.', LogLevel.LOADING)
+    const membershipProofURI = await getIPFSCid(membershipProof)
+
+    saveAsFile(membershipProof, 'membership_proof_save_to_ipfs_if_you_dont_trust_relayers_pinning_service.txt')
+
+    return { membershipProof, membershipProofURI }
+  } catch (err) {
+    throw new Error(err.message)
+  }
 }
 
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair, logger: LoggerType) {
   try {
-    let membershipProof
+    // let membershipProof
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
     params.outputs = params.outputs || []
     while (params.outputs.length < 2) {
@@ -377,63 +463,63 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
       console.log(input.blinding)
     }
 
-    if (params.recipient) {
-      const txRecordEvents = await workerProvider.getTxRecordEvents()
+    // if (params.recipient) {
+    //   const txRecordEvents = await workerProvider.getTxRecordEvents()
 
-      const associationSet = await getAssociationSet(ChainId.ETHEREUM_GOERLI)
-      console.log('TX RECORD EVENTS: ', txRecordEvents)
+    //   const associationSet = await getAssociationSet(ChainId.ETHEREUM_GOERLI)
+    //   console.log('TX RECORD EVENTS: ', txRecordEvents)
 
-      params.events = await commitmentsService.fetchCommitments(keypair)
+    //   params.events = await commitmentsService.fetchCommitments(keypair)
 
-      params.fee = params.fee || BG_ZERO
-      let extAmount = BigNumber.from(params.fee)
-        .add(params.outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
-        .sub(params.inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+    //   params.fee = params.fee || BG_ZERO
+    //   let extAmount = BigNumber.from(params.fee)
+    //     .add(params.outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
+    //     .sub(params.inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
 
-      const publicAmount = BigNumber.from(extAmount).sub(params.fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString()
-      const finalTxRecord = new TxRecord({
-        publicAmount,
-        inputs: params.inputs,
-        outputs: params.outputs,
-      })
-      console.log('COMMITMENTS: ', params.events)
+    //   const publicAmount = BigNumber.from(extAmount).sub(params.fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString()
+    //   const finalTxRecord = new TxRecord({
+    //     publicAmount,
+    //     inputs: params.inputs,
+    //     outputs: params.outputs,
+    //   })
+    //   console.log('COMMITMENTS: ', params.events)
 
-      const { poiInputs: membershipProofInputs, associationSetLeaves } = await proveInclusion(keypair, params, {
-        txRecordEvents,
-        associationSet,
-        nullifierToUtxo: undefined,
-        commitmentToUtxo: undefined,
-        finalTxRecord: finalTxRecord,
-      })
-      const inputjson = JSON.stringify(membershipProofInputs)
-      const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProofInputs[0].step_in).toHexString()] })
-      console.log('inputjson', inputjson)
-      console.log('startjson', startjson)
-      logger('Generating membership proof. This may take a while.', LogLevel.LOADING)
-      // await workerProvider.generate_public_parameters()
-      // const membershipProofTemp = await workerProvider.prove_membership(inputjson, startjson)
-      membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
-      const membershipProofJSON = JSON.parse(membershipProof)
-      // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSON, associationSet: associationSetLeaves })
-      // const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves }
-      membershipProof = JSON.stringify(membershipProofJSON)
-      console.log('MEMBERSHIP PROOF: ', membershipProof)
+    //   const { poiInputs: membershipProofInputs, associationSetLeaves } = await proveInclusion(keypair, params, {
+    //     txRecordEvents,
+    //     associationSet,
+    //     nullifierToUtxo: undefined,
+    //     commitmentToUtxo: undefined,
+    //     finalTxRecord: finalTxRecord,
+    //   })
+    //   const inputjson = JSON.stringify(membershipProofInputs)
+    //   const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProofInputs[0].step_in).toHexString()] })
+    //   console.log('inputjson', inputjson)
+    //   console.log('startjson', startjson)
+    //   logger('Generating membership proof. This may take a while.', LogLevel.LOADING)
+    //   // await workerProvider.generate_public_parameters()
+    //   // const membershipProofTemp = await workerProvider.prove_membership(inputjson, startjson)
+    //   membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
+    //   const membershipProofJSON = JSON.parse(membershipProof)
+    //   // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSON, associationSet: associationSetLeaves })
+    //   // const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves }
+    //   membershipProof = JSON.stringify(membershipProofJSON)
+    //   console.log('MEMBERSHIP PROOF: ', membershipProof)
 
-      logger('Downloading membership proof.', LogLevel.LOADING)
-      params.membershipProofURI = await getIPFSCid(membershipProof)
+    //   logger('Downloading membership proof.', LogLevel.LOADING)
+    //   params.membershipProofURI = await getIPFSCid(membershipProof)
 
-      saveAsFile(membershipProof, 'membership_proof_save_to_ipfs_if_you_dont_trust_relayers_pinning_service.txt')
-    }
+    //   saveAsFile(membershipProof, 'membership_proof_save_to_ipfs_if_you_dont_trust_relayers_pinning_service.txt')
+    // }
     params.events = await commitmentsService.fetchCommitments(keypair)
 
     logger('Sending transaction...', LogLevel.LOADING)
 
     const { extData, args, amount } = await prepareTransaction(params)
 
-    return { extData, args, amount, membershipProof }
+    return { extData, args, amount }
   } catch (err) {
     throw new Error(err.message)
   }
 }
 
-export { createTransactionData }
+export { createTransactionData, createMembershipProof }

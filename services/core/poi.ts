@@ -171,7 +171,7 @@ async function proveInclusion(
   console.log("Steps->", steps)
   console.log("txRecordsMerkleTree->", txRecordEvents)
   const txRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
-  const allowedTxRecordsMerkleTree = buildTxRecordMerkleTree({ events: associationSet })
+  const allowedTxRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
   console.log("allowedTxRecordsMerkleTree->", allowedTxRecordsMerkleTree)
   let accInnocentCommitments = [ZERO_LEAF, ZERO_LEAF]
   console.log("accInnocentCommitments->", accInnocentCommitments)

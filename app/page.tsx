@@ -5,14 +5,15 @@ import { ChainId, LogLevel, LoggerType } from '@/types'
 import { toWei } from 'web3-utils'
 import CustomConnectButton from '@/components/CustomConnectButton'
 import { useAccount, useBalance, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
-import { POOL_CONTRACT, SIGN_MESSAGE, WRAPPED_TOKEN, errorTypes } from '@/constants'
+import { POOL_CONTRACT, SIGN_MESSAGE, WRAPPED_TOKEN, errorTypes, numbers } from '@/constants'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Image from 'next/image'
 import bgPattern from '@/public/images/bg-pattern.webp'
 
-import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { encodeFunctionData } from 'viem'
+
+import { fromWei, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
+import { WriteContractErrorType, encodeFunctionData } from 'viem'
 import { BigNumber } from 'ethers'
 import { PrivacyPool__factory as TornadoPool__factory } from '@/_contracts'
 
@@ -21,7 +22,7 @@ import DepositComponent from '@/components/Deposit'
 import WithdrawComponent from '@/components/Withdraw'
 import Logo from '@/components/Logo'
 import { RelayerInfo } from '@/types'
-import { getUtxoFromKeypair, prepareTransaction } from '@/store/account'
+import { getUtxoFromKeypair, prepareMembershipProof, prepareTransaction } from '@/store/account'
 import ErrorModal from '@/components/Error'
 import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
 import LoadingSpinner from '@/components/Loading'
@@ -33,6 +34,7 @@ import GeneratePool from '@/components/GeneratePool'
 import StatsComponent from '@/components/StatsComponent'
 import HistoryComponent from '@/components/HistoryComponent'
 import { CHAINS } from '@/constants'
+import { getGasPriceFromRpc } from '@/services/gasOracle'
 
 const relayers: RelayerInfo[] = [
   {
@@ -165,16 +167,17 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
-      if (Number(amount) > poolBalance) {
-        throw new Error('Amount cannot be bigger than user balance!')
-      }
+      // if (Number(amount) > poolBalance) {
+      //   console.log(Number(amount), poolBalance);
+      //   throw new Error('Amount cannot be bigger than user balance!')
+      // }
       if (parseFloat(amount) < 0) {
         throw new Error('Amount cannot be negative number!')
       }
       if (isNaN(parseFloat(amount))) {
         throw new Error('Invalid decimal value')
       }
-      await handleAllowance({ publicClient, walletClient, logger }, amount)
+      // await handleAllowance({ publicClient, walletClient, logger }, amount)
       if (!address) {
         throw new Error('Address is null')
       }
@@ -233,6 +236,32 @@ export default function Home() {
     }
   }
 
+  async function getRelayerFees(relayer: RelayerInfo): Promise<{ transferServiceFee: string; withdrawalServiceFee: number }> {
+    try {
+      const { data: res } = await axios.get(`${relayer.api}/status`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      return { transferServiceFee: res.serviceFee.transfer, withdrawalServiceFee: res.serviceFee.withdrawal }
+    } catch (error) {
+      throw new Error('Failed to get relayer fees')
+    }
+  }
+
+  async function calculateRelayerFee(amount: BigNumber, transferServiceFee: string, withdrawalServiceFee: number) {
+    const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_GOERLI)
+    console.log("GAS FEE FOR FAST IS", fast)
+    const gasLimit = BigNumber.from(2000000)
+    const operationFee = BigNumber.from(fast).mul(gasLimit).mul('120').div(numbers.ONE_HUNDRED)
+    const serviceFee = BigNumber.from(transferServiceFee)
+    const desiredFee = operationFee.add(serviceFee)
+    // amount * withdrawalServiceFee / 100 + desiredFee
+    const share = Number(withdrawalServiceFee) / 100
+    const fee = amount.mul(toWei(share.toString())).div(toWei('1', 'ether')).add(desiredFee)
+    return fee
+  }
+
   async function withdrawWithRelayer(amount: string, feeInWei: string, recipient: string, relayer: RelayerInfo) {
     try {
       setLoadingMessage('Withdrawing...')
@@ -258,10 +287,24 @@ export default function Home() {
       if (isNaN(parseFloat(amount))) {
         throw new Error('Invalid decimal value')
       }
-      const totalAmount = BigNumber.from(toWei(amount))
-      const fee = BigNumber.from(feeInWei)
+      // First we generate membership proof
+      const { membershipProof, membershipProofURI } = await prepareMembershipProof(
+        { keypair, address: toChecksumAddress(curAddress) },
+        logger
+      )
 
-      const { extData, args, membershipProof } = await prepareTransaction(
+      // Then we calculate the fee and the total amount
+      const { transferServiceFee, withdrawalServiceFee } = await getRelayerFees(relayer)
+      console.log('Relayer fees', transferServiceFee, withdrawalServiceFee)
+
+      const totalAmount = BigNumber.from(toWei(amount))
+
+      const fee = await calculateRelayerFee(totalAmount, transferServiceFee, withdrawalServiceFee)
+
+      console.log(totalAmount, fee)
+
+      // After we generate transaction details.
+      const { extData, args } = await prepareTransaction(
         {
           keypair,
           amount: totalAmount.sub(fee),
@@ -269,6 +312,7 @@ export default function Home() {
           fee: fee,
           recipient: toChecksumAddress(recipient),
           relayer: toChecksumAddress(relayer.rewardAddress),
+          membershipProofURI,
         },
         logger
       )
@@ -293,13 +337,52 @@ export default function Home() {
       } catch (error) {
         console.log('Error in simulate contract', error.message)
       }
-      const functionData = encodeFunctionData({ abi: TornadoPool__factory.abi, functionName: 'transact', args: [args, newExtData] })
-      console.log('Function data', functionData)
+      logger('', LogLevel.LOADING)
 
-      logger('Sending to relayer', LogLevel.LOADING)
+      async function onSendingApproval() {
+        try {
+          logger('Sending to relayer', LogLevel.LOADING)
+          const res = await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
+          await checkWithdrawal(relayers[0], res, logger)
+        } catch (error) {
+          setLoadingMessage('')
+          setError(error.message)
+        }
+      }
 
-      const res = await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
-      await checkWithdrawal(relayers[0], res, logger)
+      setModalData({
+        title: 'Are you sure',
+        text: `You are withdrawing with a membership proof to a set 0xbow provided.`,
+        operations: [
+          {
+            ButtonName: 'OK',
+            Function: () => {
+              setModalData((prevModalData) => ({
+                ...prevModalData,
+                isVisible: false,
+              }))
+              onSendingApproval()
+            },
+          },
+          {
+            ButtonName: 'Cancel',
+            Function: () => {
+              setModalData((prevModalData) => ({
+                ...prevModalData,
+                isVisible: false,
+              }))
+            },
+          },
+        ],
+        isVisible: true,
+        onClose: () => {
+          setModalData((prevModalData) => ({
+            ...prevModalData,
+            isVisible: false,
+          }))
+        },
+        feeData: fromWei(fee, 'ether'),
+      })
 
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
     } catch (error) {
