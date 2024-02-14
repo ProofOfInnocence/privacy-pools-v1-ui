@@ -211,7 +211,6 @@ async function prepareTransaction({
       amount,
     }
   } catch (err) {
-    console.error('prepareTransaction has error:', err.message)
     throw errorTypes.PROOF_GEN_ERR;
   }
 
