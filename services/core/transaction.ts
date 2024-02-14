@@ -394,7 +394,6 @@ async function createMembershipProof(params: CreateTransactionParams, keypair: K
     let extAmount = BigNumber.from(params.fee)
       .add(params.outputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
       .sub(params.inputs.reduce((sum, x) => sum.add(x.amount), BG_ZERO))
-
     const publicAmount = BigNumber.from(extAmount).sub(params.fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString()
     const finalTxRecord = new TxRecord({
       publicAmount,

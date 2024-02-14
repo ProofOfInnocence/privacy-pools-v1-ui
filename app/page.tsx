@@ -11,6 +11,7 @@ import axios from 'axios'
 import Image from 'next/image'
 import bgPattern from '@/public/images/bg-pattern.webp'
 
+
 import { fromWei, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
 import { WriteContractErrorType, encodeFunctionData } from 'viem'
 import { BigNumber } from 'ethers'
@@ -220,9 +221,17 @@ export default function Home() {
         },
       })
     } catch (error) {
+      console.log(error.name)
+
       setLoadingMessage('')
-      if (error.name == errorTypes.TX_EXEC_ERR.name) {
+      if (error.name === errorTypes.TX_EXEC_ERR.name) {
         setError(errorTypes.TX_EXEC_ERR.message)
+      } else if (error.name === errorTypes.CONTRACT_EXEC_ERR.name) {
+        setError(errorTypes.CONTRACT_EXEC_ERR.message)
+      } else if (error.name === errorTypes.TX_RECEIPT_NOT_FOUND.name) {
+        setError(errorTypes.TX_RECEIPT_NOT_FOUND.message)
+      } else if (error.name === errorTypes.TX_NOT_FOUND_ERR.name) {
+        setError(errorTypes.TX_NOT_FOUND_ERR.message)
       } else setError(error.message)
     }
   }
@@ -491,6 +500,7 @@ export default function Home() {
               alt="background pattern"
               width={1441}
               height={1025}
+              priority={true}
             />
           </div>
 
