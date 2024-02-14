@@ -47,7 +47,11 @@ export const errorTypes = {
   TX_NOT_FOUND_ERR: {
     name: "TransactionNotFoundError",
     message: "Transaction hash could not be found."
-  }
+  },
+  PROOF_GEN_ERR: {
+    name: "ProofGenerationError",
+    message: "Failed to make a transaction, wait some time, reload the page and try again."
+  },
 }
 
 const processing = {

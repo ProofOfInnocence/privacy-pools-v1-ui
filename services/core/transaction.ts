@@ -7,7 +7,7 @@ import MerkleTree from 'fixed-merkle-tree'
 import axios, { AxiosResponse } from 'axios'
 import { BytesLike } from '@ethersproject/bytes'
 
-import { BG_ZERO, FIELD_SIZE, numbers, POOL_CONTRACT, ZERO_LEAF } from '@/constants'
+import { BG_ZERO, errorTypes, FIELD_SIZE, numbers, POOL_CONTRACT, ZERO_LEAF } from '@/constants'
 
 import {
   ArgsProof,
@@ -203,14 +203,19 @@ async function prepareTransaction({
 
   // console.log('Builded merkle tree: ', params.tree)
   // console.log('Builded trees root: ', params.tree.root)
-
-  const { extData, args } = await getProof(params)
-
-  return {
-    extData,
-    args,
-    amount,
+  try {
+    const { extData, args } = await getProof(params)
+    return {
+      extData,
+      args,
+      amount,
+    }
+  } catch (err) {
+    console.error('prepareTransaction has error:', err.message)
+    throw errorTypes.PROOF_GEN_ERR;
   }
+
+  
 }
 
 // async function getIPFSIdFromENS(ensName: string) {

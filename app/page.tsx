@@ -221,7 +221,7 @@ export default function Home() {
         },
       })
     } catch (error) {
-      console.log(error.name)
+      console.log(error)
 
       setLoadingMessage('')
       if (error.name === errorTypes.TX_EXEC_ERR.name) {
