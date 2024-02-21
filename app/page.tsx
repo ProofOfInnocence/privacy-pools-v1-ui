@@ -38,8 +38,8 @@ import { getGasPriceFromRpc } from '@/services/gasOracle'
 
 const relayers: RelayerInfo[] = [
   {
-    name: 'Demo Relayer',
-    api: 'http://64.225.93.152:8000',
+    name: 'oxbow relay',
+    api: 'https://oxbow-relay.mule-herring.ts.net',
     fee: '10000000000',
     rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F',
   },
@@ -409,7 +409,7 @@ export default function Home() {
             resolve()
           } else if (res.status === 'FAILED') {
             clearInterval(intervalId)
-            reject(new Error('Withdraw failed, ' + JSON.stringify(res.failedReason)))
+            reject(new Error('Relayer failed with Error: ' + JSON.stringify(res.failedReason)))
           }
           console.log('STATUS', res)
         } catch (error) {
