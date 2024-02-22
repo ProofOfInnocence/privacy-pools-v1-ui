@@ -40,8 +40,6 @@ const relayers: RelayerInfo[] = [
   {
     name: 'oxbow relay',
     api: 'https://oxbow-relay.mule-herring.ts.net',
-    fee: '10000000000',
-    rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F',
   },
 ]
 
@@ -236,14 +234,14 @@ export default function Home() {
     }
   }
 
-  async function getRelayerFees(relayer: RelayerInfo): Promise<{ transferServiceFee: string; withdrawalServiceFee: number }> {
+  async function getRelayerFees(relayer: RelayerInfo): Promise<{ transferServiceFee: string; withdrawalServiceFee: number, relayerRewardAddress: string }> {
     try {
       const { data: res } = await axios.get(`${relayer.api}/status`, {
         headers: {
           'Content-Type': 'application/json',
         },
       })
-      return { transferServiceFee: res.serviceFee.transfer, withdrawalServiceFee: res.serviceFee.withdrawal }
+      return { transferServiceFee: res.serviceFee.transfer, withdrawalServiceFee: res.serviceFee.withdrawal, relayerRewardAddress: res.rewardAddress }
     } catch (error) {
       throw new Error('Failed to get relayer fees')
     }
@@ -253,7 +251,7 @@ export default function Home() {
     const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_GOERLI)
     console.log("GAS FEE FOR FAST IS", fast)
     const gasLimit = BigNumber.from(2000000)
-    const operationFee = BigNumber.from(fast).mul(gasLimit).mul('120').div(numbers.ONE_HUNDRED)
+    const operationFee = BigNumber.from(fast).mul(gasLimit).mul('130').div(numbers.ONE_HUNDRED)
     const serviceFee = BigNumber.from(transferServiceFee)
     const desiredFee = operationFee.add(serviceFee)
     // amount * withdrawalServiceFee / 100 + desiredFee
@@ -294,7 +292,7 @@ export default function Home() {
       )
 
       // Then we calculate the fee and the total amount
-      const { transferServiceFee, withdrawalServiceFee } = await getRelayerFees(relayer)
+      const { transferServiceFee, withdrawalServiceFee, relayerRewardAddress } = await getRelayerFees(relayer)
       console.log('Relayer fees', transferServiceFee, withdrawalServiceFee)
 
       const totalAmount = BigNumber.from(toWei(amount))
@@ -311,7 +309,7 @@ export default function Home() {
           address: toChecksumAddress(curAddress),
           fee: fee,
           recipient: toChecksumAddress(recipient),
-          relayer: toChecksumAddress(relayer.rewardAddress),
+          relayer: toChecksumAddress(relayerRewardAddress),
           membershipProofURI,
         },
         logger
@@ -331,7 +329,7 @@ export default function Home() {
           abi: TornadoPool__factory.abi,
           functionName: 'transact',
           args: [args, newExtData],
-          account: toHexString(relayer.rewardAddress || ''),
+          account: toHexString(relayerRewardAddress || ''),
         })
         console.log('Request', request)
       } catch (error) {
