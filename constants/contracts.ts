@@ -6,7 +6,7 @@ export const POOL_CONTRACT: { [chainId in ChainId]: string } = {
   // [ChainId.XDAI]: '0xD692Fd2D0b2Fbd2e52CFa5B5b9424bC981C30696',
   // [ChainId.BSC]: '',
   // [ChainId.MAINNET]: '',
-  [ChainId.ETHEREUM_GOERLI]: '0x49Bf92Fa466854637aE5a4cD00E97DDEA43C0767'
+  [ChainId.ETHEREUM_GOERLI]: '0x30221943644fFaa55F20e915A83352d0548585ca'
 }
 // export const REDGISTRY_CONTRACT: { [chainId in ChainId]: string } = {
 //   [ChainId.MAINNET]: '0x58E8dCC13BE9780fC42E8723D8EaD4CF46943dF2',
@@ -25,6 +25,10 @@ export const WRAPPED_TOKEN: { [chainId in ChainId]: string } = {
   // [ChainId.XDAI]: '0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1', // WETH on xdai
   // [ChainId.BSC]: '0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04', // WBNB on xdai
   [ChainId.ETHEREUM_GOERLI]: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6', // WETH on ethereum goerli
+}
+
+export const ETH_MAIN_TOKEN: { [chainId in ChainId]: string } = {
+  [ChainId.ETHEREUM_GOERLI]: '0xdD69DB25F6D620A7baD3023c5d32761D353D3De9' // GETH on ethereum goerli
 }
 
 export const RPC_LIST: { [chainId in ChainId]: string } = {

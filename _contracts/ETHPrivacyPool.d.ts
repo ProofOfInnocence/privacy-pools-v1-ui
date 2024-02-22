@@ -19,7 +19,7 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
-interface PrivacyPoolInterface extends ethers.utils.Interface {
+interface ETHPrivacyPoolInterface extends ethers.utils.Interface {
   functions: {
     "FIELD_SIZE()": FunctionFragment;
     "MAX_EXT_AMOUNT()": FunctionFragment;
@@ -239,7 +239,7 @@ export type NewWithdrawalEvent = TypedEvent<
   }
 >;
 
-export class PrivacyPool extends BaseContract {
+export class ETHPrivacyPool extends BaseContract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -280,7 +280,7 @@ export class PrivacyPool extends BaseContract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: PrivacyPoolInterface;
+  interface: ETHPrivacyPoolInterface;
 
   functions: {
     FIELD_SIZE(overrides?: CallOverrides): Promise<[BigNumber]>;

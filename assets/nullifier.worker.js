@@ -293,9 +293,9 @@ const getIsDBEnabled = async () => {
 }
 
 const getIsWhitelistedDomain = () => {
-  const domainWhiteList = ['localhost:3000', 'nova.tornadocash.eth', 'nova.tornadocash.eth.link', 'nova.tornadocash.eth.limo']
+  const domainWhiteList = ['localhost:3000']
 
-  if (self.location.host.includes('compassionate-payne-b9dc6b.netlify.app')) {
+  if (self.location.host.includes('privacy-pools-v1-demo.netlify.app')) {
     return true
   }
   return domainWhiteList.includes(self.location.host)

@@ -27,14 +27,40 @@ const wallet = {
   ALREADY_PROCESSING: 'You already have the pending request in the wallet',
 }
 
+export const errorTypes = {
+  TX_EXEC_ERR: {
+    name: "TransactionExecutionError",
+    message: "User denied transaction signature."
+  },
+  USER_REJECTED_REQ_ERR: {
+    name: "UserRejectedRequestError",
+    message: "User denied message signature."
+  },
+  CONTRACT_EXEC_ERR: {
+    name: "ContractFunctionExecutionError",
+    message: "The contract function 'transact' reverted with the following reason: Invalid merkle root"
+  },
+  TX_RECEIPT_NOT_FOUND: {
+    name: "TransactionReceiptNotFoundError",
+    message: "Transaction receipt could not be found. The Transaction may not be processed on a block yet."
+  },
+  TX_NOT_FOUND_ERR: {
+    name: "TransactionNotFoundError",
+    message: "Transaction hash could not be found."
+  },
+  PROOF_GEN_ERR: {
+    name: "ProofGenerationError",
+    message: "Failed to make a transaction, wait some time, reload the page and try again."
+  },
+}
+
 const processing = {
   DECLINE_OPERATION: 'You declined an operation',
 }
 
 const errorsGetter = (args: string[]) => ({
-  MAX_WITHDRAW_AMOUNT: `Amount exceeds an available limit of xDAI bridge. Right now the bridge allows withdrawing only ${
-    args[numbers.ZERO]
-  } ETH more.`,
+  MAX_WITHDRAW_AMOUNT: `Amount exceeds an available limit of xDAI bridge. Right now the bridge allows withdrawing only ${args[numbers.ZERO]
+    } ETH more.`,
 })
 
 const errors = {

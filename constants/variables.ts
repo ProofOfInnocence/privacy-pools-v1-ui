@@ -76,6 +76,7 @@ const registerGuideUrl = 'https://hackmd.io/@yfVgphY1TiKixVMVfVLAlw/B1Bp3p4UF'
 const BRIBE = '1500000000000000' // toWei(0.0015)
 
 const MIN_GAS_PRICE = '20000000000' // toWei(20, 'gwei')
+const ETH_PRICE_URL = "https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD"
 
 export {
   BRIBE,
@@ -94,5 +95,6 @@ export {
   ZERO_LEAF,
   APPROVAL_MESSAGE,
   TOKEN_NAME,
-  TOKEN_SYMBOL
+  TOKEN_SYMBOL,
+  ETH_PRICE_URL
 }

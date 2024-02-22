@@ -67,8 +67,6 @@ export type Inject<T> = (name: string, plugin: Plugin<T> | T) => void
 export type RelayerInfo = {
   name: string
   api: string
-  fee?: string
-  rewardAddress?: string
 }
 
 export enum LogLevel {

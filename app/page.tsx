@@ -4,15 +4,16 @@ import { Keypair, workerProvider } from '@/services'
 import { ChainId, LogLevel, LoggerType } from '@/types'
 import { toWei } from 'web3-utils'
 import CustomConnectButton from '@/components/CustomConnectButton'
-import { useAccount, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
-import { POOL_CONTRACT, SIGN_MESSAGE } from '@/constants'
+import { useAccount, useBalance, useNetwork, usePublicClient, useSignMessage, useWalletClient } from 'wagmi'
+import { POOL_CONTRACT, SIGN_MESSAGE, WRAPPED_TOKEN, errorTypes, numbers } from '@/constants'
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 import Image from 'next/image'
 import bgPattern from '@/public/images/bg-pattern.webp'
 
-import { generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
-import { encodeFunctionData } from 'viem'
+
+import { fromWei, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
+import { WriteContractErrorType, encodeFunctionData } from 'viem'
 import { BigNumber } from 'ethers'
 import { PrivacyPool__factory as TornadoPool__factory } from '@/_contracts'
 
@@ -21,7 +22,7 @@ import DepositComponent from '@/components/Deposit'
 import WithdrawComponent from '@/components/Withdraw'
 import Logo from '@/components/Logo'
 import { RelayerInfo } from '@/types'
-import { getUtxoFromKeypair, prepareTransaction } from '@/store/account'
+import { getUtxoFromKeypair, prepareMembershipProof, prepareTransaction } from '@/store/account'
 import ErrorModal from '@/components/Error'
 import { handleAllowance, handleWrapEther, transact } from '@/store/wallet'
 import LoadingSpinner from '@/components/Loading'
@@ -30,13 +31,15 @@ import { sendToRelayer } from '@/store/relayer'
 import Modal, { ModalProps } from '@/components/Modal'
 import Description from '@/components/Description'
 import GeneratePool from '@/components/GeneratePool'
+import StatsComponent from '@/components/StatsComponent'
+import HistoryComponent from '@/components/HistoryComponent'
+import { CHAINS } from '@/constants'
+import { getGasPriceFromRpc } from '@/services/gasOracle'
 
 const relayers: RelayerInfo[] = [
   {
-    name: 'Demo Relayer',
-    api: 'http://64.225.93.152:8000',
-    fee: '10000000000',
-    rewardAddress: '0x952198215a9D99bE8CEFc791337B909bF520d98F',
+    name: 'oxbow relay',
+    api: 'https://oxbow-relay.mule-herring.ts.net',
   },
 ]
 
@@ -48,14 +51,26 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('deposit')
   const [curChainId, setCurChainId] = useState(0)
   const [curAddress, setCurAddress] = useState('')
+  const [connectedAddress, setConnectedAddress] = useState('')
   const [modalData, setModalData] = useState({} as ModalProps)
   const [isDisabled, setIsDisabled] = useState(true)
   const [isKeyGenerated, setIsKeyGenerated] = useState(false)
+  const [wethBalance, setWethBalance] = useState('0')
 
   const { address, connector } = useAccount()
   const publicClient = usePublicClient()
   const { data: walletClient } = useWalletClient()
   const { chain } = useNetwork()
+
+  const WETHbalance = useBalance({
+    address: curAddress as `0x${string}`,
+    token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
+    watch: true,
+    onSuccess(data) {
+      const formattedNumber = parseFloat(data.formatted).toFixed(5)
+      setWethBalance(formattedNumber)
+    },
+  })
 
   const logger = (message: string, logType: LogLevel = LogLevel.DEBUG) => {
     if (logType === LogLevel.ERROR) {
@@ -77,7 +92,8 @@ export default function Home() {
       initKeypair(keypair)
     },
     onError(error) {
-      setError(error.message)
+      if (error.name === errorTypes.USER_REJECTED_REQ_ERR.name) setError(errorTypes.USER_REJECTED_REQ_ERR.message)
+      else setError(error.message)
     },
   })
 
@@ -88,12 +104,10 @@ export default function Home() {
   }, [chain, curChainId])
 
   useEffect(() => {
-    if (curAddress != '' && address && address !== curAddress) {
-      setKeypair(null)
-      setPoolBalance(0)
-      setCurAddress('')
+    if (address && address !== connectedAddress) {
+      setConnectedAddress(address)
     }
-  }, [address, curAddress])
+  }, [address, connectedAddress])
 
   async function initializeKeypair() {
     if (!connector || !address) {
@@ -151,7 +165,17 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
-      await handleAllowance({ publicClient, walletClient, logger }, amount)
+      // if (Number(amount) > poolBalance) {
+      //   console.log(Number(amount), poolBalance);
+      //   throw new Error('Amount cannot be bigger than user balance!')
+      // }
+      if (parseFloat(amount) < 0) {
+        throw new Error('Amount cannot be negative number!')
+      }
+      if (isNaN(parseFloat(amount))) {
+        throw new Error('Invalid decimal value')
+      }
+      // await handleAllowance({ publicClient, walletClient, logger }, amount)
       if (!address) {
         throw new Error('Address is null')
       }
@@ -159,7 +183,7 @@ export default function Home() {
         {
           keypair,
           amount: BigNumber.from(toWei(amount)),
-          address: address,
+          address: curAddress,
         },
         logger
       )
@@ -182,7 +206,7 @@ export default function Home() {
           {
             ButtonName: 'Explorer',
             Function: () => {
-              window.open(`https://goerli.etherscan.io/tx/${txReceipt.transactionHash}`, '_blank')
+              window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${txReceipt.transactionHash}`, '_blank')
             },
           },
         ],
@@ -195,9 +219,45 @@ export default function Home() {
         },
       })
     } catch (error) {
+      console.log(error)
+
       setLoadingMessage('')
-      setError(error.message)
+      if (error.name === errorTypes.TX_EXEC_ERR.name) {
+        setError(errorTypes.TX_EXEC_ERR.message)
+      } else if (error.name === errorTypes.CONTRACT_EXEC_ERR.name) {
+        setError(errorTypes.CONTRACT_EXEC_ERR.message)
+      } else if (error.name === errorTypes.TX_RECEIPT_NOT_FOUND.name) {
+        setError(errorTypes.TX_RECEIPT_NOT_FOUND.message)
+      } else if (error.name === errorTypes.TX_NOT_FOUND_ERR.name) {
+        setError(errorTypes.TX_NOT_FOUND_ERR.message)
+      } else setError(error.message)
     }
+  }
+
+  async function getRelayerFees(relayer: RelayerInfo): Promise<{ transferServiceFee: string; withdrawalServiceFee: number, relayerRewardAddress: string }> {
+    try {
+      const { data: res } = await axios.get(`${relayer.api}/status`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      return { transferServiceFee: res.serviceFee.transfer, withdrawalServiceFee: res.serviceFee.withdrawal, relayerRewardAddress: res.rewardAddress }
+    } catch (error) {
+      throw new Error('Failed to get relayer fees')
+    }
+  }
+
+  async function calculateRelayerFee(amount: BigNumber, transferServiceFee: string, withdrawalServiceFee: number) {
+    const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_GOERLI)
+    console.log("GAS FEE FOR FAST IS", fast)
+    const gasLimit = BigNumber.from(2000000)
+    const operationFee = BigNumber.from(fast).mul(gasLimit).mul('130').div(numbers.ONE_HUNDRED)
+    const serviceFee = BigNumber.from(transferServiceFee)
+    const desiredFee = operationFee.add(serviceFee)
+    // amount * withdrawalServiceFee / 100 + desiredFee
+    const share = Number(withdrawalServiceFee) / 100
+    const fee = amount.mul(toWei(share.toString())).div(toWei('1', 'ether')).add(desiredFee)
+    return fee
   }
 
   async function withdrawWithRelayer(amount: string, feeInWei: string, recipient: string, relayer: RelayerInfo) {
@@ -212,20 +272,50 @@ export default function Home() {
       if (!walletClient) {
         throw new Error('Wallet client is null')
       }
-      const totalAmount = BigNumber.from(toWei(amount))
-      const fee = BigNumber.from(feeInWei)
+      if (Number(amount) > poolBalance) {
+        throw new Error('Amount cannot be bigger than private balance!')
+      }
+      if (toHexString(recipient) === toHexString('') || recipient === undefined || toHexString(recipient).length !== 42) {
+        throw new Error('Invalid address')
+      }
 
-      const { extData, args, membershipProof } = await prepareTransaction(
+      if (parseFloat(amount) < 0) {
+        throw new Error('Amount cannot be negative number!')
+      }
+      if (isNaN(parseFloat(amount))) {
+        throw new Error('Invalid decimal value')
+      }
+      // First we generate membership proof
+      const { membershipProof, membershipProofURI } = await prepareMembershipProof(
+        { keypair, address: toChecksumAddress(curAddress) },
+        logger
+      )
+
+      // Then we calculate the fee and the total amount
+      const { transferServiceFee, withdrawalServiceFee, relayerRewardAddress } = await getRelayerFees(relayer)
+      console.log('Relayer fees', transferServiceFee, withdrawalServiceFee)
+
+      const totalAmount = BigNumber.from(toWei(amount))
+
+      const fee = await calculateRelayerFee(totalAmount, transferServiceFee, withdrawalServiceFee)
+
+      console.log(totalAmount, fee)
+
+      // After we generate transaction details.
+      const { extData, args } = await prepareTransaction(
         {
           keypair,
           amount: totalAmount.sub(fee),
-          address: toChecksumAddress(address),
+          address: toChecksumAddress(curAddress),
           fee: fee,
           recipient: toChecksumAddress(recipient),
-          relayer: toChecksumAddress(relayer.rewardAddress),
+          relayer: toChecksumAddress(relayerRewardAddress),
+          membershipProofURI,
         },
         logger
       )
+      console.log('membershipProof', membershipProof)
+
       console.log('Ext data', extData)
       console.log('Args', args)
       let newExtData: ExtData = { ...extData }
@@ -239,19 +329,58 @@ export default function Home() {
           abi: TornadoPool__factory.abi,
           functionName: 'transact',
           args: [args, newExtData],
-          account: toHexString(relayer.rewardAddress || ''),
+          account: toHexString(relayerRewardAddress || ''),
         })
         console.log('Request', request)
       } catch (error) {
         console.log('Error in simulate contract', error.message)
       }
-      const functionData = encodeFunctionData({ abi: TornadoPool__factory.abi, functionName: 'transact', args: [args, newExtData] })
-      console.log('Function data', functionData)
+      logger('', LogLevel.LOADING)
 
-      logger('Sending to relayer', LogLevel.LOADING)
+      async function onSendingApproval() {
+        try {
+          logger('Sending to relayer', LogLevel.LOADING)
+          const res = await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
+          await checkWithdrawal(relayers[0], res, logger)
+        } catch (error) {
+          setLoadingMessage('')
+          setError(error.message)
+        }
+      }
 
-      const res = await sendToRelayer(relayer, { extData: newExtData, args, membershipProof })
-      await checkWithdrawal(relayers[0], res, logger)
+      setModalData({
+        title: 'Are you sure',
+        text: `You are withdrawing with a membership proof to a set 0xbow provided.`,
+        operations: [
+          {
+            ButtonName: 'OK',
+            Function: () => {
+              setModalData((prevModalData) => ({
+                ...prevModalData,
+                isVisible: false,
+              }))
+              onSendingApproval()
+            },
+          },
+          {
+            ButtonName: 'Cancel',
+            Function: () => {
+              setModalData((prevModalData) => ({
+                ...prevModalData,
+                isVisible: false,
+              }))
+            },
+          },
+        ],
+        isVisible: true,
+        onClose: () => {
+          setModalData((prevModalData) => ({
+            ...prevModalData,
+            isVisible: false,
+          }))
+        },
+        feeData: fromWei(fee, 'ether'),
+      })
 
       // await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData: newExtData })
     } catch (error) {
@@ -278,7 +407,7 @@ export default function Home() {
             resolve()
           } else if (res.status === 'FAILED') {
             clearInterval(intervalId)
-            reject(new Error('Withdraw failed, ' + JSON.stringify(res.failedReason)))
+            reject(new Error('Relayer failed with Error: ' + JSON.stringify(res.failedReason)))
           }
           console.log('STATUS', res)
         } catch (error) {
@@ -306,7 +435,7 @@ export default function Home() {
         {
           ButtonName: 'Explorer',
           Function: () => {
-            window.open(`https://goerli.etherscan.io/tx/${txHash}`, '_blank')
+            window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${txHash}`, '_blank')
           },
         },
       ],
@@ -369,6 +498,7 @@ export default function Home() {
               alt="background pattern"
               width={1441}
               height={1025}
+              priority={true}
             />
           </div>
 
@@ -391,6 +521,24 @@ export default function Home() {
                 >
                   Withdraw
                 </button>
+                <button
+                  onClick={() => setActiveTab('stats')}
+                  disabled={isDisabled}
+                  className={`pb-4 px-3 mr-8 box-border ${
+                    activeTab === 'stats' ? 'border-b-2 border-blue-500' : ''
+                  } disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg`}
+                >
+                  Stats
+                </button>
+                <button
+                  onClick={() => setActiveTab('history')}
+                  disabled={isDisabled}
+                  className={`pb-4 px-3 mr-8 box-border ${
+                    activeTab === 'history' ? 'border-b-2 border-blue-500' : ''
+                  } disabled:opacity-40 disabled:cursor-not-allowed font-bold text-lg`}
+                >
+                  History
+                </button>
 
                 {/* <button
                   onClick={() => setActiveTab('wrapEther')}
@@ -405,7 +553,9 @@ export default function Home() {
             </div>
 
             {!isKeyGenerated && <GeneratePool initializeKeypair={initializeKeypair} />}
-            {isKeyGenerated && activeTab === 'deposit' && <DepositComponent deposit={deposit} address={curAddress} />}
+            {isKeyGenerated && activeTab === 'deposit' && (
+              <DepositComponent deposit={deposit} address={toChecksumAddress(connectedAddress)} />
+            )}
             {/* {isKeyGenerated && activeTab === 'wrapEther' && <WrapEtherComponent wrapEther={wrapEther} address={curAddress} />} */}
             {isKeyGenerated && activeTab === 'withdraw' && (
               <WithdrawComponent
@@ -415,6 +565,8 @@ export default function Home() {
                 shieldedBalance={poolBalance}
               />
             )}
+            {isKeyGenerated && activeTab === 'stats' && <StatsComponent />}
+            {isKeyGenerated && activeTab === 'history' && keypair && <HistoryComponent />}
 
             <ErrorModal isVisible={error !== ''} message={error} onClose={() => setError('')} />
 
