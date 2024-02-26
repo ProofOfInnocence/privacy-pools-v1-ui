@@ -1,13 +1,13 @@
 {
-  "name": "nova-scotia-browser",
+  "name": "wasm-nova",
   "version": "0.1.0",
   "files": [
-    "nova_scotia_browser_bg.wasm",
-    "nova_scotia_browser.js",
-    "nova_scotia_browser.d.ts"
+    "wasm_nova_bg.wasm",
+    "wasm_nova.js",
+    "wasm_nova.d.ts"
   ],
-  "module": "nova_scotia_browser.js",
-  "types": "nova_scotia_browser.d.ts",
+  "module": "wasm_nova.js",
+  "types": "wasm_nova.d.ts",
   "sideEffects": [
     "./snippets/*"
   ]
