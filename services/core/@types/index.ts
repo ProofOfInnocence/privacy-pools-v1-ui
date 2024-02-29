@@ -23,6 +23,7 @@ export interface BaseUtxo {
   getNullifier: () => BigNumber
   getCommitment: () => BigNumber
   encrypt: () => string
+  getSignature: () => BigNumber
 }
 
 export type CustomUtxo = BaseUtxo & { transactionHash: string }
