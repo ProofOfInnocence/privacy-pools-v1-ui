@@ -62,6 +62,19 @@ class Utxo extends UtxoStatic implements BaseUtxo {
     return this.nullifier
   }
 
+  public getSignature() {
+    if (this.nullifier == null) {
+      // eslint-disable-next-line eqeqeq
+      if (this.amount.gt(numbers.ZERO) && (this.index == undefined || this.keypair.privkey == undefined)) {
+        throw new Error('Can not compute nullifier without utxo index or shielded key')
+      }
+      const signature = this.keypair.privkey ? this.keypair.sign(this.getCommitment(), this.index || numbers.ZERO) : numbers.ZERO
+      this.nullifier = poseidonHash([this.getCommitment(), this.index || numbers.ZERO, signature])
+    }
+    return this.keypair.privkey ? this.keypair.sign(this.getCommitment(), this.index || BigNumber.from(0)) : BigNumber.from(0)
+
+  }
+
   public encrypt() {
     const bytes = Buffer.concat([toBuffer(this.amount, BYTES_31), toBuffer(this.blinding, BYTES_31)])
     return this.keypair.encrypt(bytes)

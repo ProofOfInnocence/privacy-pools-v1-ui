@@ -23,6 +23,7 @@ export interface BaseUtxo {
   getNullifier: () => BigNumber
   getCommitment: () => BigNumber
   encrypt: () => string
+  getSignature: () => BigNumber
 }
 
 export type CustomUtxo = BaseUtxo & { transactionHash: string }
@@ -70,6 +71,7 @@ export type ProveInclusionParams = {
   nullifierToUtxo?: Map<string, BaseUtxo>
   commitmentToUtxo?: Map<string, BaseUtxo>
   finalTxRecord: TxRecord
+  membershipProofOption?: number
 }
 
 export type GeneratePoiStepParams = {

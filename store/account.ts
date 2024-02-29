@@ -52,9 +52,11 @@ export async function getUtxoFromKeypair({
 export async function prepareMembershipProof({
   keypair,
   address,
+  membershipProofOption,
 }: {
   keypair: Keypair,
   address: string,
+  membershipProofOption: number
 }, logger: LoggerType) {
   try {
     const { unspentUtxo, totalAmount } = await getUtxoFromKeypair({
@@ -71,6 +73,7 @@ export async function prepareMembershipProof({
       {
         inputs: unspentUtxo.length > 2 ? unspentUtxo.slice(0, 2) : unspentUtxo,
       },
+      membershipProofOption,
       keypair,
       logger
     )

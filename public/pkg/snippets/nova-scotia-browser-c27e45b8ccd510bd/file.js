@@ -5,7 +5,7 @@ export async function read_filex(path) {
     return (await fetch(path)).text();
 }
 
-export async function read_fileb(path) {
+export async function read_file_binary(path) {
     console.log("from js b, ");
     console.log(path);
     let result = await fetch(path);

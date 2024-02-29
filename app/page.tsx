@@ -260,7 +260,7 @@ export default function Home() {
     return fee
   }
 
-  async function withdrawWithRelayer(amount: string, feeInWei: string, recipient: string, relayer: RelayerInfo) {
+  async function withdrawWithRelayer(amount: string, feeInWei: string, recipient: string, relayer: RelayerInfo, membershipProofOption: number) {
     try {
       setLoadingMessage('Withdrawing...')
       if (!keypair) {
@@ -287,7 +287,7 @@ export default function Home() {
       }
       // First we generate membership proof
       const { membershipProof, membershipProofURI } = await prepareMembershipProof(
-        { keypair, address: toChecksumAddress(curAddress) },
+        { keypair, address: toChecksumAddress(curAddress), membershipProofOption },
         logger
       )
 
