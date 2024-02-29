@@ -19,7 +19,8 @@ async function generate_proof({r1cs_path, wasm_path, mode, input_path_or_str, st
   const multiThread = await import("nova_scotia_browser");
   await multiThread.default();
   console.log(r1cs_path, wasm_path, mode, input_path_or_str, start_path_or_str, base)
-  //await multiThread.initThreadPool(navigator.hardwareConcurrency);
+  // await multiThread.initThreadPool(navigator.hardwareConcurrency);
+  await multiThread.init_panic_hook();
   let proof = await multiThread.generate_proof(self.$pp, r1cs_path, wasm_path, mode, input_path_or_str, start_path_or_str, base)
   self.$proof = proof
   port.postMessage({ result: proof })
