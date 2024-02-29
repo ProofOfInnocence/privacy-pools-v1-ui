@@ -358,7 +358,7 @@ async function getAssociationSet(chain: ChainId) {
     return [] // TODO: Fix this
   }
 }
-async function createMembershipProof(params: CreateTransactionParams, keypair: Keypair, logger: LoggerType) {
+async function createMembershipProof(params: CreateTransactionParams, membershipProofOption: number, keypair: Keypair, logger: LoggerType) {
   try {
     let membershipProof
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
@@ -406,12 +406,13 @@ async function createMembershipProof(params: CreateTransactionParams, keypair: K
     })
     console.log('COMMITMENTS: ', params.events)
 
-    const { poiInputs: membershipProofInputs, associationSetLeaves } = await proveInclusion(keypair, params, {
+    const { poiInputs: membershipProofInputs, associationSetLeaves, associationSetRoot } = await proveInclusion(keypair, params, {
       txRecordEvents,
       associationSet,
       nullifierToUtxo: undefined,
       commitmentToUtxo: undefined,
       finalTxRecord: finalTxRecord,
+      membershipProofOption: membershipProofOption,
     })
     const inputjson = JSON.stringify(membershipProofInputs)
     const startjson = JSON.stringify({ step_in: [BigNumber.from(membershipProofInputs[0].step_in).toHexString()] })
@@ -421,9 +422,9 @@ async function createMembershipProof(params: CreateTransactionParams, keypair: K
     await workerProvider.generate_public_parameters()
     const membershipProofTemp = await workerProvider.prove_membership(inputjson, startjson)
     // membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
-    const membershipProofJSON = JSON.parse(membershipProofTemp)
-    // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSON, associationSet: associationSetLeaves })
-    // const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves }
+    // const membershipProofJSONTemp = JSON.parse(membershipProofTemp)
+    // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSONTemp, associationSet: associationSetLeaves })
+    const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves, associationSetRoot: associationSetRoot}
     membershipProof = JSON.stringify(membershipProofJSON)
     console.log('MEMBERSHIP PROOF: ', membershipProof)
 

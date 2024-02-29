@@ -160,7 +160,7 @@ async function proveInclusion(
     isL1Withdrawal = true,
     membershipProofURI = ""
   }: PrepareTxParams,
-  { txRecordEvents, associationSet, nullifierToUtxo = undefined, commitmentToUtxo = undefined, finalTxRecord }: ProveInclusionParams
+  { txRecordEvents, associationSet, nullifierToUtxo = undefined, commitmentToUtxo = undefined, finalTxRecord, membershipProofOption }: ProveInclusionParams
 ) {
   if (!nullifierToUtxo || !commitmentToUtxo) {
     const { nullifierToUtxo: nullifierToUtxo_, commitmentToUtxo: commitmentToUtxo_ } = await buildMappings(keypair, events, txRecordEvents)
@@ -171,7 +171,15 @@ async function proveInclusion(
   console.log("Steps->", steps)
   console.log("txRecordsMerkleTree->", txRecordEvents)
   const txRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
-  const allowedTxRecordsMerkleTree = buildTxRecordMerkleTree({ events: txRecordEvents })
+  let allowedTxRecordsMerkleTree;
+  if(membershipProofOption == 0) {
+    allowedTxRecordsMerkleTree = buildTxRecordMerkleTree({ events: steps.map((step) => step.toEvent())}) // TODO: Change this to use deposits only.
+  } else if (membershipProofOption == 1) {
+    allowedTxRecordsMerkleTree = buildTxRecordMerkleTree({ events: associationSet })
+  } else {
+    throw new Error('Invalid membershipProofOption')
+  }
+  
   console.log("allowedTxRecordsMerkleTree->", allowedTxRecordsMerkleTree)
   let accInnocentCommitments = [ZERO_LEAF, ZERO_LEAF]
   console.log("accInnocentCommitments->", accInnocentCommitments)
@@ -189,7 +197,7 @@ async function proveInclusion(
     )
   }
   console.log("poiInputs->", poiInputs)
-  return {poiInputs, associationSetLeaves: allowedTxRecordsMerkleTree.elements}
+  return {poiInputs, associationSetLeaves: allowedTxRecordsMerkleTree.elements, associationSetRoot: allowedTxRecordsMerkleTree.root}
 }
 
 export { proveInclusion }

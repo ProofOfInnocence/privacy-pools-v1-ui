@@ -71,6 +71,7 @@ export type ProveInclusionParams = {
   nullifierToUtxo?: Map<string, BaseUtxo>
   commitmentToUtxo?: Map<string, BaseUtxo>
   finalTxRecord: TxRecord
+  membershipProofOption?: number
 }
 
 export type GeneratePoiStepParams = {

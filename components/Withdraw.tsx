@@ -11,11 +11,13 @@ import { formatNumber } from '@/utilities/formatNumber'
 import { ETH_PRICE_URL } from '@/constants'
 
 type WithdrawComponentProps = {
-  withdrawWithRelayer: (amount: string, fee: string, recipient: string, relayer: RelayerInfo) => void
+  withdrawWithRelayer: (amount: string, fee: string, recipient: string, relayer: RelayerInfo, membershipProofOption: number) => void
   relayers: RelayerInfo[]
   logger: (message: string, logLevel: LogLevel) => void
   shieldedBalance: number
 }
+
+const PROOF_OPTIONS = ['Self dox', 'Oxbow']
 
 function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBalance }: WithdrawComponentProps) {
   // const [amount, setAmount] = useState<string | undefined>(undefined)
@@ -26,6 +28,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   const [calculatedPrice, setCalculatedPrice] = useState('')
   const [balance, setBalance] = useState('0')
   const [ethPrice, setEthPrice] = useState('0')
+  const [membershipProofOption, setMembershipProofOption] = useState(1) // 1 = prove with oxbow, 0 = self dox
   // use state for fee with string or undefined
   // const [fee, setFee] = useState('0')
 
@@ -86,7 +89,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
       logger('Amount is undefined', LogLevel.ERROR)
       return
     }
-    withdrawWithRelayer(amount, "0", recipient, selectedRelayer)
+    withdrawWithRelayer(amount, "0", recipient, selectedRelayer, membershipProofOption)
   }
 
   // const calculateFee = async () => {
@@ -181,6 +184,21 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
                 {relayer.name}
               </option>
             ))}
+          </select>
+          <Image className="ml-[-2.5rem]" src={selectArrowIcon} alt="arrow icon" width={16} height={9} />
+        </div>
+      </div>
+
+      <div className="mb-8">
+        <label className="block mb-8 ml-6 text-lg font-bold">Membership proof:</label>
+        <div className="flex justify-start items-center">
+          <select
+            value={membershipProofOption}
+            onChange={(e) => setMembershipProofOption(parseInt(e.target.value))}
+            className="w-full pr-8 pl-12 py-4 font-bold text-xl rounded-[40px] bg-[#F5F5F5] text-black transition-all duration-150 hover:bg-[#eaeaea] hover:cursor-pointer box-border appearance-none"
+          >
+            <option value={1}>{PROOF_OPTIONS[1]}</option>
+            <option value={0}>{PROOF_OPTIONS[0]}</option>
           </select>
           <Image className="ml-[-2.5rem]" src={selectArrowIcon} alt="arrow icon" width={16} height={9} />
         </div>

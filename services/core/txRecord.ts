@@ -58,6 +58,19 @@ class TxRecord {
     ])
   }
 
+  public toEvent() : TxRecordEvent {
+    return {
+      inputNullifier1: this.inputs[0].getNullifier().toHexString(),
+      inputNullifier2: this.inputs[1].getNullifier().toHexString(),
+      outputCommitment1: this.outputs[0].getCommitment().toHexString(),
+      outputCommitment2: this.outputs[1].getCommitment().toHexString(),
+      publicAmount: this.publicAmount,
+      index: this.index,
+      transactionHash: this.txHash || '',
+      blockNumber: 0,
+    }
+  }
+
   public generateInputs({ txRecordsMerkleTree, allowedTxRecordsMerkleTree, accInnocentCommitments, isLastStep }: GeneratePoiStepParams) {
     console.log('txRecordsMerkleTree', txRecordsMerkleTree)
     const txRecord = toFixedHex(this.hash())
