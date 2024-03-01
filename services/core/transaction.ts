@@ -214,7 +214,7 @@ async function prepareTransaction({
     throw errorTypes.PROOF_GEN_ERR;
   }
 
-  
+
 }
 
 // async function getIPFSIdFromENS(ensName: string) {
@@ -295,27 +295,45 @@ async function download({ prefix, name, contentType }: DownloadParams) {
 //     )
 //   }
 // }
+type ApiResponse = {
+  uuid: string;
+  mtID: string;
+  zero: string;
+  merkleRoot: string;
+  hashSet: string[];
+  proofs: Proof[];
+  ipfsHash: string;
+  txHash: string;
+  timestamp: number;
+};
 
-type ApiResponseObject = {
-  id: number
-  chain: string
-  txHash: string
-  logIndex: number
-  contractAddr: string
-  depositAddr: string
-  outputCommitment1: string
-  outputCommitment2: string
-  nullifierHash1: string
-  nullifierHash2: string
-  recordIndex: number
-  publicAmount: string
-  blockTimestamp: number
-  decisionStatus: string
-  decisionTimestamp: number
-  decisionReason: string
-}
+type Proof = {
+  record_hash: string;
+  record_data: RecordData;
+  merkle_proof: MerkleProof;
+};
 
-type ApiResponse = ApiResponseObject[]
+type RecordData = {
+  txHash: string;
+  outputCommitment1: string;
+  outputCommitment2: string;
+  nullifierHash1: string;
+  nullifierHash2: string;
+  recordIndex: number;
+  publicAmount: string;
+};
+
+type MerkleProof = {
+  merkle_tree_max_depth: number;
+  leaf: string;
+  leaf_index: number;
+  path_root: string;
+  path_indices: number[];
+  path_positions: number[];
+  path_elements: string[];
+};
+
+// type ApiResponse = ApiResponseObject[]
 /**
  * 
 export type TxRecordEvent = {
@@ -332,29 +350,41 @@ export type TxRecordEvent = {
 
 async function getAssociationSet(chain: ChainId) {
   try {
+    console.log("AAAAAA getAssociationSet")
     const contractAddr = POOL_CONTRACT[chain];
-    const API = 'https://api.0xbow.io/api/v1/inclusion?chain=goerli&contractAddr=' + contractAddr;
-    const response = await axios.get(API)
-    console.log("ASP Response:", response);
+    const API = `https://api.0xbow.io/api/v1/inclusion?chain=goerli&contract=${contractAddr}`;
+
+    // Making a POST request using axios
+    const response = await axios.post(API, {}, {
+      headers: {
+        // 'Content-Length': 0
+      }
+    });
+
+    console.log("AAAAAA getAssociationSet response: ", response);
+
+
     const associationSet: ApiResponse = response.data || [];
 
+
     // make txRecordEvents filtering by decisionStatus == "approved"
-    const txRecordEvents: TxRecordEvent[] = associationSet
-      .filter((x: ApiResponseObject) => x.decisionStatus == 'approved')
-      .map((x: ApiResponseObject) => {
+    const txRecordEvents: TxRecordEvent[] = associationSet.proofs
+      .map((x: Proof) => {
         return {
-          blockNumber: x.blockTimestamp,
-          transactionHash: x.txHash,
-          index: x.recordIndex,
-          inputNullifier1: '0x' + x.nullifierHash1,
-          inputNullifier2: '0x' + x.nullifierHash2,
-          outputCommitment1: '0x' + x.outputCommitment1,
-          outputCommitment2: '0x' + x.outputCommitment2,
-          publicAmount: x.publicAmount,
+          blockNumber: 0,
+          transactionHash: x.record_data.txHash,
+          index: x.record_data.recordIndex,
+          inputNullifier1: x.record_data.nullifierHash1,
+          inputNullifier2: x.record_data.nullifierHash2,
+          outputCommitment1: x.record_data.outputCommitment1,
+          outputCommitment2: x.record_data.outputCommitment2,
+          publicAmount: '0x' + x.record_data.publicAmount
         } as TxRecordEvent
       })
+    console.log("AAAAAA txRecord Events: ", txRecordEvents)
     return txRecordEvents
   } catch (err) {
+    console.error('getAssociationSet has error:', err.message)
     return [] // TODO: Fix this
   }
 }
@@ -424,7 +454,7 @@ async function createMembershipProof(params: CreateTransactionParams, membership
     // membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
     // const membershipProofJSONTemp = JSON.parse(membershipProofTemp)
     // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSONTemp, associationSet: associationSetLeaves })
-    const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves, associationSetRoot: associationSetRoot}
+    const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves, associationSetRoot: associationSetRoot }
     membershipProof = JSON.stringify(membershipProofJSON)
     console.log('MEMBERSHIP PROOF: ', membershipProof)
 
