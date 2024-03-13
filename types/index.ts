@@ -1,16 +1,16 @@
 // const BSC_CHAIN_ID = 56
 // const XDAI_CHAIN_ID = 100
 // const MAINNET_CHAIN_ID = 1
-const ETHEREUM_GOERLI_CHAIN_ID = 5
+const ETHEREUM_SEPOLIA_CHAIN_ID = 11155111
 
 export enum ChainId {
   // BSC = BSC_CHAIN_ID,
   // XDAI = XDAI_CHAIN_ID,
   // MAINNET = MAINNET_CHAIN_ID,
-  ETHEREUM_GOERLI = ETHEREUM_GOERLI_CHAIN_ID,
+  ETHEREUM_SEPOLIA = ETHEREUM_SEPOLIA_CHAIN_ID,
 }
 
-export type PoolChainId = typeof ChainId.ETHEREUM_GOERLI
+export type PoolChainId = typeof ChainId.ETHEREUM_SEPOLIA
 
 // export type L1ChainId = typeof ChainId.MAINNET
 // export type L2ChainId = typeof ChainId.XDAI

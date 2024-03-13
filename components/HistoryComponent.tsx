@@ -52,7 +52,7 @@ function HistoryComponent() {
               key={index}
             >
               <a
-                href={`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${record.txHash}`}
+                href={`${CHAINS[ChainId.ETHEREUM_SEPOLIA].blockExplorerUrl}/tx/${record.txHash}`}
                 className="flex justify-between items-center py-3 px-3 my-4"
                 target="_blank"
               >
@@ -66,7 +66,7 @@ function HistoryComponent() {
               key={index}
             >
               <a
-                href={`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${record.txHash}`}
+                href={`${CHAINS[ChainId.ETHEREUM_SEPOLIA].blockExplorerUrl}/tx/${record.txHash}`}
                 className="flex justify-between items-center py-3 px-3 my-4"
                 target="_blank"
               >

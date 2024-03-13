@@ -97,7 +97,7 @@ function WithdrawComponent({ withdrawWithRelayer, relayers, logger, shieldedBala
   //   console.log('selectedRelayer.fee:', selectedRelayer.fee)
   //   const serviceFee = BigNumber.from(selectedRelayer.fee)
   //   console.log('serviceFee:', serviceFee)
-  //   // const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_GOERLI)
+  //   // const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_SEPOLIA)
   //   const fast = 20
   //   console.log('fast:', fast)
   //   const gasLimit = BigNumber.from(2000000)

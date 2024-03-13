@@ -39,7 +39,7 @@ import { getGasPriceFromRpc } from '@/services/gasOracle'
 const relayers: RelayerInfo[] = [
   {
     name: 'oxbow relay',
-    api: 'https://oxbow-relay.mule-herring.ts.net',
+    api: 'http://0.0.0.0:8000',
   },
 ]
 
@@ -62,15 +62,15 @@ export default function Home() {
   const { data: walletClient } = useWalletClient()
   const { chain } = useNetwork()
 
-  const WETHbalance = useBalance({
-    address: curAddress as `0x${string}`,
-    token: WRAPPED_TOKEN[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
-    watch: true,
-    onSuccess(data) {
-      const formattedNumber = parseFloat(data.formatted).toFixed(5)
-      setWethBalance(formattedNumber)
-    },
-  })
+  // const WETHbalance = useBalance({
+  //   address: curAddress as `0x${string}`,
+  //   token: WRAPPED_TOKEN[ChainId.ETHEREUM_SEPOLIA] as `0x${string}`,
+  //   watch: true,
+  //   onSuccess(data) {
+  //     const formattedNumber = parseFloat(data.formatted).toFixed(5)
+  //     setWethBalance(formattedNumber)
+  //   },
+  // })
 
   const logger = (message: string, logType: LogLevel = LogLevel.DEBUG) => {
     if (logType === LogLevel.ERROR) {
@@ -88,7 +88,7 @@ export default function Home() {
       const privateKey = generatePrivateKeyFromEntropy(data)
       const keypair = new Keypair(privateKey)
       console.log(keypair.address())
-      workerProvider.workerSetup(ChainId.ETHEREUM_GOERLI)
+      workerProvider.workerSetup(ChainId.ETHEREUM_SEPOLIA)
       initKeypair(keypair)
     },
     onError(error) {
@@ -139,12 +139,11 @@ export default function Home() {
 
   async function initKeypair(keypair: Keypair) {
     try {
-      setLoadingMessage('Initilazing...')
+      setLoadingMessage('Initializing...')
       setKeypair(keypair)
       if (!address) {
         throw new Error('Address is null')
       }
-
       const { totalAmount } = await getUtxoFromKeypair({ keypair, accountAddress: address, withCache: false })
       setPoolBalance(totalAmount)
       setLoadingMessage('')
@@ -206,7 +205,7 @@ export default function Home() {
           {
             ButtonName: 'Explorer',
             Function: () => {
-              window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${txReceipt.transactionHash}`, '_blank')
+              window.open(`${CHAINS[ChainId.ETHEREUM_SEPOLIA].blockExplorerUrl}/tx/${txReceipt.transactionHash}`, '_blank')
             },
           },
         ],
@@ -248,7 +247,7 @@ export default function Home() {
   }
 
   async function calculateRelayerFee(amount: BigNumber, transferServiceFee: string, withdrawalServiceFee: number) {
-    const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_GOERLI)
+    const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_SEPOLIA)
     console.log("GAS FEE FOR FAST IS", fast)
     const gasLimit = BigNumber.from(2000000)
     const operationFee = BigNumber.from(fast).mul(gasLimit).mul('130').div(numbers.ONE_HUNDRED)
@@ -309,7 +308,7 @@ export default function Home() {
           address: toChecksumAddress(curAddress),
           fee: fee,
           recipient: toChecksumAddress(recipient),
-          relayer: toChecksumAddress(relayerRewardAddress),
+          relayer: toChecksumAddress(address),
           membershipProofURI,
         },
         logger
@@ -325,7 +324,7 @@ export default function Home() {
       }
       try {
         const { request } = await publicClient.simulateContract({
-          address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI]),
+          address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_SEPOLIA]),
           abi: TornadoPool__factory.abi,
           functionName: 'transact',
           args: [args, newExtData],
@@ -435,7 +434,7 @@ export default function Home() {
         {
           ButtonName: 'Explorer',
           Function: () => {
-            window.open(`${CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl}/tx/${txHash}`, '_blank')
+            window.open(`${CHAINS[ChainId.ETHEREUM_SEPOLIA].blockExplorerUrl}/tx/${txHash}`, '_blank')
           },
         },
       ],

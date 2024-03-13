@@ -3,7 +3,7 @@
 import * as React from 'react'
 import { RainbowKitProvider, connectorsForWallets, AvatarComponent } from '@rainbow-me/rainbowkit'
 import { injectedWallet } from '@rainbow-me/rainbowkit/wallets'
-import { configureChains, createConfig, WagmiConfig } from 'wagmi'
+import { configureChains, createConfig, sepolia, WagmiConfig } from 'wagmi'
 import { goerli } from 'wagmi/chains'
 import { publicProvider } from 'wagmi/providers/public'
 import { alchemyProvider } from 'wagmi/providers/alchemy'
@@ -12,7 +12,7 @@ import { alchemyProvider } from 'wagmi/providers/alchemy'
 
 // console.log('Alchemy API Key', alchemyApiKey)
 
-const { chains, publicClient } = configureChains([goerli], [publicProvider()])
+const { chains, publicClient } = configureChains([sepolia], [publicProvider()])
 
 const demoAppInfo = {
   appName: 'Privacy Pools',

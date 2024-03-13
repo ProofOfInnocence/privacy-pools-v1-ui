@@ -15,7 +15,7 @@ export async function getUtxoFromKeypair({
   withCache: boolean
 }) {
   try {
-    const utxoService = utxoFactory.getService(ChainId.ETHEREUM_GOERLI, accountAddress)
+    const utxoService = utxoFactory.getService(ChainId.ETHEREUM_SEPOLIA, accountAddress)
     const { totalAmount, unspentUtxo, freshUnspentUtxo, freshDecryptedEvents } = await utxoService.fetchUnspentUtxo({
       keypair,
       withCache,

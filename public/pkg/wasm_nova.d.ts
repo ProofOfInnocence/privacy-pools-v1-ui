@@ -3,6 +3,12 @@
 /**
 * @param {string} path
 * @param {string} base
+* @returns {Promise<string>}
+*/
+export function read_filem(path: string, base: string): Promise<string>;
+/**
+* @param {string} path
+* @param {string} base
 * @returns {Promise<Uint8Array>}
 */
 export function read_filen(path: string, base: string): Promise<Uint8Array>;
@@ -72,6 +78,7 @@ export class wbg_rayon_PoolBuilder {
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
+  readonly read_filem: (a: number, b: number, c: number, d: number) => number;
   readonly read_filen: (a: number, b: number, c: number, d: number) => number;
   readonly generate_params: (a: number, b: number, c: number, d: number) => number;
   readonly generate_proof: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => number;
@@ -89,9 +96,9 @@ export interface InitOutput {
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
   readonly __wbindgen_export_3: WebAssembly.Table;
-  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h5052f3f5b8268c87: (a: number, b: number, c: number) => void;
+  readonly _dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h174e49dcb38e7e6b: (a: number, b: number, c: number) => void;
   readonly __wbindgen_exn_store: (a: number) => void;
-  readonly wasm_bindgen__convert__closures__invoke2_mut__h0565c1192756957b: (a: number, b: number, c: number, d: number) => void;
+  readonly wasm_bindgen__convert__closures__invoke2_mut__h2b3a78c867d69c54: (a: number, b: number, c: number, d: number) => void;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
   readonly __wbindgen_thread_destroy: (a?: number, b?: number) => void;
   readonly __wbindgen_start: () => void;

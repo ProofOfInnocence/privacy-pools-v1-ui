@@ -38,7 +38,7 @@ export async function transact(
   const [address] = await walletClient.getAddresses()
   console.log("You should send ", extData.extAmount);
   const { request } = await publicClient.simulateContract({
-    address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_GOERLI]),
+    address: toHexString(POOL_CONTRACT[ChainId.ETHEREUM_SEPOLIA]),
     abi: TornadoPool__factory.abi,
     functionName: 'transact',
     args: [args, extData],
@@ -66,7 +66,7 @@ export async function handleAllowance(
   amount: string
 ) {
   // const amountInWei = toWei(amount)
-  const weth = getWrappedToken(ChainId.ETHEREUM_GOERLI)
+  const weth = getWrappedToken(ChainId.ETHEREUM_SEPOLIA)
   const [address] = await walletClient.getAddresses()
   // const wrappedAmount = await weth.balanceOf(address)
   // console.log('Wrapped amount', wrappedAmount.toString())
@@ -84,14 +84,14 @@ export async function handleAllowance(
   //   logger('Waiting for transaction ' + hash, LogLevel.LOADING)
   //   await publicClient.waitForTransactionReceipt({ hash })
   // }
-  const curAllowance = await weth.allowance(address, POOL_CONTRACT[ChainId.ETHEREUM_GOERLI])
+  const curAllowance = await weth.allowance(address, POOL_CONTRACT[ChainId.ETHEREUM_SEPOLIA])
 
   if (curAllowance.lt(toWei(amount))) {
     const { request } = await publicClient.simulateContract({
       address: toHexString(weth.address),
       abi: WETH__factory.abi,
       functionName: 'approve',
-      args: [POOL_CONTRACT[ChainId.ETHEREUM_GOERLI], 115792089237316195423570985008687907853269984665640564039457.584007913129639935],
+      args: [POOL_CONTRACT[ChainId.ETHEREUM_SEPOLIA], 115792089237316195423570985008687907853269984665640564039457.584007913129639935],
       account: address,
     })
     logger(APPROVAL_MESSAGE, LogLevel.LOADING)
@@ -113,7 +113,7 @@ export async function handleWrapEther(
   },
   amount: string
 ) {
-  const weth = getWrappedToken(ChainId.ETHEREUM_GOERLI)
+  const weth = getWrappedToken(ChainId.ETHEREUM_SEPOLIA)
   const [address] = await walletClient.getAddresses()
 
   const { request } = await publicClient.simulateContract({

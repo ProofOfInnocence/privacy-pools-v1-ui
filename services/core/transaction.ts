@@ -281,7 +281,7 @@ async function download({ prefix, name, contentType }: DownloadParams) {
 
 // async function estimateTransact(payload: EstimateTransactParams) {
 //   try {
-//     const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
+//     const tornadoPool = getTornadoPool(ChainId.ETHEREUM_SEPOLIA)
 
 //     const gas = await tornadoPool.estimateGas.transact(payload.args, payload.extData, {
 //       from: tornadoPool.address,
@@ -391,7 +391,7 @@ async function getAssociationSet(chain: ChainId) {
 async function createMembershipProof(params: CreateTransactionParams, membershipProofOption: number, keypair: Keypair, logger: LoggerType) {
   try {
     let membershipProof
-    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
+    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_SEPOLIA)
     params.outputs = []
     while (params.outputs.length < 2) {
       params.outputs.push(new Utxo({ keypair }))
@@ -419,7 +419,7 @@ async function createMembershipProof(params: CreateTransactionParams, membership
 
     const txRecordEvents = await workerProvider.getTxRecordEvents()
 
-    const associationSet = await getAssociationSet(ChainId.ETHEREUM_GOERLI)
+    const associationSet = await getAssociationSet(ChainId.ETHEREUM_SEPOLIA)
     console.log('TX RECORD EVENTS: ', txRecordEvents)
 
     params.events = await commitmentsService.fetchCommitments(keypair)
@@ -472,7 +472,7 @@ async function createMembershipProof(params: CreateTransactionParams, membership
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair, logger: LoggerType) {
   try {
     // let membershipProof
-    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
+    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_SEPOLIA)
     params.outputs = params.outputs || []
     while (params.outputs.length < 2) {
       params.outputs.push(new Utxo({ keypair }))
@@ -501,7 +501,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     // if (params.recipient) {
     //   const txRecordEvents = await workerProvider.getTxRecordEvents()
 
-    //   const associationSet = await getAssociationSet(ChainId.ETHEREUM_GOERLI)
+    //   const associationSet = await getAssociationSet(ChainId.ETHEREUM_SEPOLIA)
     //   console.log('TX RECORD EVENTS: ', txRecordEvents)
 
     //   params.events = await commitmentsService.fetchCommitments(keypair)

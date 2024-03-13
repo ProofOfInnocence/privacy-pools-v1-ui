@@ -9,8 +9,8 @@ function StatsComponent() {
   const [poolBalance, setPoolBalance] = useState('0')
 
   const WETHbalance = useBalance({
-    address: POOL_CONTRACT[ChainId.ETHEREUM_GOERLI] as `0x${string}`,
-    chainId: ChainId.ETHEREUM_GOERLI,
+    address: POOL_CONTRACT[ChainId.ETHEREUM_SEPOLIA] as `0x${string}`,
+    chainId: ChainId.ETHEREUM_SEPOLIA,
     watch: true,
     onSuccess(data) {
       const formattedNumber = parseFloat(data.formatted).toFixed(5)

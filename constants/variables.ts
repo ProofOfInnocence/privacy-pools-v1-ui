@@ -68,7 +68,7 @@ const REGISTRY_DEPLOYED_BLOCK: Record<ChainId, number> = {
   // [ChainId.MAINNET]: 14173129,
   // [ChainId.BSC]: 0,
   // [ChainId.XDAI]: 0,
-  [ChainId.ETHEREUM_GOERLI]: 9818192
+  [ChainId.ETHEREUM_SEPOLIA]: 9818192
 }
 
 const registerGuideUrl = 'https://hackmd.io/@yfVgphY1TiKixVMVfVLAlw/B1Bp3p4UF'
