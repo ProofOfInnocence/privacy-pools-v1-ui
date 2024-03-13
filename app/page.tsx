@@ -11,7 +11,6 @@ import axios from 'axios'
 import Image from 'next/image'
 import bgPattern from '@/public/images/bg-pattern.webp'
 
-
 import { fromWei, generatePrivateKeyFromEntropy, toChecksumAddress, toHexString } from '@/utilities'
 import { WriteContractErrorType, encodeFunctionData } from 'viem'
 import { BigNumber } from 'ethers'
@@ -56,6 +55,9 @@ export default function Home() {
   const [isDisabled, setIsDisabled] = useState(true)
   const [isKeyGenerated, setIsKeyGenerated] = useState(false)
   const [wethBalance, setWethBalance] = useState('0')
+  const [membershipProofAndURI, setMembershipProofAndURI] = useState<{ membershipProof: string; membershipProofURI: string } | undefined>(
+    undefined
+  )
 
   const { address, connector } = useAccount()
   const publicClient = usePublicClient()
@@ -186,9 +188,9 @@ export default function Home() {
         },
         logger
       )
-      let txReceipt = await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
+      let txHash = await transact({ publicClient, walletClient, logger, syncPoolBalance }, { args, extData })
       setLoadingMessage('')
-      console.log('Tx receipt', txReceipt)
+      console.log('Tx receipt', txHash)
       setModalData({
         title: 'Deposit success',
         text: 'Your deposit is successful',
@@ -205,7 +207,7 @@ export default function Home() {
           {
             ButtonName: 'Explorer',
             Function: () => {
-              window.open(`${CHAINS[ChainId.ETHEREUM_SEPOLIA].blockExplorerUrl}/tx/${txReceipt.transactionHash}`, '_blank')
+              window.open(`${CHAINS[ChainId.ETHEREUM_SEPOLIA].blockExplorerUrl}/tx/${txHash}`, '_blank')
             },
           },
         ],
@@ -233,14 +235,20 @@ export default function Home() {
     }
   }
 
-  async function getRelayerFees(relayer: RelayerInfo): Promise<{ transferServiceFee: string; withdrawalServiceFee: number, relayerRewardAddress: string }> {
+  async function getRelayerFees(
+    relayer: RelayerInfo
+  ): Promise<{ transferServiceFee: string; withdrawalServiceFee: number; relayerRewardAddress: string }> {
     try {
       const { data: res } = await axios.get(`${relayer.api}/status`, {
         headers: {
           'Content-Type': 'application/json',
         },
       })
-      return { transferServiceFee: res.serviceFee.transfer, withdrawalServiceFee: res.serviceFee.withdrawal, relayerRewardAddress: res.rewardAddress }
+      return {
+        transferServiceFee: res.serviceFee.transfer,
+        withdrawalServiceFee: res.serviceFee.withdrawal,
+        relayerRewardAddress: res.rewardAddress,
+      }
     } catch (error) {
       throw new Error('Failed to get relayer fees')
     }
@@ -248,7 +256,7 @@ export default function Home() {
 
   async function calculateRelayerFee(amount: BigNumber, transferServiceFee: string, withdrawalServiceFee: number) {
     const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_SEPOLIA)
-    console.log("GAS FEE FOR FAST IS", fast)
+    console.log('GAS FEE FOR FAST IS', fast)
     const gasLimit = BigNumber.from(2000000)
     const operationFee = BigNumber.from(fast).mul(gasLimit).mul('130').div(numbers.ONE_HUNDRED)
     const serviceFee = BigNumber.from(transferServiceFee)
@@ -259,7 +267,13 @@ export default function Home() {
     return fee
   }
 
-  async function withdrawWithRelayer(amount: string, feeInWei: string, recipient: string, relayer: RelayerInfo, membershipProofOption: number) {
+  async function withdrawWithRelayer(
+    amount: string,
+    feeInWei: string,
+    recipient: string,
+    relayer: RelayerInfo,
+    membershipProofOption: number
+  ) {
     try {
       setLoadingMessage('Withdrawing...')
       if (!keypair) {
@@ -284,11 +298,21 @@ export default function Home() {
       if (isNaN(parseFloat(amount))) {
         throw new Error('Invalid decimal value')
       }
-      // First we generate membership proof
-      const { membershipProof, membershipProofURI } = await prepareMembershipProof(
-        { keypair, address: toChecksumAddress(curAddress), membershipProofOption },
-        logger
-      )
+      // let membershipProof: string = ""
+      // let membershipProofURI: string = ""
+      // if (membershipProofAndURI === undefined) {
+        // First we generate membership proof
+        const { membershipProof, membershipProofURI } = await prepareMembershipProof(
+          { keypair, address: toChecksumAddress(curAddress), membershipProofOption },
+          logger
+        )
+      //   setMembershipProofAndURI({ membershipProof: mp, membershipProofURI: mp_uri })
+      //   membershipProof = mp
+      //   membershipProofURI = mp_uri
+      // } else {
+      //   membershipProof = membershipProofAndURI.membershipProof
+      //   membershipProofURI = membershipProofAndURI.membershipProofURI
+      // }
 
       // Then we calculate the fee and the total amount
       const { transferServiceFee, withdrawalServiceFee, relayerRewardAddress } = await getRelayerFees(relayer)
@@ -308,7 +332,7 @@ export default function Home() {
           address: toChecksumAddress(curAddress),
           fee: fee,
           recipient: toChecksumAddress(recipient),
-          relayer: toChecksumAddress(address),
+          relayer: toChecksumAddress(relayerRewardAddress),
           membershipProofURI,
         },
         logger

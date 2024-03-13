@@ -15,7 +15,7 @@ const CHAINS: NetworkConfig = {
     blockGasLimit: 144000000,
     hexChainId: '0xAA36A7',
     isEipSupported: true,
-    ensSubdomainKey: 'goerli-tornado',
+    ensSubdomainKey: 'sepolia-tornado',
     blockExplorerUrl: 'https://sepolia.etherscan.io'
   },
   // [ChainId.XDAI]: {
