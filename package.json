@@ -25,7 +25,6 @@
     "jszip": "^3.7.1",
     "lodash": "^4.17.21",
     "next": "13.5.4",
-    "nova_scotia_browser": "file:public/pkg",
     "react": "^18",
     "react-dom": "^18",
     "request": "^2.79.0",
