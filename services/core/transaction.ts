@@ -454,7 +454,7 @@ async function createMembershipProof(params: CreateTransactionParams, membership
     // membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
     // const membershipProofJSONTemp = JSON.parse(membershipProofTemp)
     // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSONTemp, associationSet: associationSetLeaves })
-    const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves, associationSetRoot: associationSetRoot }
+    const membershipProofJSON = { txRecordsMerkleRoot: membershipProofInputs[0].txRecordsMerkleRoot, allowedTxRecordsMerkleRoot: membershipProofInputs[0].allowedTxRecordsMerkleRoot, step_in: membershipProofInputs[0].step_in, proof: membershipProofTemp, associationSet: associationSetLeaves, associationSetRoot: associationSetRoot }
     membershipProof = JSON.stringify(membershipProofJSON)
     console.log('MEMBERSHIP PROOF: ', membershipProof)
 
