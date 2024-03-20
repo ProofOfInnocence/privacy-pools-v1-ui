@@ -38,7 +38,7 @@ import { getGasPriceFromRpc } from '@/services/gasOracle'
 const relayers: RelayerInfo[] = [
   {
     name: 'oxbow relay',
-    api: 'http://0.0.0.0:8000',
+    api: 'https://oxbow-relay.mule-herring.ts.net',
   },
 ]
 
