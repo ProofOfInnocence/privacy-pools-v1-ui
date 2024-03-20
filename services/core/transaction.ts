@@ -463,7 +463,7 @@ async function createMembershipProof(params: CreateTransactionParams, membership
 
     saveAsFile(membershipProof, 'membership_proof_save_to_ipfs_if_you_dont_trust_relayers_pinning_service.txt')
 
-    return { membershipProof, membershipProofURI }
+    return { membershipProof, membershipProofURI, secondOutputBlinding:params.outputs[1].blinding }
   } catch (err) {
     throw new Error(err.message)
   }
@@ -475,7 +475,11 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_SEPOLIA)
     params.outputs = params.outputs || []
     while (params.outputs.length < 2) {
-      params.outputs.push(new Utxo({ keypair }))
+      if (params.outputs.length == 1 && params.secondOutputBlinding) {
+        params.outputs.push(new Utxo({ keypair, blinding: BigNumber.from(params.secondOutputBlinding) }))
+      } else {
+        params.outputs.push(new Utxo({ keypair }))
+      }
     }
     params.inputs = params.inputs || []
     while (params.inputs.length < 2) {
@@ -483,7 +487,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
         '0x' +
         ethers.utils
           .keccak256(
-            ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
+            ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.secondOutputBlinding || params.outputs[params.inputs.length].blinding)])
           )
           .slice(2, 64)
       ).mod(FIELD_SIZE)

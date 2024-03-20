@@ -193,7 +193,7 @@ export default function Home() {
       console.log('Tx receipt', txHash)
       setModalData({
         title: 'Deposit success',
-        text: 'Your deposit is successful',
+        text: 'Your deposit is successful, refresh this page to see the updated balance',
         operations: [
           {
             ButtonName: 'OK',
@@ -258,7 +258,7 @@ export default function Home() {
     const { fast } = await getGasPriceFromRpc(ChainId.ETHEREUM_SEPOLIA)
     console.log('GAS FEE FOR FAST IS', fast)
     const gasLimit = BigNumber.from(2000000)
-    const operationFee = BigNumber.from(fast).mul(gasLimit).mul('130').div(numbers.ONE_HUNDRED)
+    const operationFee = BigNumber.from(fast).mul(gasLimit).mul('140').div(numbers.ONE_HUNDRED)
     const serviceFee = BigNumber.from(transferServiceFee)
     const desiredFee = operationFee.add(serviceFee)
     // amount * withdrawalServiceFee / 100 + desiredFee
@@ -302,7 +302,7 @@ export default function Home() {
       // let membershipProofURI: string = ""
       // if (membershipProofAndURI === undefined) {
         // First we generate membership proof
-        const { membershipProof, membershipProofURI } = await prepareMembershipProof(
+        const { membershipProof, membershipProofURI, secondOutputBlinding } = await prepareMembershipProof(
           { keypair, address: toChecksumAddress(curAddress), membershipProofOption },
           logger
         )
@@ -334,6 +334,7 @@ export default function Home() {
           recipient: toChecksumAddress(recipient),
           relayer: toChecksumAddress(relayerRewardAddress),
           membershipProofURI,
+          secondOutputBlinding: secondOutputBlinding.toHexString(),
         },
         logger
       )

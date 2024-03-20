@@ -69,7 +69,7 @@ export async function prepareMembershipProof({
     }
 
 
-    const { membershipProof, membershipProofURI } = await createMembershipProof(
+    const { membershipProof, membershipProofURI, secondOutputBlinding } = await createMembershipProof(
       {
         inputs: unspentUtxo.length > 2 ? unspentUtxo.slice(0, 2) : unspentUtxo,
       },
@@ -78,7 +78,7 @@ export async function prepareMembershipProof({
       logger
     )
 
-    return { membershipProof, membershipProofURI }
+    return { membershipProof, membershipProofURI, secondOutputBlinding }
   } catch (err) {
     throw new Error(err.message)
   }
@@ -92,6 +92,7 @@ export async function prepareTransaction({
   relayer = BG_ZERO,
   recipient = BG_ZERO,
   membershipProofURI = '',
+  secondOutputBlinding = '',
 }: {
   keypair: Keypair
   amount: BigNumber
@@ -100,6 +101,7 @@ export async function prepareTransaction({
   relayer?: string | BigNumber
   recipient?: string | BigNumber
   membershipProofURI?: string
+  secondOutputBlinding?: string
 }, logger: LoggerType) {
   try {
     const amountWithFee = amount.add(fee)
@@ -134,6 +136,7 @@ export async function prepareTransaction({
         relayer: relayer !== BG_ZERO ? toChecksumAddress(relayer) : undefined,
         fee: fee,
         membershipProofURI: membershipProofURI,
+        secondOutputBlinding: secondOutputBlinding,
       },
       keypair,
       logger
