@@ -20,7 +20,7 @@ function DepositComponent({ deposit, address }: DepositProps) {
 
   const ETHbalance = useBalance({
     address: address as `0x${string}`,
-    chainId: ChainId.ETHEREUM_GOERLI,
+    chainId: ChainId.ETHEREUM_SEPOLIA,
     watch: true,
     onSuccess(data) {
       const formattedNumber = parseFloat(data.formatted).toFixed(5)

@@ -6,7 +6,7 @@ export const POOL_CONTRACT: { [chainId in ChainId]: string } = {
   // [ChainId.XDAI]: '0xD692Fd2D0b2Fbd2e52CFa5B5b9424bC981C30696',
   // [ChainId.BSC]: '',
   // [ChainId.MAINNET]: '',
-  [ChainId.ETHEREUM_GOERLI]: '0x30221943644fFaa55F20e915A83352d0548585ca'
+  [ChainId.ETHEREUM_SEPOLIA]: '0x8e3E4702B4ec7400ef15fba30B3e4bfdc72aBC3B'
 }
 // export const REDGISTRY_CONTRACT: { [chainId in ChainId]: string } = {
 //   [ChainId.MAINNET]: '0x58E8dCC13BE9780fC42E8723D8EaD4CF46943dF2',
@@ -24,18 +24,18 @@ export const WRAPPED_TOKEN: { [chainId in ChainId]: string } = {
   // [ChainId.MAINNET]: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', // WETH on mainnet
   // [ChainId.XDAI]: '0x6A023CCd1ff6F2045C3309768eAd9E68F978f6e1', // WETH on xdai
   // [ChainId.BSC]: '0xCa8d20f3e0144a72C6B5d576e9Bd3Fd8557E2B04', // WBNB on xdai
-  [ChainId.ETHEREUM_GOERLI]: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6', // WETH on ethereum goerli
+  [ChainId.ETHEREUM_SEPOLIA]: '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6', // WETH on ethereum goerli
 }
 
 export const ETH_MAIN_TOKEN: { [chainId in ChainId]: string } = {
-  [ChainId.ETHEREUM_GOERLI]: '0xdD69DB25F6D620A7baD3023c5d32761D353D3De9' // GETH on ethereum goerli
+  [ChainId.ETHEREUM_SEPOLIA]: '0xdD69DB25F6D620A7baD3023c5d32761D353D3De9' // GETH on ethereum goerli
 }
 
 export const RPC_LIST: { [chainId in ChainId]: string } = {
   // [ChainId.BSC]: 'https://bsc-mainnet.chainnodes.org/d692ae63-0a7e-43e0-9da9-fe4f4cc6c607',
   // [ChainId.MAINNET]: 'https://mainnet.chainnodes.org/d692ae63-0a7e-43e0-9da9-fe4f4cc6c607',
   // [ChainId.XDAI]: 'https://gnosis-mainnet.chainnodes.org/d692ae63-0a7e-43e0-9da9-fe4f4cc6c607',
-  [ChainId.ETHEREUM_GOERLI]: 'https://goerli.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161'
+  [ChainId.ETHEREUM_SEPOLIA]: 'https://ethereum-sepolia-rpc.publicnode.com'
 }
 
 export const FALLBACK_RPC_LIST: { [chainId in ChainId]: string[] } = {
@@ -51,8 +51,8 @@ export const FALLBACK_RPC_LIST: { [chainId in ChainId]: string[] } = {
   //   // 'https://rpc.ankr.com/gnosis/dbe08b852ba176a8aeac783cc1fa8becaf4f107235dfdae79241063fbf52ca4a',
   //   'https://rpc.gnosis.gateway.fm',
   // ],
-  [ChainId.ETHEREUM_GOERLI]: [
-    'https://rpc.ankr.com/eth_goerli'
+  [ChainId.ETHEREUM_SEPOLIA]: [
+    'https://rpc.sepolia.org'
   ]
 }
 
@@ -60,7 +60,7 @@ export const RPC_WS_LIST: { [chainId in ChainId]: string } = {
   // [ChainId.MAINNET]: 'wss://mainnet.chainnodes.org/d692ae63-0a7e-43e0-9da9-fe4f4cc6c607',
   // [ChainId.BSC]: 'wss://bsc-mainnet.chainnodes.org/d692ae63-0a7e-43e0-9da9-fe4f4cc6c607',
   // [ChainId.XDAI]: 'wss://gnosis-mainnet.chainnodes.org/d692ae63-0a7e-43e0-9da9-fe4f4cc6c607',
-  [ChainId.ETHEREUM_GOERLI]: 'wss://goerli.infura.io/ws/v3/9aa3d95b3bc440fa88ea12eaa4456161'
+  [ChainId.ETHEREUM_SEPOLIA]: 'wss://ethereum-sepolia-rpc.publicnode.com'
 }
 
 // export const MULTICALL: { [chainId in ChainId]: string } = {

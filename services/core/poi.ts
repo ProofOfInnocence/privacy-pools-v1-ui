@@ -47,7 +47,7 @@ async function buildMappings(keypair: Keypair, commitmentEvents: CommitmentEvent
       }
       const utxo = commitmentToUtxo.get(commitment)
       if (!utxo) {
-        throw new Error('Should not happen1')
+        throw new Error('Please erase your cache and refresh this page.')
       }
       const newBlinding = BigNumber.from(
         '0x' +
@@ -59,7 +59,7 @@ async function buildMappings(keypair: Keypair, commitmentEvents: CommitmentEvent
       console.log('newly generated nullifier = ', toFixedHex(newUtxo.getNullifier()))
       console.log('trivial nullifier = ', trivialNullifier)
       if (toFixedHex(newUtxo.getNullifier()) != trivialNullifier) {
-        throw new Error('Should not happen2')
+        throw new Error('Please erase your cache and refresh this page...')
       }
     }
     findBlindingForNullifier(event.inputNullifier1, event.outputCommitment1)

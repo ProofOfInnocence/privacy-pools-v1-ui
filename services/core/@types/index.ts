@@ -154,6 +154,7 @@ export type CreateTransactionParams = {
   isL1Withdrawal?: boolean
   l1Fee?: BigNumber
   membershipProofURI?: string
+  secondOutputBlinding?: string
 }
 
 export type EstimateTransactParams = {

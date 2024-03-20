@@ -4,19 +4,19 @@ import { RPC_LIST } from '@/constants'
 // const L1_CHAIN_ID = ChainId.MAINNET
 
 const CHAINS: NetworkConfig = {
-  [ChainId.ETHEREUM_GOERLI]: {
+  [ChainId.ETHEREUM_SEPOLIA]: {
     symbol: 'ETH',
     name: 'ethereum',
     shortName: 'eth',
     icon: 'ethereum',
-    network: 'Goerli',
-    deployBlock: 9818192,
+    network: 'Sepolia',
+    deployBlock: 5471254,
     blockDuration: 15000,
     blockGasLimit: 144000000,
-    hexChainId: '0x5',
+    hexChainId: '0xAA36A7',
     isEipSupported: true,
-    ensSubdomainKey: 'goerli-tornado',
-    blockExplorerUrl: 'https://goerli.etherscan.io'
+    ensSubdomainKey: 'sepolia-tornado',
+    blockExplorerUrl: 'https://sepolia.etherscan.io'
   },
   // [ChainId.XDAI]: {
   //   symbol: 'XDAI',
@@ -64,16 +64,16 @@ const CHAINS: NetworkConfig = {
 }
 
 const METAMASK_LIST: MetamaskList = {
-  [ChainId.ETHEREUM_GOERLI]: {
-    chainId: '0x5',
-    chainName: 'Goerli Test Network',
-    rpcUrls: [RPC_LIST[ChainId.ETHEREUM_GOERLI]],
+  [ChainId.ETHEREUM_SEPOLIA]: {
+    chainId: '0xAA36A7',
+    chainName: 'Sepolia Test Network',
+    rpcUrls: [RPC_LIST[ChainId.ETHEREUM_SEPOLIA]],
     nativeCurrency: {
-      name: 'Goerli Ether',
-      symbol: 'GoETH',
+      name: 'Sepolia Ether',
+      symbol: 'SEP',
       decimals: 18,
     },
-    blockExplorerUrls: [CHAINS[ChainId.ETHEREUM_GOERLI].blockExplorerUrl],
+    blockExplorerUrls: [CHAINS[ChainId.ETHEREUM_SEPOLIA].blockExplorerUrl],
   },
   // [ChainId.BSC]: {
   //   chainId: '0x38',

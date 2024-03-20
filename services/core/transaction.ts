@@ -281,7 +281,7 @@ async function download({ prefix, name, contentType }: DownloadParams) {
 
 // async function estimateTransact(payload: EstimateTransactParams) {
 //   try {
-//     const tornadoPool = getTornadoPool(ChainId.ETHEREUM_GOERLI)
+//     const tornadoPool = getTornadoPool(ChainId.ETHEREUM_SEPOLIA)
 
 //     const gas = await tornadoPool.estimateGas.transact(payload.args, payload.extData, {
 //       from: tornadoPool.address,
@@ -391,7 +391,7 @@ async function getAssociationSet(chain: ChainId) {
 async function createMembershipProof(params: CreateTransactionParams, membershipProofOption: number, keypair: Keypair, logger: LoggerType) {
   try {
     let membershipProof
-    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
+    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_SEPOLIA)
     params.outputs = []
     while (params.outputs.length < 2) {
       params.outputs.push(new Utxo({ keypair }))
@@ -419,7 +419,7 @@ async function createMembershipProof(params: CreateTransactionParams, membership
 
     const txRecordEvents = await workerProvider.getTxRecordEvents()
 
-    const associationSet = await getAssociationSet(ChainId.ETHEREUM_GOERLI)
+    const associationSet = await getAssociationSet(ChainId.ETHEREUM_SEPOLIA)
     console.log('TX RECORD EVENTS: ', txRecordEvents)
 
     params.events = await commitmentsService.fetchCommitments(keypair)
@@ -454,7 +454,7 @@ async function createMembershipProof(params: CreateTransactionParams, membership
     // membershipProof = JSON.stringify({ proof: 'No proof, PRIVATE TRANSACTION' })
     // const membershipProofJSONTemp = JSON.parse(membershipProofTemp)
     // const finalMembershipProof = JSON.stringify({ proof: membershipProofJSONTemp, associationSet: associationSetLeaves })
-    const membershipProofJSON = { proof: JSON.parse(membershipProofTemp), associationSet: associationSetLeaves, associationSetRoot: associationSetRoot }
+    const membershipProofJSON = { txRecordsMerkleRoot: membershipProofInputs[0].txRecordsMerkleRoot, allowedTxRecordsMerkleRoot: membershipProofInputs[0].allowedTxRecordsMerkleRoot, step_in: membershipProofInputs[0].step_in, proof: membershipProofTemp, associationSet: associationSetLeaves, associationSetRoot: associationSetRoot }
     membershipProof = JSON.stringify(membershipProofJSON)
     console.log('MEMBERSHIP PROOF: ', membershipProof)
 
@@ -463,7 +463,7 @@ async function createMembershipProof(params: CreateTransactionParams, membership
 
     saveAsFile(membershipProof, 'membership_proof_save_to_ipfs_if_you_dont_trust_relayers_pinning_service.txt')
 
-    return { membershipProof, membershipProofURI }
+    return { membershipProof, membershipProofURI, secondOutputBlinding:params.outputs[1].blinding }
   } catch (err) {
     throw new Error(err.message)
   }
@@ -472,10 +472,14 @@ async function createMembershipProof(params: CreateTransactionParams, membership
 async function createTransactionData(params: CreateTransactionParams, keypair: Keypair, logger: LoggerType) {
   try {
     // let membershipProof
-    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_GOERLI)
+    const commitmentsService = commitmentsFactory.getService(ChainId.ETHEREUM_SEPOLIA)
     params.outputs = params.outputs || []
     while (params.outputs.length < 2) {
-      params.outputs.push(new Utxo({ keypair }))
+      if (params.outputs.length == 1 && params.secondOutputBlinding) {
+        params.outputs.push(new Utxo({ keypair, blinding: BigNumber.from(params.secondOutputBlinding) }))
+      } else {
+        params.outputs.push(new Utxo({ keypair }))
+      }
     }
     params.inputs = params.inputs || []
     while (params.inputs.length < 2) {
@@ -483,7 +487,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
         '0x' +
         ethers.utils
           .keccak256(
-            ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.outputs[params.inputs.length].blinding)])
+            ethers.utils.concat([ethers.utils.arrayify(ZERO_LEAF), ethers.utils.arrayify(params.secondOutputBlinding || params.outputs[params.inputs.length].blinding)])
           )
           .slice(2, 64)
       ).mod(FIELD_SIZE)
@@ -501,7 +505,7 @@ async function createTransactionData(params: CreateTransactionParams, keypair: K
     // if (params.recipient) {
     //   const txRecordEvents = await workerProvider.getTxRecordEvents()
 
-    //   const associationSet = await getAssociationSet(ChainId.ETHEREUM_GOERLI)
+    //   const associationSet = await getAssociationSet(ChainId.ETHEREUM_SEPOLIA)
     //   console.log('TX RECORD EVENTS: ', txRecordEvents)
 
     //   params.events = await commitmentsService.fetchCommitments(keypair)
